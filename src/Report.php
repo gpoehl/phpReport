@@ -158,7 +158,7 @@ class Report {
         return $this;
     }
 
-    public function sheet($name, $keyAttribute, $dataAttribute, ?int $typ = Factory::XS, $fromKey = null, $toKey = null, $maxLevel = null) {
+    public function sheet($name, $dataAttribute, $keyAttribute, ?int $typ = Factory::XS, $fromKey = null, $toKey = null, $maxLevel = null) {
         $typ = ($typ) ?? Factory::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $cum = Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey);
@@ -167,7 +167,7 @@ class Report {
             $dim = end($this->dims);
             $key = $this->prepareSumAttribute($name, $keyAttribute, $dim, 'key');
             $value = $this->prepareSumAttribute($name, $dataAttribute, $dim, 'data');
-            $dim->addCmd .= '$this->total->items[' . $this->wrapName($name) . "]->add($key, $value);\n";
+            $dim->addCmd .= '$this->total->items[' . $this->wrapName($name) . "]->add($value, $key);\n";
         }
         return $this;
     }
@@ -516,7 +516,7 @@ class Report {
             $command = str_replace('>>>', ']', $command);
         } else {
             $command = str_replace(["<<<'", "<<<"], '->', $command);
-            $command = str_replace([">>>'", ">>>"], '', $command);
+            $command = str_replace(["'>>>", ">>>"], '', $command);
         }
         return $command;
     }

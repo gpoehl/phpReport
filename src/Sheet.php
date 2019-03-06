@@ -42,7 +42,7 @@ class Sheet extends AbstractCollector {
      * @param string|int $key The key of the sheet cumulator (column).
      * @param int|float|null $value The value to be added
      */
-    public function add($key, $value) {
+    public function add($value, $key) {
         if (!isset($this->items[$key])) {
             $this->addItem($key);
         }

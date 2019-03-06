@@ -58,10 +58,10 @@ class FixedSheet extends AbstractCollector {
      * Value will be added to sheet item of $key by
      * calling the add method of cumulator class.
      * The cumulator must already exist.
-     * @param string|int $key The key of the sheet cumulator (column).
      * @param int|float|null $value The value to be added
+     * @param string|int $key The key of the sheet cumulator (column).
      */
-    public function add($key, $value) {
+    public function add($value, $key) {
         if (!isset($this->items[$key])) {
             throw new OutOfBoundsException("Key $key is not part of fixed sheet");
         }
