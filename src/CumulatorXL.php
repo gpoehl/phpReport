@@ -89,7 +89,7 @@ class CumulatorXL extends Cumulator implements MinMaxInterface {
      */
     public function min(int $level = null) {
         $min = null;
-        for ($i = $level ?? $this->mp->level; $i <= $this->maxLevel; $i++) {
+        for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
             if (isset($this->min[$i]) && ($this->min[$i] < $min || $min === null )) {
                 $min = $this->min[$i];
             }
@@ -99,7 +99,7 @@ class CumulatorXL extends Cumulator implements MinMaxInterface {
 
     public function max(int $level = null) {
         $max = null;
-        for ($i = $level ?? $this->mp->level; $i <= $this->maxLevel; $i++) {
+        for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
             if (isset($this->max[$i]) && ($this->max[$i] > $max )) {
                 $max = $this->max[$i];
             }
