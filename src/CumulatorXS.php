@@ -31,8 +31,8 @@ class CumulatorXS extends AbstractCumulator {
         // not test on is_numeric to improve performance
         $this->total[$this->maxLevel] += $value;
     }
-    
-    protected function initializeValue($value, int $level) :void {
+
+    protected function initializeValue($value, int $level): void {
         $this->total[$level] = $value;
     }
 
@@ -47,7 +47,7 @@ class CumulatorXS extends AbstractCumulator {
     }
 
     public function cumulateToNextLevel(): void {
-         $level = $this->mp->level;
+        $level = $this->mp->level;
         if ($level > $this->maxLevel) {
             return;
         }
@@ -80,14 +80,16 @@ class CumulatorXS extends AbstractCumulator {
         }
         return $sum;
     }
-    
+
     public function nn() {
         return null;
     }
+
     public function nz() {
         return null;
     }
-      public function min() {
+
+    public function min() {
         return null;
     }
 
