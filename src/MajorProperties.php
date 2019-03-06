@@ -27,6 +27,6 @@ class MajorProperties {
     public $detailLevel;           // Level for details 
     
     public function getLevel(int $level = null): int {
-        $level = $level ?? ($this->level < $this->detailLevel) ? $htis->level : $this->detailLevel -1;
+       return $level ?? ($this->level < $this->detailLevel) ? $this->level : $this->detailLevel -1;
     }
 }
