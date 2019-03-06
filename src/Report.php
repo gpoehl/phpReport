@@ -215,6 +215,7 @@ class Report {
             $this->rc->addItem(Factory::cumulator($this->mp, $dim->lastLevel, Factory::XS, $dimID));
             $this->noDataActions[$dimID] = $this->getCallable('noData_n', Helper::getConfigValue($dimID, $this->methods['noData_n']));
         }
+        $this->mp->detailLevel = $dim->lastLevel + 1;
         $this->detailMethod = $this->getCallable('detail', $this->methods['detail']);
         $this->callMethod('init');
         $this->callMethod('totalHeader');
@@ -421,7 +422,6 @@ class Report {
         $this->dim->groupValues = $indexedValues;
         ($this->needFooter) ? $this->callFooterMethods($this->changedLevel) : $this->needFooter = true;
         $this->dim->row = [$rowKey, $row];
-        ($this->dim->addClosure)($row, $rowKey);
         // Group values from dim get active after handling footers. 
         $this->groups->setValues($this->dim->fromLevel, $indexedValues);
         // Call Header methods;
@@ -433,6 +433,7 @@ class Report {
             $this->callHeadersAndFooters('headerAction', $groupValue);
             $this->mp->level++;
         }
+        ($this->dim->addClosure)($row, $rowKey);
         $this->method = $this->detailMethod;
     }
 
@@ -444,20 +445,13 @@ class Report {
      * @param int $changedLevel The group level where a group has changed
      */
     private function callFooterMethods(int $changedLevel): void {
-//        $footerStartTime = microtime(true);
         $groupValues = array_reverse(array_slice($this->groups->values, $changedLevel));
         $this->mp->level = $this->lowestHeader;
         foreach ($groupValues as $groupValue) {
-//            if ($this->currentDimID !== $this->groups->groups[$this->mp->level]->dim){
-//                echo '<br>Dim not same for ' .$groupValue. ' Current = ' .$this->currentDimID .
-//                        ' GroupDim = ' . $this->groups->groups[$this->mp->level]->dim;
-//            }
             $this->callHeadersAndFooters('footerAction', $groupValue);
             $this->collector->cumulateToNextLevel();
             $this->mp->level--;
         }
-//        $footerEndTime = microtime(true);
-//        $this->footerUsedTime += $footerEndTime - $footerStartTime;
     }
 
     /**
