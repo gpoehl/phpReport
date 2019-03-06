@@ -99,7 +99,7 @@ class Cumulator extends AbstractCumulator implements CounterInterface {
 
     private function runningTotal(array $arr, int $level = null) {
         $sum = 0;
-        for ($i = $level ?? $this->mp->level; $i <= $this->maxLevel; $i++) {
+        for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
             if (isset($this->total[$i])) {
                 $sum += $arr[$i];
             }
