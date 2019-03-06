@@ -81,10 +81,17 @@ class CumulatorXS extends AbstractCumulator {
         return $sum;
     }
     
-    public function nn(int $level = null) {
+    public function nn() {
         return null;
     }
-    public function nz(int $level = null) {
+    public function nz() {
+        return null;
+    }
+      public function min() {
+        return null;
+    }
+
+    public function max() {
         return null;
     }
 

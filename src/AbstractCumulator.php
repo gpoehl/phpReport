@@ -23,7 +23,7 @@ abstract class AbstractCumulator {
 
     /**
      * @param MajorPropertiesService $mp Object of major properties  
-     * @param int $maxLevel The lowest level  
+     * @param int $maxLevel The maximum (group) level 
      * @param mixed|null $objID Optioal referece of this object.
      */
     public function __construct(MajorProperties $mp, int $maxLevel) {
@@ -56,16 +56,12 @@ abstract class AbstractCumulator {
 
     abstract public function sum(int $level = null);
 
-    abstract public function nn(int $level = null);
+    abstract public function nn();
 
-    abstract public function nz(int $level = null);
+    abstract public function nz();
+    abstract public function min();
+    abstract public function max();
 
-    public function min(int $level = null) {
-        return null;
-    }
-
-    public function max(int $level = null) {
-        return null;
-    }
+  
 
 }
