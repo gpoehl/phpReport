@@ -56,12 +56,20 @@ abstract class AbstractCumulator {
 
     abstract public function sum(int $level = null);
 
-    abstract public function nn();
+    public function nn() {
+        return null;
+    }
 
-    abstract public function nz();
-    abstract public function min();
-    abstract public function max();
+    public function nz() {
+        return null;
+    }
 
-  
+    public function min() {
+        return null;
+    }
+
+    public function max() {
+        return null;
+    }
 
 }
