@@ -58,8 +58,8 @@ class Report {
     // @property AbstractCollector $total Collector of attributes to be cumulated
     public $total;
     private $target;           // Object which holds the methods to be called. Usally passed as $this
-    private $_callOption = self::CALL_EXISTING;      // One of the prototype options above
-    private $_prototype;       // prototype object  
+    private $callOption = self::CALL_EXISTING;      // One of the prototype options above
+    private $prototype;       // prototype object  
 
     /**
      * Configurable mapping of methods to user method names.
@@ -237,13 +237,13 @@ class Report {
      */
     private function getCallable($key, $method): ?array {
         // Call prototype regardless of the type. Prototype method is key
-        if ($this->_callOption === self::CALL_ALWAYS_PROTOTYPE) {
+        if ($this->callOption === self::CALL_ALWAYS_PROTOTYPE) {
             if ($method[0] >= self::CALLABLE) {
-                return [$method[0], $key, [$this->_prototype, $key], $method[1]];
+                return [$method[0], $key, [$this->prototype, $key], $method[1]];
             } else {
                 // string or closure
                 // increase type by 10 to force always call the callable
-                return [$method[0] + 10, $key, [$this->_prototype, $key]];
+                return [$method[0] + 10, $key, [$this->prototype, $key]];
             }
         }
         // String, closure or array[class, method]
@@ -251,12 +251,12 @@ class Report {
             return [$method[0], $key, $method[1]];
         }
         // Normal method to be called in $target
-        if ($this->_callOption === self::CALL_ALWAYS || method_exists($this->target, $method[1])) {
+        if ($this->callOption === self::CALL_ALWAYS || method_exists($this->target, $method[1])) {
             return [$method[0], $key, [$this->target, $method[1]], $method[1]];
         }
         // Call protoype
-        if ($this->_callOption === self::CALL_PROTOTYPE) {
-            return [$method[0], $key, [$this->_prototype, $key], method[1]];
+        if ($this->callOption === self::CALL_PROTOTYPE) {
+            return [$method[0], $key, [$this->prototype, $key], method[1]];
         }
         // no action is required
         return null;
@@ -276,9 +276,9 @@ class Report {
             throw new Exception('Invalid call option');
         }
         if ($callOption >= self::CALL_PROTOTYPE) {
-            $this->_prototype = new Prototype($this);
+            $this->prototype = new Prototype($this);
         }
-        $this->_callOption = $callOption;
+        $this->callOption = $callOption;
         // Re-assign the classes in which methods will be called
         $this->detailMethod = $this->getCallable('detail', $this->methods['detail']);
         foreach ($this->groups->groups as $group) {
@@ -298,11 +298,11 @@ class Report {
      * methods.
      */
     public function prototype(): string {
-        if (!isset($this->_prototype)) {
-            $this->_prototype = new Prototype($this);
+        if (!isset($this->prototype)) {
+            $this->prototype = new Prototype($this);
         }
         // magic() detects the actual method.
-        return $this->_prototype->magic();
+        return $this->prototype->magic();
     }
 
     /**
