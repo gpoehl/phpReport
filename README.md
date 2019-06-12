@@ -43,7 +43,7 @@ $rep = new \gpoehl\phpReport($this)
 $rep->group('attribute1')
 ->group('attribute2')   
 ->sum('attribute3')
-->sum(function ($row){return substr ($row, 4,5);})
+->sum(function ($row){return substr ($row, 4,5);})   // closures can be used to get values
 ->setPrototyp(phpReport::all)                        // only for demonstration and testing
 ->run($data);
 echo $rep->output;
@@ -57,16 +57,18 @@ This will echo a prototyp report having your data grouped by attribute1 and attr
 Setup & Configuration
 =====================
 
-All [configuration directives](https://mpdf.github.io/configuration.html) can
-be set by the `$config` parameter of the constructor.
+All [configuration directives](https://phpReport.github.io/configuration.html) have defaults which might be altered in the configuration file.
+All directives can also declared as configuration parameter during instantiaton of phpReport.
 
-Configuration allows naming of methods to be called depending on the rules of your organisation. In case that a directive in the configuration file don't fit your needs in a special use case it can also be passed as a parameter to **phpReport**.
+Configuration allows adopting method names to meet your organisation rules.
 
 
 ```php
 <?php
 
-$rep = new \gpoehl\phpReport($this, ['tempDir' => false]);
+$rep = new \gpoehl\phpReport($this, [
+    'actions' => ['noData' => 'No data found.'],      // print string when no data was found instead of calling noData method
+    ]);
 
 ```
 
@@ -88,12 +90,9 @@ Unit Testing
 
 Unit testing for phpReport is done using [PHPUnit](https://phpunit.de/).
 
-To get started, run `composer install` from the command line while in the mPDF root directory
-(you'll need [composer installed first](https://getcomposer.org/download/)).
-
 To execute tests, run `vendor/bin/phpunit` from the command line while in the phpReport root directory.
 
-Any assistance writing unit tests for mPDF is greatly appreciated. If you'd like to help, please
+Any assistance writing unit tests for phpReport is greatly appreciated. If you'd like to help, please
 note that any PHP file located in the `/tests/` directory will be autoloaded when unit testing.
 
 [1]: https://phpReport.github.io
