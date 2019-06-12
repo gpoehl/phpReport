@@ -189,7 +189,7 @@ class Report {
      * This method must be called once for each attribute to be summarized.
      * Values are summarized at each group level and can be returned at any time.
      * @param string $name The name to reference the cumulator object.
-     * Cumulator objects are stored in $this->t->name.
+     * Cumulator objects are stored in $this->total->name.
      * Must be unique between all dimensions.
      * @param mixed $value The attribute name when data row is an object or
      * the key when data row is array. It is also possiblbe to use a callable
@@ -214,7 +214,7 @@ class Report {
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $cum = Factory::cumulator($this->mp, $maxLevel, $typ);
         $this->total->addItem($cum, $name);
-        if ($dataAttribute !== false) {
+        if ($value !== false) {
             $dim = end($this->dims);
             $dim->sumAttributes[$name] = $value;
         }

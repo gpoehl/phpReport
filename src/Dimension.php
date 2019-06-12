@@ -38,9 +38,10 @@ class Dimension {
     // Attributes to determine group changes. Given by group(). Key is group name.
     // Value has info how value is extracted from row. 
     public $groupAttr = [];
-    //Attributes to be summarized. Key is sum name, value like in $groupAttr.
+    // Attributes to be summarized. Key is sum name, value is info how to extract value from row.
     public $sumAttributes = [];
-    //Attributes to be summarized in sheets. Key is sheet name, value like in $groupAttr.
+    // Attributes to be summarized in sheets. Key is sheet name, value has infos
+    // in an array how to extract the value and the key from row.
     public $sheetAttributes = [];
     public $row = [];          // Array Current row and rowKey
     public $groupValues = [];   // Array of group values to detect group change
