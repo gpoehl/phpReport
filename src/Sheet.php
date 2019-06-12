@@ -1,11 +1,14 @@
 <?php
 
-declare(strict_types=1);
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the gpoehl/phpReport library.
+ *
+ * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
+ * @copyright ©2019 Günter Pöhl
+ * @link      https://github.com/gpoehl/phpReport/readme
+ * @author    Günter Pöhl  <phpReport@gmx.net>
  */
+declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
@@ -14,8 +17,6 @@ namespace gpoehl\phpReport;
  * The cumulator will be selected by a key.
  * Cumulators will be instantiated during add() method and are clones
  * of class instantiation $cumulator parameter.  
- *
- * @author Günter
  */
 class Sheet extends AbstractCollector {
 
@@ -23,6 +24,22 @@ class Sheet extends AbstractCollector {
 
     public function __construct(AbstractCumulator $cumulator) {
         $this->cumulator = $cumulator;
+    }
+
+    /**
+     * Returns true when assigned cumulater handles notNull and notZero counters.  
+     * @return boolean
+     */
+    public function hasCounter(): bool {
+        return $this->cumulator->hasCounter();
+    }
+
+    /**
+     * Returns true when assigned cumulator handles min and max values. 
+     * @return boolean
+     */
+    public function hasMinMax(): bool {
+        return $this->cumulator->hasMinMax();
     }
 
     private function addItem($key = null) {
@@ -42,7 +59,7 @@ class Sheet extends AbstractCollector {
      * @param string|int $key The key of the sheet cumulator (column).
      * @param int|float|null $value The value to be added
      */
-    public function add($value, $key) {
+    public function add($key, $value) {
         if (!isset($this->items[$key])) {
             $this->addItem($key);
         }

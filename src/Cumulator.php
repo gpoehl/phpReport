@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of the gpoehl/phpReport library.
+ *
+ * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
+ * @copyright ©2019 Günter Pöhl
+ * @link      https://github.com/gpoehl/phpReport/readme
+ * @author    Günter Pöhl  <phpReport@gmx.net>
+ */
 declare(strict_types=1);
 
 namespace gpoehl\phpReport;
@@ -7,9 +15,8 @@ namespace gpoehl\phpReport;
 /**
  * Cumulator to summarize an attribute and count how often a not null and 
  * not zero value is given to the add() method.
- * @author Günter
  */
-class Cumulator extends AbstractCumulator implements CounterInterface {
+class Cumulator extends AbstractCumulator {
 
     protected $nn = [];      // Array of not null counter
     protected $nz = [];      // Array of not zero counter
@@ -18,6 +25,22 @@ class Cumulator extends AbstractCumulator implements CounterInterface {
         parent::__construct($mp, $maxLevel);
         // Initialize arrays for cumulated values and counters only on $maxLevel
         $this->initializeValue(0, $maxLevel);
+    }
+
+    /**
+     * Returns always true. Counters for notNull and notZero values are implemented.  
+     * @return boolean
+     */
+    public function hasCounter(): bool {
+        return true;
+    }
+
+    /**
+     * Returns always false. Methods to handle min and max values are not implemented. 
+     * @return boolean
+     */
+    public function hasMinMax(): bool {
+        return false;
     }
 
     /**
@@ -65,7 +88,6 @@ class Cumulator extends AbstractCumulator implements CounterInterface {
             $this->initializeValue(0, $this->maxLevel);
         }
     }
-   
 
     /**
      * Calculate the running sum up to the requested level.
@@ -73,7 +95,7 @@ class Cumulator extends AbstractCumulator implements CounterInterface {
      * @return numeric The running total of added values from the requested level down
      * to the lowest level
      */
-    public function sum(int $level = null) {
+    public function sum($level = null) {
         return $this->runningTotal($this->total, $level);
     }
 
@@ -83,7 +105,7 @@ class Cumulator extends AbstractCumulator implements CounterInterface {
      * @return numeric The running total of added values from the requested level down
      * to the lowest level
      */
-    public function nn(int $level = null) {
+    public function nn($level = null) {
         return $this->runningTotal($this->nn, $level);
     }
 
@@ -93,11 +115,11 @@ class Cumulator extends AbstractCumulator implements CounterInterface {
      * @return numeric The running total of added values from the requested level down
      * to the lowest level
      */
-    public function nz(int $level = null) {
+    public function nz($level = null) {
         return $this->runningTotal($this->nz, $level);
     }
 
-    private function runningTotal(array $arr, int $level = null) {
+    private function runningTotal(array $arr, $level = null) {
         $sum = 0;
         for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
             if (isset($this->total[$i])) {
@@ -106,4 +128,5 @@ class Cumulator extends AbstractCumulator implements CounterInterface {
         }
         return $sum;
     }
+
 }

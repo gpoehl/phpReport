@@ -1,11 +1,14 @@
 <?php
 
-declare(strict_types=1);
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the gpoehl/phpReport library.
+ *
+ * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
+ * @copyright ©2019 Günter Pöhl
+ * @link      https://github.com/gpoehl/phpReport/readme
+ * @author    Günter Pöhl  <phpReport@gmx.net>
  */
+declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
@@ -17,8 +20,6 @@ use OutOfBoundsException;
  * The cumulator will be selected by a key.
  * Cumulators will be instantiated immediately when this class is instantiated.
  * Cumaltors are clones of class instantiation $cumulator parameter.  
- *
- * @author Günter
  */
 class FixedSheet extends AbstractCollector {
 
@@ -43,6 +44,22 @@ class FixedSheet extends AbstractCollector {
     }
 
     /**
+     * Returns true when assigned cumulater handles notNull and notZero counters.  
+     * @return boolean
+     */
+    public function hasCounter(): bool {
+        return reset($this->items)->hasCounter();
+    }
+
+    /**
+     * Returns true when assigned cumulator handles min and max values. 
+     * @return boolean
+     */
+    public function hasMinMax(): bool {
+        return restet($this->items)->hasMinMax();
+    }
+
+    /**
      * Clone given cumulator from $fromKey to $toKey to have a fixed size sheet.
      * @param @see __construct
      */
@@ -58,10 +75,10 @@ class FixedSheet extends AbstractCollector {
      * Value will be added to sheet item of $key by
      * calling the add method of cumulator class.
      * The cumulator must already exist.
+     * @param string|int $key The key of the sheet cumulator (column). 
      * @param int|float|null $value The value to be added
-     * @param string|int $key The key of the sheet cumulator (column).
      */
-    public function add($value, $key) {
+    public function add($key, $value) {
         if (!isset($this->items[$key])) {
             throw new OutOfBoundsException("Key $key is not part of fixed sheet");
         }

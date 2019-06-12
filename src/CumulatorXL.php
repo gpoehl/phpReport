@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of the gpoehl/phpReport library.
+ *
+ * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
+ * @copyright ©2019 Günter Pöhl
+ * @link      https://github.com/gpoehl/phpReport/readme
+ * @author    Günter Pöhl  <phpReport@gmx.net>
+ */
 declare(strict_types=1);
 
 namespace gpoehl\phpReport;
@@ -10,9 +18,8 @@ namespace gpoehl\phpReport;
  * and max() values are identified.
  * Detection and maintaining min and max values comes with the cost of reduced
  * performance. When min or max value is not needed use other Cumulator class. 
- * @author Günter
  */
-class CumulatorXL extends Cumulator implements MinMaxInterface {
+class CumulatorXL extends Cumulator {
 
     private $min = [];      // Minimum value per level. Key is level
     private $max = [];      // Maximum value per level. Key is level
@@ -21,6 +28,22 @@ class CumulatorXL extends Cumulator implements MinMaxInterface {
         parent::__construct($mp, $maxLevel);
         // Initialize arrays for cumulated values, counters and min / max only on $maxLevel
         $this->initializeValue(0, $maxLevel);
+    }
+
+    /**
+     * Returns always true. Counters for notNull and notZero values are implemented. 
+     * @return boolean
+     */
+    public function hasCounter(): bool {
+        return true;
+    }
+
+    /**
+     * Returns always true. Methods to handle min and max values are implemented. 
+     * @return boolean
+     */
+    public function hasMinMax(): bool {
+        return true;
     }
 
     /**
@@ -87,7 +110,7 @@ class CumulatorXL extends Cumulator implements MinMaxInterface {
      * @return numeric The running total of added values from the requested level down
      * to the lowest level
      */
-    public function min(int $level = null) {
+    public function min($level = null) {
         $min = null;
         for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
             if (isset($this->min[$i]) && ($this->min[$i] < $min || $min === null )) {
@@ -97,7 +120,7 @@ class CumulatorXL extends Cumulator implements MinMaxInterface {
         return $min;
     }
 
-    public function max(int $level = null) {
+    public function max($level = null) {
         $max = null;
         for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
             if (isset($this->max[$i]) && ($this->max[$i] > $max )) {

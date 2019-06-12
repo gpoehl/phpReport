@@ -1,49 +1,116 @@
 <?php
 
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the gpoehl/phpReport library.
+ *
+ * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
+ * @copyright ©2019 Günter Pöhl
+ * @link      https://github.com/gpoehl/phpReport/readme
+ * @author    Günter Pöhl  <phpReport@gmx.net>
  */
+
+declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
 /**
- * Description of Helper
- *
- * @author Günter
+ * Collection of static helper methods
  */
 class Helper {
- /**
-     * Find the correct configuration array. When no parameter on a group is
-     * set in config then the generic config parameter is used. 
-     * @param $key Group $group
-     * @param array $config
-     * @return array The configuration for the given grouop
+
+    // pattern to check for valid method names (taken from php documentation)
+    // pattern_n extends pattern to accept also the % sign
+    static $pattern = "/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/";
+    static $pattern_n = "/^[a-zA-Z_%\x7f-\xff][a-zA-Z0-9_%\x7f-\xff]*$/";
+
+    /**
+     * Evaluate the action typ and build the method action.
+     * Depending of the value of $baseAction the action typ will be set.
+     * @param mixed $baseAction One the actions set during configuration 
+     * @param string $key The action key
+     * @param bool $allowPercentSign Is the % sign allowed in $baseAction
+     * @return array Array having the action typ and $baseAction 
+     * @throws InvalidArgumentException
      */
-    static function getConfigValue($key, $config) {
-        if (isset($config[1])) {
-            // Parameter for individual methods exists
-            if (array_key_exists($key, $config[1])) {
-                // When group has individual parameter take this one else take
-                // the generic parameter on key = 0.
-                return $config[1][$key];
+    public static function buildMethodAction($baseAction, string $key, bool $allowPercentSign = false) {
+         if ($baseAction === false) {
+            return [Report::METHOD, $baseAction];
+        }
+        if ($baseAction instanceOf \Closure) {
+            return [Report::CLOSURE, $baseAction];
+        }
+        if (is_array($baseAction)) {
+            switch (count($baseAction)) {
+                case 1:
+                    $method = end($baseAction);
+                    if (self::isValidName($method, true)) {
+                        return [Report::METHOD, $method];
+                    }
+                    throw new \InvalidArgumentException("Invalid method name '$method' for $key action.");
+                case 2:
+                    if (self::isValidName($baseAction[1], true)) {
+                        return [Report::CALLABLE, $baseAction];
+                    }
+                    throw new \InvalidArgumentException("Second parameter in callable '{$baseAction[1]}' is invalid for '$key'.");
+                default:
+                    throw new \InvalidArgumentException("Callable array for '$key' has more than two elements");
             }
-            $action = $config[0];
-//        } else {
-//            // No individual configuration is declared. Parameter is valid for
-//            // all keys
-//            $action = $config[0];
         }
-        $action = $config[0];
-        if ($action < Report::CALLABLE) {
-            return $action;
-        }
-        // Replace % only on class,method arrary or method
-        $action[1] = str_replace('%', $key, $action[1]);
-        return $action;
+        // Base action is not an array or closure
+        return self::buildMethodActionFromString($baseAction, $key, $allowPercentSign);
     }
 
-  
+    /**
+     * Check if the given value should be handled as a method name or as a string 
+     * Result of this check is returned in the first array element.
+     * A colon (:) at beginning of value forces the value to be a normal string.
+     * In this case the colon is truncated.
+     * @param string $value The string to be checked
+     * @return array First element is a boolean indicating if $value is a
+     * string while second value has the value without trailing colon.
+     */
+    private static function buildMethodActionFromString(string $baseAction, string $key, bool $allowPercentSign): array {
+        if ($key === 'noGroupChange_n') {
+            if (substr($baseAction, 0, 8) === 'warning:') {
+                return [Report::WARNING, substr($baseAction, 8)];
+            }
+            if (substr($baseAction, 0, 6) === 'error:') {
+                return [Report::ERROR, substr($baseAction, 6)];
+            }
+        }
+        if (substr($baseAction, 0, 1) === ':') {
+            return [Report::STRING, substr($baseAction, 1)];
+        }
+        return (self::isValidName($baseAction, $allowPercentSign)) ? [Report::METHOD, $baseAction] : [Report::STRING, $baseAction];
+    }
+
+    /**
+     * Verify if a given string can be used as attribute or method name
+     * @param string $name The name to be verified
+     * @param bool $allowPercentSign Is the % sign allowed in $name. Defaults to false.
+     * @return bool True when $name is valid, false when not.
+     */
+    public static function isValidName(string $name, bool $allowPercentSign = false): bool {
+        if ($allowPercentSign) {
+            return (bool) preg_match(self::$pattern_n, $name);
+        } else {
+            return (bool) preg_match(self::$pattern, $name);
+        }
+    }
+
+    /**
+     * Replace percent sign (%) in method action
+     * % sign in callables will not be replaced. 
+     * @param string|ing $replacemet The replacement for the %sign
+     * @param array $methodAction Method action is an array having the action type
+     * in the first element and the action in the second element.
+     * @return array The modified method action
+     */
+    public static function replacePercent($replacemet, array $methodAction) {
+        if (is_string($methodAction[1]) && $methodAction[0] <> Report::CLOSURE) {
+            $methodAction[1] = str_replace('%', $replacemet, $methodAction[1]);
+        }
+        return $methodAction;
+    }
 
 }

@@ -1,22 +1,36 @@
 <?php
 
-declare(strict_types=1);
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the gpoehl/phpReport library.
+ *
+ * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
+ * @copyright ©2019 Günter Pöhl
+ * @link      https://github.com/gpoehl/phpReport/readme
+ * @author    Günter Pöhl  <phpReport@gmx.net>
  */
+
+declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
 /**
- * Description of SummarizeCollector
- *
- * @author Günter
+ * AbstractCollector is the base class of Collector and sheet classes.
+ * Class is declared as abstract to avoid instantiation. It has no abstract
+ * methods.
  */
 abstract class AbstractCollector implements \ArrayAccess {
 
-    public $items=[];     // Array holding assigned items
+    public $items = [];     // Array holding assigned items
+    private $mapper = [];   // See setMapper method
+
+    /**
+     * Mapper allows mapping of string keys to int keys to access items by
+     * string key.
+     * @param array $mapper Key must be a string, value the int key of $items
+     */
+    public function setMapper(array $mapper) {
+        $this->mapper = $mapper;
+    }
 
     /**
      * Allow direct access to item via $collector->itemKey 
@@ -24,6 +38,9 @@ abstract class AbstractCollector implements \ArrayAccess {
      * @return mixed Returns the requested item
      */
     public function __get($key) {
+        if (is_string($key) && isset($this->mapper[$key])) {
+            $key = $this->mapper[$key];
+        }
         if (isset($this->items[$key])) {
             return ($this->items[$key]);
         }
@@ -44,6 +61,9 @@ abstract class AbstractCollector implements \ArrayAccess {
     }
 
     public function offsetGet($offset) {
+        if (is_string($offset) && isset($this->mapper[$offset])) {
+            $offset = $this->mapper[$offset];
+        }
         if (isset($this->items[$offset])) {
             return ($this->items[$offset]);
         }
@@ -69,22 +89,22 @@ abstract class AbstractCollector implements \ArrayAccess {
         }
     }
 
-    public function sum(int $level = null, bool $asArray = false) {
+    public function sum($level = null, bool $asArray = false) {
         $result = $this->total('sum', $level);
         return ($asArray) ? $result : array_sum($result);
     }
 
-    public function nn(int $level = null, bool $asArray = false) {
+    public function nn($level = null, bool $asArray = false) {
         $result = $this->total('nn', $level);
         return ($asArray) ? $result : array_sum($result);
     }
 
-    public function nz(int $level = null, bool $asArray = false) {
+    public function nz($level = null, bool $asArray = false) {
         $result = $this->total('nz', $level);
         return ($asArray) ? $result : array_sum($result);
     }
 
-    public function min(int $level = null, bool $asArray = false) {
+    public function min($level = null, bool $asArray = false) {
         $result = $this->total('min', $level);
         if ($asArray) {
             return $result;
@@ -94,12 +114,12 @@ abstract class AbstractCollector implements \ArrayAccess {
         return (empty($wrk)) ? null : min($wrk);
     }
 
-    public function max(int $level = null, bool $asArray = false) {
+    public function max($level = null, bool $asArray = false) {
         $result = $this->total('max', $level);
         return ($asArray) ? $result : (empty($result) ? null : max($result));
     }
 
-    protected function total(string $typ, int $level = null): array {
+    protected function total(string $typ, $level = null): array {
         $sum = [];
         foreach ($this->items as $key => $item) {
             $sum[$key] = $item->$typ($level);
