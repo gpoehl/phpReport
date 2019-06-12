@@ -65,9 +65,10 @@ Configuration allows adopting method names to meet your organisation rules.
 
 ```php
 <?php
-
+// Example of creating a new report and setting new rule for 'noData' action. 
 $rep = new \gpoehl\phpReport($this, [
-    'actions' => ['noData' => 'No data found.'],      // print string when no data was found instead of calling noData method
+    // instead of calling the noData action return given string when no data was found
+    'actions' => ['noData' => 'No data found.'],      
     ]);
 
 ```
@@ -76,7 +77,7 @@ $rep = new \gpoehl\phpReport($this, [
 Online manual
 =============
 
-Online manual is available at https://phpReport.github.io/.
+Online manual is not yet available. Soon you'l find it at https://phpReport.github.io/.
 
 For general questions or troubleshooting please use the [phpReport tag](https://stackoverflow.com/questions/tagged/phpReport) at Stack Overflow (and not the project's issue tracker).
 
