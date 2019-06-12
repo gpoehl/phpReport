@@ -54,8 +54,8 @@ class Report {
     public $rc;
     // @property Collector $gc Collector for group counters
     public $gc;
-    // @property Collector $t Collector of sum attributes and sheets to be cumulated
-    public $t;
+    // @property Collector $total Collector of sum attributes and sheets to be cumulated
+    public $total;
     public $userConfig;          // Optional user configuration. @see Configurator for details.   
     public $activeMethod;              // The current method (build by getCallable) 
       
@@ -99,8 +99,8 @@ class Report {
         $this->collector->addItem($this->rc, 'rc');
         $this->mp->gc = $this->gc = Factory::collector();
         $this->collector->addItem($this->gc, 'gc');
-        $this->mp->t = $this->t = Factory::collector();
-        $this->collector->addItem($this->t, 't');
+        $this->mp->total = $this->total = Factory::collector();
+        $this->collector->addItem($this->total, 'total');
         $this->dims[] = $this->dim = new Dimension();
         return $this;
     }
@@ -213,7 +213,7 @@ class Report {
         $typ = ($typ) ?? self::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $cum = Factory::cumulator($this->mp, $maxLevel, $typ);
-        $this->t->addItem($cum, $name);
+        $this->total->addItem($cum, $name);
         if ($dataAttribute !== false) {
             $dim = end($this->dims);
             $dim->sumAttributes[$name] = $value;
@@ -237,7 +237,7 @@ class Report {
         $typ = ($typ) ?? self::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $cum = Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey);
-        $this->t->addItem($cum, $name);
+        $this->total->addItem($cum, $name);
         if ($dataAttribute !== false) {
             $dim = end($this->dims);
             $dim->sheetAttributes[$name] = [$value, $key];
@@ -529,22 +529,21 @@ class Report {
      */
     private function addValues($row, $rowKey): void {
         $this->rc->items[$this->currentDimID]->inc();
-        if ($row instanceof \stdClass) {
-//        if (is_object($row)) {
+        if (is_object($row)) {
             foreach ($this->dim->sumAttributes as $name => $attr) {
-                $this->t->items[$name]->add(($attr instanceof \Closure) ? $attr($row, $rowKey) : $row->$attr);
+                $this->total->items[$name]->add(($attr instanceof \Closure) ? $attr($row, $rowKey) : $row->$attr);
             }
             foreach ($this->dim->sheetAttributes as $name => $attr) {
                 $key = ($attr[0] instanceof \Closure) ? $attr[0]($row, $rowKey) : $row->{$attr[0]};
-                $this->t->items[$name]->add($key, ($attr[1] instanceof \Closure) ? $attr[1]($row, $rowKey) : $row->{$attr[1]});
+                $this->total->items[$name]->add($key, ($attr[1] instanceof \Closure) ? $attr[1]($row, $rowKey) : $row->{$attr[1]});
             }
         } else {
             foreach ($this->dim->sumAttributes as $name => $attr) {
-                $this->t->items[$name]->add(($attr instanceof \Closure) ? $attr($row, $rowKey) : $row[$attr]);
+                $this->total->items[$name]->add(($attr instanceof \Closure) ? $attr($row, $rowKey) : $row[$attr]);
             }
             foreach ($this->dim->sheetAttributes as $name => $attr) {
                 $key = ($attr[0] instanceof \Closure) ? $attr[0]($row, $rowKey) : $row[$attr[0]];
-                $this->t->items[$name]->add($key, ($attr[1] instanceof \Closure) ? $attr[1]($row, $rowKey) : $row[$attr[1]]);
+                $this->total->items[$name]->add($key, ($attr[1] instanceof \Closure) ? $attr[1]($row, $rowKey) : $row[$attr[1]]);
             }
         }
     }

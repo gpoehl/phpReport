@@ -21,7 +21,7 @@ class MajorProperties {
     public $level = 0;          // The current execution level
     public $rc;                 // Collector object of row counters
     public $gc;                 // Collector object of group counters  
-    public $t;                 // Collector object of sum and sheet cumulators  
+    public $total;              // Collector object of sum and sheet cumulators  
     public $groupLevel = [];    // Holds only the group level by groupname.
     public $detailLevel;        // Level for details 
 

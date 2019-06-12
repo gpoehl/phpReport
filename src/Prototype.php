@@ -301,12 +301,12 @@ TABLE1;
      * @return string html table of values for attributes defined by sum() or sheet() methods.
      */
     private function renderTotals(): string {
-        if (empty($this->rep->t->items)) {
+        if (empty($this->rep->total->items)) {
             return "\n" . sprintf($this->contentTable, 'Calculated attributes:', 'Nothing to be summarized.');
         }
         $out = "<table border='1'" . ' style="border-collapse: collapse">'
                 . "\n<tr><th>Name</th><th>sum</th><th>nn</th><th>nz</th><th>min</th><th>max</th></tr>";
-        foreach ($this->rep->t->items as $name => $attr) {
+        foreach ($this->rep->total->items as $name => $attr) {
             $out .= '<tr><td>' . $name . '</td>';
             $out .= '<td>' . $attr->sum() . '</td>';
             if ($attr->hasCounter()) {
@@ -333,7 +333,7 @@ TABLE1;
      * @return string html table of total values
      */
     private function renderSheets(int $level): string {
-        if (!isset($this->rep->t->sheets)) {
+        if (!isset($this->rep->total->sheets)) {
             return '';
         }
         $out = '';
