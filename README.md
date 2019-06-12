@@ -30,23 +30,23 @@ $ composer require gpoehl/phpReport
 Usage
 =====
 
-The simplest usage of the library would be as follows:
+A typical usage of the library would be as follows:
 
 ```php
 <?php
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-// Assuming your data is stored in $data
+// Assuming your data is stored in variable $data
 
-$rep = new \gpoehl\phpReport($this)
-$rep->group('attribute1')
+$rep = (new \gpoehl\phpReport($this))
+->group('attribute1')
 ->group('attribute2')   
 ->sum('attribute3')
 ->sum(function ($row){return substr ($row, 4,5);})   // closures can be used to get values
 ->setPrototyp(phpReport::all)                        // only for demonstration and testing
 ->run($data);
-echo $rep->output;
+echo $rep;
 
 ```
 
