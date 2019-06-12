@@ -3,10 +3,11 @@
 declare(strict_types=1);
 
 /**
- * Unit test of Cumulator
- * @author Guenter
+ * Unit test of CumulatorXS class
  */
-use gpoehl\backbone\Factory;
+use gpoehl\phpReport\Factory;
+use gpoehl\phpReport\Report;
+use PHPUnit\Framework\Error\Error;
 use PHPUnit\Framework\TestCase;
 
 class CumulatorXSTest extends TestCase {
@@ -14,16 +15,30 @@ class CumulatorXSTest extends TestCase {
     public $mp;
     protected $stack;
 
-    public function setUp() {
+    public function setUp(): void {
         $mp = Factory::properties();
+        $mp->level = 2;
+        $mp->detailLevel = 3;
         $this->mp = $mp;
-        $this->stack = Factory::cumulator($mp, 2, Factory::XS);
+        $this->stack = Factory::cumulator($mp, 2, Report::XS);
+    }
+
+    public function testHasCounter() {
+        $this->assertFalse($this->stack->hasCounter());
+    }
+
+    public function testHasMinMax() {
+        $this->assertFalse($this->stack->hasMinMax());
     }
 
     public function testAddValues() {
-        $arr = $this->additionProvider();
+        $arr = $arr = [
+            [2, 2],
+            [10, 12],
+            [4, 16],
+        ];
         foreach ($arr as $parm) {
-            list ($val, $sum) = $parm;
+            list($val, $sum) = $parm;
             $this->stack->add($val);
             $this->assertSame($sum, $this->stack->sum());
             // higer level has same value
@@ -37,10 +52,8 @@ class CumulatorXSTest extends TestCase {
         $this->assertSame(2, $this->stack->sum());
     }
 
-    /**
-     * @expectedException PHPUnit\Framework\Error\Error
-     */
-    public function testAddString() {
+    public function testAddStringFailure() {
+        $this->expectException(Error::class);
         $this->stack->add('abc');
     }
 
@@ -49,9 +62,10 @@ class CumulatorXSTest extends TestCase {
         $this->stack->add($amount);
         $this->assertSame($amount, $this->stack->sum());
         $this->assertSame($amount, $this->stack->sum(2));
-        $this->mp->level = 2;
+
         $this->stack->cumulateToNextLevel();
         $this->assertSame(0, $this->stack->sum());
+
         $this->assertSame($amount, $this->stack->sum($this->mp->level - 1));
         $this->stack->add($amount);
         $this->stack->cumulateToNextLevel();
@@ -72,22 +86,24 @@ class CumulatorXSTest extends TestCase {
         $this->assertSame(0, $this->stack->sum(99));
     }
 
-    public function testCounter() {
-        $this->assertSame(null, $this->stack->nn());
-        $this->assertSame(null, $this->stack->nz());
+    public function testNNCounterFailure() {
+        $this->expectExceptionMessage('Call to undefined method');
+        $this->stack->nn();
     }
 
-    public function testMinMax() {
-        $this->assertSame(null, $this->stack->min());
-        $this->assertSame(null, $this->stack->max());
+    public function testNZCounterFailure() {
+        $this->expectExceptionMessage('Call to undefined method');
+        $this->stack->nz();
     }
 
-    public function additionProvider() {
-        return [
-            [2, 2],
-            [10, 12],
-            [4, 16],
-        ];
+    public function testMinFailure() {
+        $this->expectExceptionMessage('Call to undefined method');
+        $this->stack->min();
+    }
+
+    public function testMaxFailure() {
+        $this->expectExceptionMessage('Call to undefined method');
+        $this->stack->max();
     }
 
 }

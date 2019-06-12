@@ -3,22 +3,20 @@
 declare(strict_types=1);
 
 /**
- * Description of GroupTest
- *
- * @author Guenter
+ * Unit test of FixedSheet class
  */
-use gpoehl\backbone\Factory;
-use gpoehl\backbone\CumulatorXS;
+use gpoehl\phpReport\CumulatorXS;
+use gpoehl\phpReport\Factory;
+use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
-class BucketFixedTest extends TestCase {
+class FixedSheetTest extends TestCase {
 
     public $b;
 
-    public function setUp() {
+    public function setUp(): void {
         $mp = Factory::properties();
-        $cumulator = Factory::cumulator($mp, 3, Factory::XS);
-        $this->b = Factory::sheet($cumulator, 1, 6);
+        $this->b = Factory::sheet($mp, 3, Report::XS, 1, 6);
     }
 
     public function testInstantiate() {
@@ -26,14 +24,16 @@ class BucketFixedTest extends TestCase {
         $this->assertInstanceOf(CumulatorXS::class, $this->b->getItem(1));
     }
 
-     public function testAddItemViaArrayAccessThrowsException() {
+    public function testAddItemViaArrayAccessThrowsException() {
         $this->expectException(Exception::class);
-        $this->b[10]= 55;
+        $this->b[10] = 55;
     }
-    public function testAddItemThrowsException() {
+
+    public function testAddThrowsException() {
         $this->expectException(Exception::class);
         $this->b->add('NewItem1', 1);
     }
+
     public function testAskForMissingKey() {
         $this->assertSame(0, $this->b->rsum('NotExistingItem'));
         $this->assertFalse(isset($this->b->NotExistingItem), "rsum does not add not exitsting items");

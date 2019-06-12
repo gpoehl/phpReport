@@ -1,32 +1,42 @@
 <?php
 
 declare(strict_types=1);
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 /**
- * Description of FactoryTest
- *
- * @author Günter
+ * Unit test of Factory class
  */
-use gpoehl\backbone\Factory;
+use gpoehl\phpReport\Collector;
+use gpoehl\phpReport\Cumulator;
+use gpoehl\phpReport\CumulatorXL;
+use gpoehl\phpReport\CumulatorXS;
+use gpoehl\phpReport\Factory;
+use gpoehl\phpReport\Sheet;
+use gpoehl\phpReport\FixedSheet;
+use gpoehl\phpReport\MajorProperties;
+use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
 class FactoryTest extends TestCase {
 
     public function testGetCumulatorClass() {
         $mp = Factory::properties();
-        $this->assertInstanceOf(\gpoehl\backbone\MajorProperties::class,$mp);
-         $this->assertInstanceOf(\gpoehl\backbone\Cumulator::class, Factory::cumulator($mp, 2, Factory::REGULAR));
-         $this->assertInstanceOf(\gpoehl\backbone\CumulatorXS::class, Factory::cumulator($mp, 2, Factory::XS));
-         $this->assertInstanceOf(\gpoehl\backbone\CumulatorXL::class, Factory::cumulator($mp, 2, Factory::XL));
-         $this->assertInstanceOf(\gpoehl\backbone\Collector::class, Factory::collector());
-         $test = Factory::collector();
-         $this->assertInstanceOf(\gpoehl\backbone\Collector::class, $test);
+        $this->assertInstanceOf(MajorProperties::class, $mp);
+        $this->assertInstanceOf(Cumulator::class, Factory::cumulator($mp, 2, Report::REGULAR));
+        $this->assertInstanceOf(CumulatorXS::class, Factory::cumulator($mp, 2, Report::XS));
+        $this->assertInstanceOf(CumulatorXL::class, Factory::cumulator($mp, 2, Report::XL));
+        $this->assertInstanceOf(Collector::class, Factory::collector());
+        $test = Factory::collector();
+        $this->assertInstanceOf(Collector::class, $test);
     }
 
+    public function testInstantiateSheet() {
+        $mp = Factory::properties();
+        $this->assertInstanceOf(Sheet::class, Factory::sheet($mp, 2, Report::REGULAR));
+    }
+
+    public function testInstantiateFixedSheet() {
+        $mp = Factory::properties();
+        $this->assertInstanceOf(FixedSheet::class, Factory::sheet($mp, 2, Report::REGULAR, 0, 5));
+    }
 
 }

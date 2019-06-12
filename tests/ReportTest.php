@@ -3,212 +3,375 @@
 declare(strict_types=1);
 
 /**
- * Description of GroupTest
- *
- * @author Guenter
+ * Unit test of Report class.
+ * For tests with multiple dimensions see ReportMultipleDimensionTest file
  */
-use gpoehl\backbone\Backbone;
+use gpoehl\phpReport\Collector;
+use gpoehl\phpReport\CumulatorXS;
+use gpoehl\phpReport\MajorProperties;
+use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
 class ReportTest extends TestCase {
 
-//    public function testRunWithoutData() {
-//        $t1 = new BB1();
-//        $bb = new Backbone($t1);
-//        $bb->setCaller(Backbone::CALL_ALWAYS);
-//        $bb->run(null);
-//        $this->assertSame('init, header, ' . $bb->noData . 'footer, finalize, ', $bb->output);
-//        $bb1 = new Backbone($t1, ['noData' => 'sorry, no data']);
-//        $bb1->run(null);
-//        $this->assertContains('sorry, no data', $bb1->output);
-//    }
-//
-//    // Check which methods (by groupIndex = level) will be called
-//    public function testFlowByGroupIndex() {
-//        $t1 = new BB1();
-//        $bb = new Backbone($t1, ['buildMethodsByGroupName' => false]);
-//        $bb->setCaller(Backbone::CALL_ALWAYS);
-//        $bb->next(['G1A', 'G2A', 1, 2]);
-//        $this->assertSame('init, header, header_1, header_2, detail, ', $bb->output);
-//        $bb->output = null;
-//        $bb->next(['G1A', 'G2B', 1, 2]);
-//        $this->assertSame('footer_2, header_2, detail, ', $bb->output);
-//        $bb->output = null;
-//        $bb->next(['G1A', 'G2B', 1, 2]);
-//        $this->assertSame('detail, ', $bb->output);
-//        $bb->output = null;
-//        $bb->next(['G1B', 'G2A', 1, 2]);
-//        $this->assertSame('footer_2, footer_1, header_1, header_2, detail, ', $bb->output);
-//        $bb->output = null;
-//        $bb->end();
-//        $this->assertSame('footer_2, footer_1, footer, finalize, ', $bb->output);
-//    }
-//
-//    // Check which methods (by groupName) will be called
-//    public function testFlowByGroupName() {
-//        $t1 = new BB1();
-//        $bb = new Backbone($t1);
-//        $bb->setCaller(Backbone::CALL_ALWAYS);
-//        $bb->next(['G1A', 'G2A', 1, 2]);
-//        $this->assertSame('init, header, header_G1, header_g2, detail, ', $bb->output);
-//        $bb->output = null;
-//        $bb->end();
-//        $this->assertSame('footer_g2, footer_G1, footer, finalize, ', $bb->output);
-//    }
-//
-//    // Verify that ucfirst is also working
-//    public function testFlowByGroupNameAndUcfirst() {
-//        $t1 = new BB1();
-//        $bb = new Backbone($t1, ['ucfirstGroupName' => true]);
-//        $bb->setCaller(Backbone::CALL_ALWAYS);
-//        $bb->next(['G1A', 'G2A', 1, 2]);
-//        $this->assertSame('init, header, header_G1, header_G2, detail, ', $bb->output);
-//        $bb->output = null;
-//        $bb->end();
-//        $this->assertSame('footer_G2, footer_G1, footer, finalize, ', $bb->output);
-//    }
-//
-//    public function testWithoutDefinedGroups() {
-//        $t1 = new BB1NoGroups();
-//        $bb = new Backbone($t1);
-//        $bb->run([
-//            ['G1-1', 'G2-1', 1, 0, null]
-//        ]);
-//        $this->assertEmpty($bb->output);
-//    }
-//    public function testOneDimension() {
-//        $t1 = new BB1();
-//        $bb = new Backbone($t1);
-//        $bb->next(['G1-1', 'G2-1', 1, 2, 0, 'other']);
-//        $this->assertSame(1, $bb->rowCount());
-//        $this->assertSame(1, $bb->sum('A'));
-//        $this->assertSame(2, $bb->sum('B'));
-//        $bb->next(['G1-1', 'G2-1', 7, 2, 0, 'other']);
-//        $this->assertSame(8, $bb->sum('A'));
-//        // group change
-//        $bb->next(['G1-2', 'G2-1', 3, 2, 0, 'other']);
-//        $this->assertSame(3, $bb->sum('A'));
-//        $this->assertSame(6, $bb->sum('B', 0));  // grand total
-//        $bb->end();
-//        $this->assertSame(3, $bb->rowCount());
-//        $this->assertSame(11, $bb->sum('A'));
-//    }
-    public function testTwoDimensions() {
-        $t2 = new BB2();
-        $bb = new Backbone($t2);
-        $bb->next(['G1-1', 'G2-1', 'other', 2, 4, [['G3-1', 2, 4], ['G3-1', 3, 6], ['G3-1', 4, 7]]]);
-        $this->assertSame(3, $bb->rowCount());
-//        $this->assertSame(1, $bb->rowCount(1));
-//        $this->assertSame(4, $bb->rowCount(0, [], false));
-//        $this->assertSame(2, $bb->sum('A'));
-        $this->assertSame(9, $bb->sum('C'));
-        $bb->next(['G1-1', 'G2-2', 'other', 3, 5, [['G3-1', 3, 5], ['G3-1', 2, 1], ['G3-1', 4, 8]]]);
-        $this->assertSame(9, $bb->sum('B',1));
-        // group change
-        $bb->next(['G1-2', 'G2-1', 'other', 4, 6, [['G3-1', 6, 7], ['G3-2', 4, 7], ['G3-2', 5, 9]]]);
-        $this->assertSame(4, $bb->sum('A', 1));
-        $this->assertSame(54, $bb->sum('D', 0));  // grand total
-        $bb->end();
-        $this->assertSame(3, $bb->rowCount());
-        $this->assertSame(9, $bb->sum('A'));
+    public function testConstructor() {
+        $rep = (new Report($this->getBase(), [
+                    'actions' => ['noData' => 'nodata'],
+                    'userConfig' => 'myConfig',
+        ]));
+        $this->assertInstanceOf(MajorProperties::class, $rep->mp);
+        $this->assertInstanceOf(Collector::class, $rep->rc);
+        $this->assertInstanceOf(Collector::class, $rep->gc);
+        $this->assertInstanceOf(Collector::class, $rep->t);
+        $this->assertSame('myConfig', $rep->userConfig);
     }
 
-    public function testRunWithoutDataInDim1() {
-//        $t1 = new bb2();
-//        $bb = new Backbone($t1);
-//        $bb->run(
-//                [
-//                    ['G1A', 'G2A', 1, 2, null],
-//                    ['G1A', 'G2B', 2, 3, null],
-//                    ['G1B', 'G1A', 2, 3, null],
-//                ]
-//        );
-//        $this->assertStringStartsWith($bb->noData, $bb->output);
+    /**
+     * @dataProvider noDataProvider
+     */
+    public function testNoData($data, $expected) {
+        $rep = (new Report($this->getBase(), ['actions' => ['noData' => 'nodata']]))
+                ->setCallOption(Report::CALL_ALWAYS);
+        $rep->run($data);
+        $this->assertInstanceOf(CumulatorXS::class, $rep->rc[0]);
+        $this->assertSame(['total' => 0], $rep->mp->groupLevel);
+        $this->assertSame(1, $rep->mp->detailLevel);
+        $this->assertSame('init, totalHeader, ' . $expected . 'totalFooter, close, ', $rep->output);
     }
 
-    public function testRunWithoutDataInDim2() {
-        $bb = new Backbone($this, ['methods'=>['noData' =>':nothing']]);
-        $bb->run(null);
-        $this->assertEquals('nothing', $bb->output);
-    }
-
-    public function fetchValues($row) {
-        return ['groupBy' => ['G1' => $row[0], 'G2' => $row[1]]
-            , 'calculate' => ['A' => $row[2], 'B' => $row[3]]
-        ];
-    }
-
-}
-
-/**
- * Basic test class for data sets with one dimension
- */
-class BB1 {
-
-    public function __call($name, $arguments) {
-        return $name . ', ';
-    }
-
-    public function fetchValues($row) {
-        return ['groupBy' => ['G1' => $row[0], 'g2' => $row[1]]
-            , 'calculate' => ['A' => $row[2], 'B' => $row[3]]
-        ];
-    }
-
-}
-
-// No groups defined in fetch Values
-class BB1NoGroups extends BB1 {
-
-    public function fetchValues($row) {
+    public function noDataProvider() {
         return [
-            'calculate' => ['A' => $row[2], 'B' => $row[3]]
+            [null, 'nodata, ', 'Data set equals null'],
+            [[], 'nodata, ', 'Data set is an empty array'],
         ];
     }
 
-}
+    public function testStringAsData() {
+        $this->expectException(Error::class);
+        (new Report($this->getBase()))->run('');
+    }
 
-/**
- * Basic test class for data sets with two dimensions
- */
-class BB2 {
+    public function testOneRowNoGroups() {
+        $rep = (new Report($this->getBase()))
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run(['A']);
+        $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
+    }
 
-    public function fetchValues($row) {
-        return ['groupBy' => ['G1' => $row[0], 'G2' => $row[1]]
-            , 'calculate' => ['A' => $row[3], 'B' => $row[4]]
-            , 'nextDim' =>['data' =>$row[5] ?? null]
+    public function testOneRowFalseFinalize() {
+        $rep = (new Report($this->getBase()))
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run(['A'], false)
+                ->end();
+        $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
+    }
+
+    public function testCallEndMethodWhenFinalizeIsTrueFails() {
+        $this->expectException(Error::class);
+        $rep = (new Report($this->getBase()))
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run(['A'])               // run returns a string
+                ->end();                   // method chaining works only on objects.
+    }
+
+    public function testChunkOfRowsWithOptionFinalizeIsFalseAndNext() {
+        $rep = (new Report($this->getBase()))
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run([['A'], ['B']], false)
+                ->next(['C'])
+                ->end();
+        $this->assertSame('init, totalHeader, detail, detail, detail, totalFooter, close, ', $rep);
+    }
+
+    public function testNextForOneRowNoGroups() {
+        $rep = (new Report($this->getBase()))
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run(null, false)
+                ->next(['A'])
+                ->end();
+        $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
+    }
+
+    public function testGroupsOnOneRow() {
+        $rep = (new Report($this->getBase()))
+                ->group('a', 'firstGroup')
+                ->group('b', 'secondGroup')
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run([['firstGroup' => 'A', 'secondGroup' => 'X']]);
+        $this->assertSame('init, totalHeader, aHeader, bHeader, detail, bFooter, aFooter, totalFooter, close, ', $rep);
+    }
+
+    /**
+     * @dataProvider callOptionsProvider
+     */
+    public function testActionTypes($option, $ex1, $ex2, $ex3, $ex4, $ex5) {
+        $rep = (new Report($this->getBase(), [
+                    'actions' => [
+                        'init' => 'init', // normal method
+                        'totalHeader' => [$this->getOtherClass(), 'staticCallMethod'], // Static callable
+                        'noData' => [$this->getOtherClass(), 'callMethod'], // Object callable
+                        'totalFooter' => 'callMethod', // Normal method call
+                        'close' => function() {
+                            return 'closure';                           // Closure
+                        },
+                    ]]))
+                ->setCallOption($option)
+                ->run(null);
+        $this->assertStringContainsString($ex1, $rep);
+        $this->assertStringContainsString($ex2, $rep);
+        $this->assertStringContainsString($ex3, $rep);
+        $this->assertStringContainsString($ex4, $rep);
+        $this->assertStringContainsString($ex5, $rep);
+    }
+
+    public function callOptionsProvider() {
+        return [
+            [Report::CALL_ALWAYS, 'init, ', 'other method called static, ', 'other method called on object, ', 'my method called on object, ', 'closure'],
+            [Report::CALL_PROTOTYPE, '>init</th>', 'other method called static, ', 'other method called on object, ', 'my method called on object, ', 'closure'],
+            [Report::CALL_ALWAYS_PROTOTYPE, '>init</th>', '>totalHeader', '>noData</th>', '>totalFooter', '>close</th>'],
         ];
     }
 
-    public function fetchValues_1($row) {
-        return ['groupBy' => ['G3' => $row[0]]
-            , 'calculate' => ['C' => $row[1], 'D' => $row[2]]
-        ];
+    // No action will be executed when method call is requested and
+    // method does not exist in owner class
+    public function testNotExistingMethods() {
+        $rep = (new Report($this->getBase(), ['actions' => [
+                        'init' => 'init', // normal method
+                        'totalHeader' => [$this->getOtherClass(), 'staticCallMethod'], // Static callable
+                        'noData' => [$this->getBase(), 'callMethod'], // Object callable
+                        'totalFooter' => 'callMissing', // Missing method forces prototype
+                        'close' => function() {
+                            return 'closure';                           // Closure
+                        },
+                    ]]))
+                ->setCallOption(Report::CALL_EXISTING)
+                ->run(null);
+        $this->assertStringNotContainsString('init', $rep);
+        $this->assertStringContainsString('other method called static', $rep);
+        $this->assertStringContainsString('my method called on object', $rep);
+        $this->assertStringNotContainsString('totalFooter', $rep);
+        $this->assertStringContainsString('closure', $rep);
     }
 
-}
+    public function testPrototype() {
+        $proto = $this->getPrototype();
+        $rep = (new Report($proto))
+                ->group('a', 0)
+                ->setCallOption(Report::CALL_ALWAYS);
+        $proto->report = $rep;
+        $rep->run([['group a Value', 'X']]);
 
-/**
- * Basic test class for data sets with three dimensions
- */
-class BB3 {
-
-    public function fetchValues($row) {
-        return ['groupBy' => ['G1' => $row[0], 'G2' => $row[1]]
-            , 'calculate' => ['A' => $row[2], 'B' => row[3]]
-        ];
+        $out = $rep->output;
+        $this->assertStringContainsString('>init</th>', $out);
+        $this->assertStringContainsString('>totalHeader</th>', $out);
+        $this->assertStringContainsString('>groupHeader', $out);
+        $this->assertStringContainsString('>aHeader', $out);
+        $this->assertStringContainsString('>detail', $out);
+        $this->assertStringContainsString('>groupFooter', $out);
+        $this->assertStringContainsString('>aFooter', $out);
+        $this->assertStringContainsString('>totalFooter</th>', $out);
+        $this->assertStringContainsString('>close</th>', $out);
     }
 
-    public function fetchValues_1($row) {
-        return ['groupBy' => ['G1' => $row[0], 'G2' => $row[1]]
-            , 'calculate' => ['A' => $row[2], 'B' => row[3]]
-        ];
+    /**
+     * @dataProvider GroupValue_sum_and_rsum_Provider
+     */
+    public function testGroupValue_sum_and_rsum($a0, $a1, $a2, $a3, $row) {
+        $rep = (new Report($this->getBase()))
+                ->setCallOption(Report::CALL_PROTOTYPE)
+                ->group('A', $a0)
+                ->sum('B', $a1)
+                ->sheet('C', $a2, $a3);
+        $out = $rep->run([$row]);
+        $this->assertStringContainsString('groupAvalue', $out);
+        $this->assertSame(5, $rep->t['B']->sum());
+        $this->assertSame(7, $rep->t['C']->rsum(6));
     }
 
-    public function fetchValues_2($row) {
-        return ['groupBy' => ['G1' => $row[0], 'G2' => $row[1]]
-            , 'calculate' => ['A' => $row[2], 'B' => row[3]]
+    public function GroupValue_sum_and_rsum_Provider() {
+        $data = ['attr0' => 'groupAvalue', 'attr1' => 5, 'attr2' => 6, 'attr3' => 7];
+        return ([
+            [0, 1, 2, 3, array_values($data)],
+            ['attr0', 'attr1', 'attr2', 'attr3', $data],
+            [
+                function($row) {
+                    return $row['attr0'];
+                },
+                function($row) {
+                    return $row['attr1'];
+                },
+                function($row) {
+                    return $row['attr2'];
+                },
+                function($row) {
+                    return $row['attr3'];
+                },
+                $data],
+            [0, 1, 2, 3, (object) array_values($data)],
+            ['attr0', 'attr1', 'attr2', 'attr3', (object) ($data)],
+            [
+                function($row) {
+                    return $row->attr0;
+                },
+                function($row) {
+                    return $row->attr1;
+                },
+                function($row) {
+                    return $row->attr2;
+                },
+                function($row) {
+                    return $row->attr3;
+                },
+                (object) $data],
+                ] );
+    }
+
+    /**
+     * Make sure that no group method is called. One detail() method call per row. 
+     */
+    public function testNoGroups() {
+        $rep = (new Report($this->getBase()))
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run([['A'], ['B']]);
+        $this->assertSame('init, totalHeader, detail, detail, totalFooter, close, ', $rep);
+    }
+
+    public function testFlowWithGroupChangesOnMultipleGroups() {
+        $rep = (new Report($this->getBase()))
+                ->group('a', 'ga')
+                ->group('b', 'gb')
+                ->group('c', 'gc')
+                ->sum('d', 'a2')
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run(null, false);
+        // First row exectues all headers
+        $rep->next(['ga' => 11, 'gb' => 21, 'gc' => 31, 'a1' => 'a', 'a2' => 2]);
+        $this->assertSame('init, totalHeader, aHeader, bHeader, cHeader, detail, ', $rep->output);
+        $this->assertSame(1, $rep->gc->items[1]->sum(0));
+        $this->assertSame(1, $rep->gc->{1}->sum(0));
+        $this->assertSame(1, $rep->gc->a->sum(0));
+        $this->assertSame(1, $rep->gc->items[1]->sum('total'));
+
+        // Next row change on gc executes only cFooter and cHeader 
+        $rep->output = null;
+        $rep->next(['ga' => 11, 'gb' => 21, 'gc' => 32, 'a1' => 'a', 'a2' => 2]);
+        $this->assertSame('cFooter, cHeader, detail, ', $rep->output);
+
+        // Next row change on ga executes all footers and headers
+        $rep->output = null;
+        $rep->next(['ga' => 12, 'gb' => 21, 'gc' => 3, 'a1' => 'a', 'a2' => 2]);
+        $this->assertSame('cFooter, bFooter, aFooter, aHeader, bHeader, cHeader, detail, ', $rep->output);
+
+        // Next row change on gc executes only cFooter and cHeader 
+        $rep->output = null;
+        $rep->next(['ga' => 12, 'gb' => 21, 'gc' => 32, 'a1' => 'a', 'a2' => 2]);
+        $this->assertSame('cFooter, cHeader, detail, ', $rep->output);
+
+        // Next row change on gb executes gb and gc footers and headers
+        $rep->output = null;
+        $rep->next(['ga' => 12, 'gb' => 22, 'gc' => 99, 'a1' => 'a', 'a2' => 2]);
+        $this->assertSame('cFooter, bFooter, bHeader, cHeader, detail, ', $rep->output);
+
+        // End of job
+        $rep->output = null;
+        $rep->end();
+        $this->assertSame('cFooter, bFooter, aFooter, totalFooter, close, ', $rep->output);
+        $this->assertSame(5 * 2, $rep->t->d->sum());
+        $this->assertSame(5, $rep->rc->sum());
+        $this->assertSame(2, $rep->gc->a->sum(0));      // Total a groups
+        $this->assertSame(3, $rep->gc->b->sum(0));      // Total b groups
+        $this->assertSame(5, $rep->gc->c->sum(0));      // Total c groups
+    }
+
+    /**
+     * @dataProvider headerAndFooterActionProvider
+     */
+    public function testHeaderAndFooterActions($headerAction, $footerAction, $expectedHeader, $expectedFooter) {
+        $rep = (new Report($this->getBase()))
+                ->group('a', 'ga')
+                ->group('b', 'gb', $headerAction, $footerAction)
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run([['ga' => 1, 'gb' => 2]]);
+        $this->assertSame('init, totalHeader, aHeader, ' . $expectedHeader . 'detail, ' . $expectedFooter . 'aFooter, totalFooter, close, ', $rep);
+    }
+
+    public function headerAndFooterActionProvider() {
+        return [
+            'alternate header' => ['H, ', null, 'H, ', 'bFooter, '],
+            'alternate header, no footer' => ['H, ', false, 'H, ', ''],
+            'alternate footer' => [null, 'F, ', 'bHeader, ', 'F, '],
+            'no header, alternate footer' => [false, 'F, ', '', 'F, '],
+            'no header, noFooter' => [false, false, '', ''],
+            'Closure header and footer' => [
+                function ($val, $row) {
+                    return (string) $val . (string) $row['ga'] . ', ';
+                },
+                function ($val, $row) {
+                    return $val . $row['gb'] . ', ';
+                },
+                '21, ',
+                '22, '
+            ],
         ];
+    }
+    
+    public function testIsFirst(){
+    }
+
+    /**
+     * Basic class which executes actions called from Report
+     * @return anonymous class
+     */
+    public function getBase() {
+        return new class() {
+
+            public function __call($name, $arguments) {
+                return $name . ', ';
+            }
+
+            public static function staticCallMethod() {
+                return 'my method called static, ';
+            }
+
+            public static function callMethod() {
+                return 'my method called on object, ';
+            }
+        };
+    }
+
+    /**
+     * Other class which executes actions in other classes called from Report
+     * @return anonymous class
+     */
+    public function getOtherClass() {
+        return new class() {
+
+            public function __call($name, $arguments) {
+                return 'other_' . $name . ', ';
+            }
+
+            public static function staticCallMethod() {
+                return 'other method called static, ';
+            }
+
+            public function callMethod() {
+                return 'other method called on object, ';
+            }
+        };
+    }
+
+    /**
+     * Test class to call prototyp method in report object. 
+     */
+    public function getPrototype() {
+        return new class() {
+
+            public $report;
+
+            public function __call($name, $arguments) {
+                return $this->report->prototype();
+            }
+        };
     }
 
 }
