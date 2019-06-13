@@ -1,9 +1,9 @@
 {
     "name": "gpoehl/phpreport",
-    "description": "Create reports or batch like applications. Handles group changes, counts rows and groups and cumulates values per group.",
+    "description": "PHP framework to create reports, data grids or run data driven tasks.",
     "authors": [
         {
-            "name": "Guenter Poehl",
+            "name": "Guenter Poehl"
         }
     ],
  "require": {
