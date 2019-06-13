@@ -1,13 +1,11 @@
 {
-    "name": "gpoehl/phpReport",
+    "name": "gpoehl/phpreport",
     "description": "Create reports or batch like applications. Handles group changes, counts rows and groups and cumulates values per group.",
     "authors": [
         {
             "name": "Guenter Poehl",
-            "email": "phpreport@gmx.net"
         }
     ],
-    "minimum-stability": "dev",
  "require": {
         "php": "^7.3"
 },
