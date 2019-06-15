@@ -13,9 +13,8 @@
         "grouping",
         "group change",
         "total",
-        "subtotals",
-      
-    ],
+        "subtotals"
+     ],
  "require": {
         "php": "^7.3"
 },
