@@ -22,7 +22,7 @@ class ReportTest extends TestCase {
         $this->assertInstanceOf(MajorProperties::class, $rep->mp);
         $this->assertInstanceOf(Collector::class, $rep->rc);
         $this->assertInstanceOf(Collector::class, $rep->gc);
-        $this->assertInstanceOf(Collector::class, $rep->t);
+        $this->assertInstanceOf(Collector::class, $rep->total);
         $this->assertSame('myConfig', $rep->userConfig);
     }
 
@@ -184,8 +184,8 @@ class ReportTest extends TestCase {
                 ->sheet('C', $a2, $a3);
         $out = $rep->run([$row]);
         $this->assertStringContainsString('groupAvalue', $out);
-        $this->assertSame(5, $rep->t['B']->sum());
-        $this->assertSame(7, $rep->t['C']->rsum(6));
+        $this->assertSame(5, $rep->total['B']->sum());
+        $this->assertSame(7, $rep->total['C']->rsum(6));
     }
 
     public function GroupValue_sum_and_rsum_Provider() {
@@ -276,7 +276,7 @@ class ReportTest extends TestCase {
         $rep->output = null;
         $rep->end();
         $this->assertSame('cFooter, bFooter, aFooter, totalFooter, close, ', $rep->output);
-        $this->assertSame(5 * 2, $rep->t->d->sum());
+        $this->assertSame(5 * 2, $rep->total->d->sum());
         $this->assertSame(5, $rep->rc->sum());
         $this->assertSame(2, $rep->gc->a->sum(0));      // Total a groups
         $this->assertSame(3, $rep->gc->b->sum(0));      // Total b groups

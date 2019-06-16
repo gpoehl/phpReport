@@ -294,7 +294,7 @@ class ReportMultiDimensionTest extends TestCase {
                     'noData' => ':<br><strong>No data found</strong><br>',
                     'noData_n' => 'noDataDim%',
                     'noGroupChange_n' => 'noGroupChange%',
-                    'detail_n' => 'detail%'
+                    'data_n' => 'detail%'
                 ]
             ];
             
