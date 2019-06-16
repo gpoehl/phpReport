@@ -32,7 +32,7 @@ class Configurator {
      * pattern build depending on $buildMethodsByGroupName rules.
      * Percent sign in totalHeader and totalFooter will be replaced by the value
      * of $grandTotalName.
-     * Percent sign in noData_n will be replaced by number of dimension.
+     * Percent sign in data_n and noData_n will be replaced by number of dimension.
      */
     public $actions = [
         'init' => [Report::METHOD, 'init'],
@@ -45,7 +45,7 @@ class Configurator {
         // : sign declares string explicit to avoid method calls when callOption = CALL_ALWAYS
         'noData' => [Report::STRING, ':<br><strong>No data found</strong><br>'], // Dimension = 0
         'noData_n' => [Report::METHOD, 'noDataDim%'],
-        'detail_n' => [Report::METHOD, false],
+        'data_n' => [Report::METHOD, false],
         'noGroupChange_n' => [Report::ERROR, "error:Current row in dimension % didn't trigger a group change."],
     ];
     // $buildMethodsByGroupName can be true, false or 'ucfirst'

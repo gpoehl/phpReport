@@ -34,12 +34,10 @@ class Report {
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
     const CALL_PROTOTYPE = 2;         // Call methods in prototype class when not implemented in owner class.
     const CALL_ALWAYS_PROTOTYPE = 3;  // Call methods in prototype class for any action.
-   
     // Cumulator class selection
     const XS = 1;                       // CumulatorXS class (default)
     const REGULAR = 2;                  // Cumulator class (has not null and not zero counters)
     const XL = 3;                       // CumulatorXL class (has also min and max values) 
-    
     // Action types are used internally to speed up action execution. 
     const STRING = 1;
     const CLOSURE = 2;
@@ -47,10 +45,10 @@ class Report {
     const METHOD = 4;
     const WARNING = 5;
     const ERROR = 6;
-    
- // @property MajorProperties $mp Holds major properties to be passed to cumulator objects
+
+    // @property MajorProperties $mp Holds major properties to be passed to cumulator objects
     public $mp;
-     // @property Collector $rc Collector for row counters
+    // @property Collector $rc Collector for row counters
     public $rc;
     // @property Collector $gc Collector for group counters
     public $gc;
@@ -58,19 +56,15 @@ class Report {
     public $total;
     public $userConfig;          // Optional user configuration. @see Configurator for details.   
     public $activeMethod;              // The current method (build by getCallable) 
-      
-      
     private $dims;                  // Array of dimension objects
     private $currentDimID = 0;      // ID of current dimension. Start at 0.
     private $dim;                   // The actual dimension. Shortcut of $dims[$currentDimID]; 
     private $maxDimID = 0;          // Total number of dimensions
     private $changedLevel;          // Highest level of changed group. Null when no change 
     private $groups;                // Array to hold group objects
-   
     // @property Collector $collector The master collector. All items
     // within this collector will cumumlated to higher level on group change.
     private $collector;
-   
     private $target;                   // Object which holds the methods to be called. Usally passed as $this
     private $callOption = self::CALL_EXISTING;      // One of the execution rules above
     // @property Prototype $prototyp Prototyp object to serve prototyp actions
@@ -132,7 +126,7 @@ class Report {
      * @param mixed $parameters Optional variadic list of additional parameters passed thrue 
      * to external methods. 
      */
-    public function data($source, $noData = null, $rowDetail = null, $noGroupChange = null, $parameters = null): Report {
+    public function data($source, $noData = null, $rowDetail = null, $noGroupChange = null, array $parameters = null): Report {
         if (is_array($source) && count($source) === 1) {
             // Make sure that method name is set to array index = 1
             $source = [null, end($source)];
@@ -146,6 +140,8 @@ class Report {
         if ($noGroupChange !== null) {
             $noGroupChange = Helper::buildMethodAction($noGroupChange, 'noGroupChange_n');
         }
+        // Make an empty array to allow calls with variadic parameter list.  
+        $parameters = ($parameters) ?? [];
         $dim = end($this->dims);
         $dim->setParameter($source, $noData, $rowDetail, $noGroupChange, $parameters);
         $this->dims[] = new Dimension();
@@ -225,22 +221,22 @@ class Report {
      * Sheet is a collection of cumulators for a horizontal representation of a value.
      *  
      * @param type $name
-     * @param type $source
-     * @param type $keySource
+     * @param type $key
+     * @param type $valuen
      * @param int|null $typ
      * @param type $fromKey
      * @param type $toKey
      * @param type $maxLevel
      * @return $this
      */
-    public function sheet($name, $value, $key, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null): Report {
+    public function sheet($name, $key, $value, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null): Report {
         $typ = ($typ) ?? self::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $cum = Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey);
         $this->total->addItem($cum, $name);
         if ($dataAttribute !== false) {
             $dim = end($this->dims);
-            $dim->sheetAttributes[$name] = [$value, $key];
+            $dim->sheetAttributes[$name] = [$key, $value];
         }
         return $this;
     }
@@ -344,8 +340,8 @@ class Report {
             $dim = $this->dims[$dimID];
             $method = ($dim->noDataParam) ?? Helper::replacePercent($dimID, $this->actions['noData_n']);
             $dim->noDataAction = $this->getRuntimeAction('noData_n', $method);
-            $method = ($dim->rowDetail) ?? Helper::replacePercent($dimID, $this->actions['detail_n']);
-            $dim->detailAction = $this->getRuntimeAction('detail_n', $method);
+            $method = ($dim->rowDetail) ?? Helper::replacePercent($dimID, $this->actions['data_n']);
+            $dim->detailAction = $this->getRuntimeAction('data_n', $method);
             $method = ($dim->noGroupChangeParam) ?? Helper::replacePercent($dimID, $this->actions['noGroupChange_n']);
             $dim->noGroupChangeAction = $this->getRuntimeAction('noGroupChange_n', $method);
         }
@@ -485,8 +481,7 @@ class Report {
      */
     private function handleGroupChanges($row, $rowKey): void {
         $indexedValues = [];
-//        if (is_object($row)) {
-              if ($row instanceof \stdClass) {
+        if (is_object($row)) {
             foreach ($this->dim->groupAttr as $attr) {
                 $indexedValues[] = ($attr instanceof \Closure) ? $attr($row, $rowKey) : $row->$attr;
             }

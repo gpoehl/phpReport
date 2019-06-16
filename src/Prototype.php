@@ -228,7 +228,7 @@ TABLE1;
         $content = $this->renderRowValues($row, $rowKey);
         $content .= $this->renderTotals();
         $content .= $this->renderRowCounter();
-        return $this->renderAction($content, ", Dim = {$this->rep->getCurrentDimID()}");
+        return $this->renderAction($content, ", Dim = {$this->rep->getCurrentDimID()} RowKey = $rowKey");
     }
 
     public function noData(): string {
@@ -262,7 +262,7 @@ TABLE1;
     public function data_n($row, $rowKey, int $dimID): string {
         $content = $this->renderRowValues($row, $rowKey);
         $content .= $this->renderRowCounter();
-        return $this->renderAction($content, ", Dim = $dimID");
+        return $this->renderAction($content, ", Dim = $dimID Rowkey = $rowKey");
     }
 
     /**

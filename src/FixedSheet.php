@@ -56,7 +56,7 @@ class FixedSheet extends AbstractCollector {
      * @return boolean
      */
     public function hasMinMax(): bool {
-        return restet($this->items)->hasMinMax();
+        return reset($this->items)->hasMinMax();
     }
 
     /**
