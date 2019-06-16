@@ -1,26 +1,26 @@
 {
-    "name": "gpoehl/phpreport",
-    "description": "PHP framework to create reports, data grids or run data driven tasks.",
-    "license": "LGPL-3.0-or-later",
-    "authors": [
+    "name": "gpoehl/phpReport",
+	"description": "Delegate handling of group changes and calculation of subtotals and totals for easy creation of reports and batch like applications.",
+ 	"license": "LGPL-3.0-or-later",
+	"authors": [
         {
-            "name": "Guenter Poehl"
+            "name": "Guenter Poehl",
         }
     ],
 	"keywords": [
-	"php",
+		"php",
         "report",
         "grouping",
         "group change",
         "total",
-        "subtotals"
-     ],
- "require": {
+		"subtotals"
+	],
+   "require": {
         "php": "^7.3"
-},
+	},
     "autoload": {
         "psr-4": {
-            "gpoehl\\phpReport\\": "src"
+            "gpoehl\\phpReport\\": "src/"
         }
     },
 	"require-dev": {

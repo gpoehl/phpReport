@@ -38,7 +38,7 @@ return [
     // Action for each row in dimensions < last dimension. Usually not needed.
     // Group haeders and footers should be prefered.
     // Value false will not even call prototyp method.
-    // 'detail_n' => false ,
+    // 'data_n' => false ,
     // 
     // Action for each row in dimensions < last dimension when groups are defined
     // but no group change was triggered.
