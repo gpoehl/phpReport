@@ -35,7 +35,8 @@ class FixedSheet extends AbstractCollector {
      * @param mixed $name Optional name to identify this object.
      */
     public function __construct(AbstractCumulator $cumulator, $fromKey, $toKey) {
-        $this->addItems($cumulator, $fromKey, $toKey);
+        (is_array($fromKey)) ? $this->addArrayItems($cumulator, $fromKey)
+        : $this->addItems($cumulator, $fromKey, $toKey);
     }
 
     // Implementation of arrayAccess interface. Don't allow creating new items
@@ -67,6 +68,16 @@ class FixedSheet extends AbstractCollector {
         $this->items[$fromKey] = $cumulator;
         for ($i = $fromKey ++; $i <= $toKey; $i ++) {
             $this->items[$i] = clone $cumulator;
+        }
+    }
+    
+    /**
+     * Clone given cumulator from $fromKey to $toKey to have a fixed size sheet.
+     * @param @see __construct
+     */
+    private function addArrayItems($cumulator, $fromKey) {
+        foreach ($fromKey as $key) {
+            $this->items[$key] = clone $cumulator;
         }
     }
 

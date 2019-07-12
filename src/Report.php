@@ -203,7 +203,7 @@ class Report {
      * @param int|null $maxLevel The group level at which the value will be 
      * added. Defaults to the maximum level of the dimension. Might be less when
      * cumulated data are only needed on higher levels.
-     * @return $this Allows chaining of method calls.
+     * @return mixed $this Allows chaining of method calls.
      */
     public function sum($name, $value, ?int $typ = self::XS, ?int $maxLevel = null): Report {
         $typ = ($typ) ?? self::XS;
@@ -221,8 +221,11 @@ class Report {
      * Sheet is a collection of cumulators for a horizontal representation of a value.
      *  
      * @param type $name
-     * @param type $key
-     * @param type $valuen
+     * @param false | mixed $key represents the source to get the value for the key.
+     * When false the sheet will be instantiated but your have to call the add()
+     * yourself. This is very useful when calculation of $key or $value is 
+     * complicated and / or you need access to these data on the detail level. 
+     * @param type $value
      * @param int|null $typ
      * @param type $fromKey
      * @param type $toKey
@@ -234,7 +237,7 @@ class Report {
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $cum = Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey);
         $this->total->addItem($cum, $name);
-        if ($dataAttribute !== false) {
+        if ($key !== false) {
             $dim = end($this->dims);
             $dim->sheetAttributes[$name] = [$key, $value];
         }
