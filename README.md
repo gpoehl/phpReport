@@ -1,11 +1,18 @@
 # phpReport
-PHP framework to create reports, data grids or run data driven tasks.
+PHP library to help creating reports, data grids or run data driven tasks.
 
-Use **phpReport** with any data source and simply specify the attributes to be cumulated or triggers group changes. 
-phpReport calls methods in your class which should execute further tasks or create desired output.
+**phpReport** primarily manages all tasks related to group changes and cumulutes selected values.
 
-**phpReport** does not read any data nor does it generate a report by itself. The basic idea is that you use the tools you already use to get data from any resource and that you define the output depending on your needs.
-Output can be anything like a database table, a file (eg. excel file), an HTML string or an input string to generate a pdf document (e.g. mpdf).  
+When **phpReport** detects a group change related header and footer actions will be triggered. Actions are usually methods or closures. 
+
+Due to the design of **phpReport** you can use it for your most complex tasks. There are no limitations as you have always full control over the program flow.
+
+**phpReport** can run with any data source. So can can use your existing data models with all your business models accessable.
+It handles even multi-dimensional arrays or one to many relationsships declared in your models.
+
+**phpReport** does not read any data itself. The best way to get data is using the methods of your own php framwork. But you can use any data access method and pass data row by row or the dataset to **phpReport**. Within one task you can even mix data from any resource like database tables, json files, excel tables and much more.
+
+The same is true for the desired output of your task. You can write data to a database table, a file (eg. excel file), an HTML string, generate a pdf document or send emails. Of course you can do it all together.  
 
 Requirements
 ============
@@ -37,20 +44,30 @@ A typical usage of the library would be as follows:
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-// Assuming your data is stored in variable $data
-
 $rep = (new \gpoehl\phpReport($this))
-->group('attribute1')
-->group('attribute2')   
-->sum('attribute3')
-->sum(function ($row){return substr ($row, 4,5);})   // closures can be used to get values
-->setPrototyp(phpReport::all)                        // only for demonstration and testing
-->run($data);
+->group('region', 'regionID')                     
+->group('customer', 'customerID')   
+->sum('sales', 'mySalesColumn')
+->sum('tax', 'myTaxColumn')
+->run($data);                                        // $data holds the data set 
 echo $rep;
 
 ```
+public method regionHeader($regionID, $row){
+   // your code
+}
+public method customerHeader($customerID, $row){
+   // your code
+}
+public method customerFooter($customerID, $row){
+   // your code
+}
+public method regionFooter($regionID, $row){
+   // your code
+}
 
-This will echo a prototyp report having your data grouped by attribute1 and attribute2 while attribute3 and the output of the closure is cumulated.
+
+```
 
 
 
@@ -77,7 +94,7 @@ $rep = new \gpoehl\phpReport($this, [
 Online manual
 =============
 
-Online manual is not yet available. Soon you'l find it at https://phpReport.github.io/.
+Online manual is not yet ready. The current version can be viewed at https://gpoehl.github.io/.
 
 For general questions or troubleshooting please use the [phpReport tag](https://stackoverflow.com/questions/tagged/phpReport) at Stack Overflow (and not the project's issue tracker).
 
