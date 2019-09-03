@@ -9,3 +9,9 @@ By default phpReport instatiates three collectors.
 2) A group counter collector
 
 3) A collector for declared values to be cumulated.
+
+<ul>
+  <li>A1</li>
+  <li>A1</li>
+  <li>A1</li>
+</ul>
