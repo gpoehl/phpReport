@@ -16,4 +16,4 @@ return
 This was a code snippet
 
 [Define group changes](group.md)
-[Cumulate values](collector.html)
+[Cumulate values](collector.md)
