@@ -1,4 +1,4 @@
-<h1>Collector</h1>
+# Collector
 Cumulating values is very powerful feature of phpReport.
 
 For each value to be cumulated an object will be instantiated. These objects will be hold as an item in a collector class.
