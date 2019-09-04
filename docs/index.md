@@ -1,6 +1,6 @@
 <h1>phpReport</h1>
 
-Hallo world,
+phpReport is a library which helps to generate reports or grid views. phpReport can also be used with any task where you need to take care of group changes or you need to cumulate any values.
 
 this is a testpage for phpreport in docs folder
 <h2>Getting started</h2>
