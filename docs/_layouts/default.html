@@ -20,8 +20,7 @@
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
   </head>
   <body>
-    <a id="skip-to-content" href="#content">Skip to the content.</a>
-
+   
     <header class="page-header" role="banner">
       <h1 class="project-name">{{ page.title | default: site.title | default: site.github.repository_name }}</h1>
       <h2 class="project-tagline">{{ page.description | default: site.description | default: site.github.project_tagline }}</h2>
@@ -35,10 +34,19 @@
     </header>
 
     <main id="content" class="main-content" role="main">
+   
+      <div class="container">
+  <div class="row">
+    <div class="col">
+      1 of 2
+    </div>
+    <div class="col">
+      2 of 2
+       {{ content }}
+    </div>
+  </div>
     
-    hallo XXXXXXXXXXXXXXXXXXXXXXXXx
-    
-      {{ content }}
+     
 
       <footer class="site-footer">
         {% if site.github.is_project_page %}
