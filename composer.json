@@ -1,29 +1,29 @@
 {
-    "name": "gpoehl/phpReport",
-	"description": "Delegate handling of group changes and calculation of subtotals and totals for easy creation of reports and batch like applications.",
- 	"license": "LGPL-3.0-or-later",
-	"authors": [
+    "name": "gpoehl/phpreport",
+    "description": "Backbone for reports and other aplications dealing with data sets. Handles group changes, calculates totals, subtotals, min, max and much more.",
+    "license": "LGPL-3.0-or-later",
+    "authors": [
         {
             "name": "Guenter Poehl"
         }
     ],
-	"keywords": [
-		"php",
+    "keywords": [
+        "php",
         "report",
         "grouping",
         "group change",
         "total",
-		"subtotals"
-	],
-   "require": {
+        "subtotals"
+    ],
+    "require": {
         "php": "^7.3"
-	},
-    "autoload": {
-        "psr-4": {
-            "gpoehl\\phpReport\\": "src/"
-        }
     },
-	"require-dev": {
-        "phpunit/phpunit": "^8"
+    "autoload": {
+        "classmap": [
+            "src/"
+        ]
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.5"
     }
 }
