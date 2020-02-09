@@ -1,0 +1,291 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Data input &mdash; phpReport 1.00 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data output" href="dataOutput.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> phpReport
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions.html">Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prototype.html">Prototyping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data input</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#multi-dimensional-data">Multi-Dimensional Data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calculation.html">Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sugar.html">Extra sugar</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">phpReport</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Data input</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/gpoehl/phpReport/blob/master/docs/dataInput.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="data-input">
+<h1>Data input<a class="headerlink" href="#data-input" title="Permalink to this headline">¶</a></h1>
+<p><strong>phpReport</strong> doesn’t read data itself. What seems to be a lack of functionality
+on the first glance is in reality a huge benefit.</p>
+<p>You can use your own methods and models for data retrieval which might include
+authorisation, authentification, caching and much more.
+You are not limited to the features delivered by a report tool.</p>
+<p>Using your own methods for data retrieval allows you to access data from any
+source (any database and any file type like csc, xml, json, excel sheets, etc.)
+and also to use data from differents sources within the same job.</p>
+<p>Data rows can be arrays or objects.</p>
+<p><strong>phpReport</strong> accepts data in three different ways.</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Passing all data within an iterable to the run() method.</dt><dd><p><strong>phpReport</strong> iterates over the data set and calls the next() method
+for each entry.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Passing chunks of data within an iterable by calling the run()</dt><dd><p>method for each chunk while setting the parameter <em>finalize to false</em>.
+<strong>phpReport</strong> iterates over the data set and calls the next() method
+for each entry. To finalize the job either call the end() method after
+the last chunk or set the finalize parameter for the last chunk to true.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Passing single rows by calling the next() method for each data row. This</dt><dd><p>is in many cases the most efficent way as you don’t have to collect your
+data into an array. To finalize the job just call the end() method after
+processing the last row.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<div class="section" id="multi-dimensional-data">
+<h2>Multi-Dimensional Data<a class="headerlink" href="#multi-dimensional-data" title="Permalink to this headline">¶</a></h2>
+<p>Handling of multi-dimensional data makes <strong>phpReport</strong> extreme powerful.
+It let’s you iterate over nested arrays with the same functionaity as for the
+primary data set. So you can define groups and calculate values for any data
+dimension.</p>
+<p>Data dimension can exist in form of nested arrays, object methods delivering
+related data or even completely independent.</p>
+<p>Instead of joining data during data retrieval you can get related data at the
+moment you need them. This can save a lot of memory consumpiton.</p>
+<p>To pass chunks or the whole dataset to phpReport call the run mehod. For chunks you must set the second paramet (finalize) to false.
+Call run for the last chunck with finalize = true or call the end methhod afterwords.</p>
+<dl class="method">
+<dt>
+<code class="sig-name descname">data($source, $noData, $rowDetail, $noGroupChange, $parameters) : Report</code></dt>
+<dd><p>Called when group values between two rows are not equal. Each group has
+its own groupHeader.</p>
+<p>Group headers are called from the changed group level down to the lowest
+declared group (within an data dimension).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>$source</strong> (<em>mixed</em>) – The source for the next data dimension.</p></li>
+<li><p><strong>$noData</strong> (<em>mixed</em>) – The action to be executed when $source doesn’t return any data.</p></li>
+<li><p><strong>$rowDetail</strong> (<em>mixed</em>) – The action to be executed for each row returned by $source.</p></li>
+<li><p><strong>$noGroupChange</strong> (<em>mixed</em>) – The action to be executed when two consecutive rows don’t trigger
+a group change.</p></li>
+<li><p><strong>$parameters</strong> (<em>array|null</em>) – Any parameter to be passed to $source.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dataOutput.html" class="btn btn-neutral float-right" title="Data output" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Günter Pöhl
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

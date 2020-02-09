@@ -1,0 +1,257 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Prototyping &mdash; phpReport 1.00 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="The overall process flow" href="process.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> phpReport
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions.html">Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Prototyping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calculation.html">Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">phpReport</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Prototyping</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/gpoehl/phpReport/blob/master/docs/prototype.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="prototyping">
+<span id="prototype-label"></span><h1>Prototyping<a class="headerlink" href="#prototyping" title="Permalink to this headline">¶</a></h1>
+<p>Prototyping gives information about the program flow, the currently processed
+data row, the value of group fields and calculated values.</p>
+<p>Prototype tells also what the real action would be (e.g. Call method xy or
+append string ‘blabla’).</p>
+<p>Very often protoye is a good choice before you start debugging or tracing your
+program.</p>
+<p>You can call the prototype function at any time by just calling</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="nv">$rep</span><span class="o">-&gt;</span><span class="na">prototype</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>This will return an html table for the current action key.</p>
+<p>The other way is setting the call method parameter by calling the
+setCallAction() method with one of the following constants as parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">CALL_EXISTING = 0</dt>
+<dd class="field-odd"><p>Call methods in owner class only when implemented. Default.</p>
+</dd>
+<dt class="field-even">CALL_ALWAYS = 1</dt>
+<dd class="field-even"><p>Call also not existing methods in owner class.
+This allows using magic function calls.</p>
+</dd>
+<dt class="field-odd">CALL_PROTOTYPE = 2</dt>
+<dd class="field-odd"><p>Call methods in prototype class when they are not
+implemented in owner class. Very useful for incremental developing of reports.</p>
+</dd>
+<dt class="field-even">CALL_ALWAYS_PROTOTYPE = 3</dt>
+<dd class="field-even"><p>Call methods in prototype class for any action.</p>
+</dd>
+</dl>
+<p>Usually the method is called once before calling the run() method. But it is
+also possible to alter the call action at any time.</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="c1">// $rep has a reference to phpReport object</span>
+<span class="nv">$rep</span><span class="o">-&gt;</span><span class="na">setCallAction</span><span class="p">(</span><span class="nx">Report</span><span class="o">::</span><span class="na">CALL_EXISTING</span><span class="p">);</span>
+<span class="nv">$rep</span><span class="o">-&gt;</span><span class="na">setCallAction</span><span class="p">(</span><span class="nx">Report</span><span class="o">::</span><span class="na">CALL_ALWAYS</span><span class="p">);</span>
+<span class="nv">$rep</span><span class="o">-&gt;</span><span class="na">setCallAction</span><span class="p">(</span><span class="nx">Report</span><span class="o">::</span><span class="na">CALL_PROTOTYPE</span><span class="p">);</span>
+<span class="nv">$rep</span><span class="o">-&gt;</span><span class="na">setCallAction</span><span class="p">(</span><span class="nx">Report</span><span class="o">::</span><span class="na">CALL_ALWAYS_PROTOTYPE</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The prototying class is a good example how flexible a report can be.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="process.html" class="btn btn-neutral float-left" title="The overall process flow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Günter Pöhl
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

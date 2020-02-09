@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Introduction &mdash; phpReport 1.00 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Actions" href="actions.html" />
+    <link rel="prev" title="phpReport Manual" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> phpReport
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-does-it-work">How does it work?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prototyping">Prototyping</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="actions.html">Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prototype.html">Prototyping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calculation.html">Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">phpReport</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Introduction</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/gpoehl/phpReport/blob/master/docs/introduction.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>phpReport simplifies building of reports or batch like applications by handling
+of all tasks related to group changes and by calculating desired values.</p>
+<p>phpReport integrates without configuration into any framework. It’s usage is
+simple enough to deal with easy tasks and powerful enough to work also with most
+complex data structures.</p>
+<p>To fetch data from a database or any other source use your own (and well known)
+methods. PhpReport will work with this data no matter if you provide a simple
+data set or an multi dimensional array. Getting joined data during data
+processing is also possible.</p>
+<div class="section" id="how-does-it-work">
+<h2>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h2>
+<p>After instantiation of the report class you declare which fields holds values
+to be compared to detect group changes by calling the group() method.</p>
+<p>To declare which values should be cumulated call the calculate() or the sheet()
+methods.</p>
+<p>Then pass your data to the run() method.</p>
+<p>At certain events PhpReport will then call methods in your class where you might
+want to prepare your output.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>phpReport integrates fully with your environment and any framework.
+So you have full access to all your business rules implemented in
+your existing models.</p>
+</div>
+<p>A simple report might look like</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="k">use</span> <span class="nx">gpoehl\phpreport\Report</span><span class="p">;</span>
+<span class="nv">$rep</span><span class="p">;</span>
+<span class="o">..</span>
+<span class="c1">// $data = get your data from any source</span>
+<span class="o">..</span>
+
+<span class="c1">// in any method or in a other class (e.g. your controller)</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">rep</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Report</span><span class="p">(</span><span class="nv">$this</span><span class="p">))</span>
+<span class="o">-&gt;</span><span class="na">group</span><span class="p">(</span><span class="s1">&#39;customer&#39;</span><span class="p">)</span>
+<span class="o">-&gt;</span><span class="na">group</span><span class="p">(</span><span class="s1">&#39;invoice&#39;</span><span class="p">,</span> <span class="s1">&#39;invoiceID&#39;</span><span class="p">)</span>
+<span class="o">-&gt;</span><span class="na">calulate</span><span class="p">(</span><span class="s1">&#39;sales&#39;</span><span class="p">,</span> <span class="nx">funcion</span><span class="p">(</span><span class="nv">$row</span><span class="p">){</span><span class="k">return</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">*</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">price</span><span class="p">;})</span>
+<span class="o">-&gt;</span><span class="na">run</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+<span class="k">echo</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">rep</span><span class="o">-&gt;</span><span class="na">output</span><span class="p">;</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="nf">init</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;h1&gt;My very first report&lt;/h1&gt;&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="nf">customerHeader</span><span class="p">(</span><span class="nv">$customer</span><span class="p">,</span> <span class="nv">$row</span><span class="p">){</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;h2&gt;Customer </span><span class="si">$customer</span><span class="s2">&lt;/h2&gt;&quot;</span> <span class="o">.</span> <span class="nv">$customer</span><span class="o">-&gt;</span><span class="na">address</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="nf">invoiceHeader</span><span class="p">(</span><span class="nv">$invoice</span><span class="p">,</span> <span class="nv">$row</span><span class="p">){</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;h3&gt;Invoidce </span><span class="si">$invoice</span><span class="s2">&lt;/h3&gt;&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Will be called for each data row</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">detail</span><span class="p">(</span><span class="nv">$row</span><span class="p">,</span> <span class="nv">$rowKey</span><span class="p">){</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;br&gt;</span><span class="si">$row-&gt;item</span><span class="s2">: </span><span class="si">$row-&gt;description</span><span class="s2">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="nf">invoiceFooter</span><span class="p">(</span><span class="nv">$invoice</span><span class="p">,</span> <span class="nv">$row</span><span class="p">){</span>
+    <span class="k">return</span> <span class="s2">&quot;Total of invoice </span><span class="si">$invoice</span><span class="s2"> = &quot;</span> <span class="o">.</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">rep</span><span class="o">-&gt;</span><span class="na">total</span><span class="o">-&gt;</span><span class="na">sales</span><span class="o">-&gt;</span><span class="na">sum</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="nf">customerFooter</span><span class="p">(</span><span class="nv">$customer</span><span class="p">,</span> <span class="nv">$row</span><span class="p">){</span>
+    <span class="k">return</span> <span class="s2">&quot;Total sales for customer </span><span class="si">$customer</span><span class="s2"> = &quot;</span> <span class="o">.</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">rep</span><span class="o">-&gt;</span><span class="na">total</span><span class="o">-&gt;</span><span class="na">sales</span><span class="o">-&gt;</span><span class="na">sum</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="nf">totalFooter</span><span class="p">(){</span>
+    <span class="k">return</span>
+        <span class="s2">&quot;Total sales = </span><span class="si">$this-&gt;rep</span><span class="s2">-&gt;total-&gt;sales-&gt;sum()&quot;</span> <span class="o">.</span>
+        <span class="s2">&quot;Total number of customers: </span><span class="si">$this-&gt;rep</span><span class="s2">-&gt;gc-&gt;customer-&gt;sum()&quot;</span> <span class="o">.</span>
+        <span class="s2">&quot;Total number of invoices:  </span><span class="si">$this-&gt;rep</span><span class="s2">-&gt;gc-&gt;invoice-&gt;sum()&quot;</span> <span class="o">.</span>
+        <span class="s2">&quot;Total number of rows:  </span><span class="si">$this-&gt;rep</span><span class="s2">-&gt;rc-&gt;sum()&quot;</span> <span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="prototyping">
+<h2>Prototyping<a class="headerlink" href="#prototyping" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Before you start writing any code you might want to use the prototyping system
+to generate a report which shows some data of the currently processed row,
+names of methods which will be called in real life reports, the value of group
+fields and some values out of the calculated fields.</p>
+<p>It’s also a good idea to use prototyping before you start tracing or debugging
+your report.
+To find out how to use protoyping see <a class="reference internal" href="prototype.html#prototype-label"><span class="std std-ref">Prototyping</span></a>.</p>
+</div></blockquote>
+<p>PhpReport has no dependencies. Your class can extend from any class you want.
+To avoid naming conflicts you can configure phpReport.
+Main features are:</p>
+<dl>
+<dt>Data handling</dt><dd><p>In the most simple form you will call the run method and pass your dataset to this
+method. phpReport will the iterate over this dataset and execute certain actions.</p>
+<p>It is not required to build a dataset upfront. You can optionally call the run
+method wihout any data and call the next method once for each data row.
+This might save a lot of memory and processing time.</p>
+<p>phpReport is also able to handle multi-dimensional arrays. Calling the data method
+tells which element contains the sub-array. phpReport will then iterate of the
+sub-array. Sub-array can also have elements where you want specific actions when
+the value changes. So call the group method after the data method to declare
+this element. Same is true for values to be calculated.</p>
+<p>phpReport might also getting related data to a given row. See data section for
+details.
+Out of the box phpReport calculates row counters.</p>
+</dd>
+<dt>Calculation values</dt><dd><p>With phpReport it’s easy to calculate values. While calling the calculate method
+your values are cumulated. Your might also let phpReport count how often you got
+a not null or not zero value as well as figure out the min and max value.</p>
+</dd>
+<dt>Sheets</dt><dd><p>Sheets are a very powerful when you need calulated values horizontally. Assume
+you want to present your calculated data in a table grouped by month. All you need
+to do is calling the sheet method and tell
+phpReport where to find (or how to build) the key (month) and
+where to find the value.</p>
+</dd>
+<dt>Group changes</dt><dd><p>phpReport monitors as much groups as you like. As soon as a value changes phpReport
+executes certain actions like calling group header and group footer methods.
+See actions section for more details.
+To let phpReport know which attributes or elements should be monitored call the
+group method once for for each group.
+Out of the box phpReport calculates group counters which lets you know how often
+a certain value (or group) occurs in an other group.</p>
+</dd>
+<dt>Prototyping</dt><dd><p>Beginners and experienced users of phpReport can benefit from the prototype system.
+Prototyint lets you know which method would habe been called, what data row triggered
+the actions, what are the values of the group fields and the values of calculated
+fields.
+[Prototyping](prototype.rst)</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="actions.html" class="btn btn-neutral float-right" title="Actions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="phpReport Manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Günter Pöhl
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

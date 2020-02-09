@@ -1,0 +1,5 @@
+/nbproject/
+composer.lock
+phpunit.xml
+# composer vendor dir
+/vendor/
