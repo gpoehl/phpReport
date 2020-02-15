@@ -90,10 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="actions.html">Actions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prototype.html">Prototyping</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#configurate-action-parameter">Configurate action parameter.</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
@@ -168,7 +165,10 @@
             
   <div class="section" id="configuration">
 <h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
-<p><strong>phpReport</strong> is designed to be very flexible.</p>
+<p><strong>phpReport</strong> lets you configure the real action to be performed for events
+which triggers one or more actions.</p>
+<p>Whenever an event occurs the action defined to an action key will be performed.</p>
+<p>n</p>
 <p>For each possible action to be executed you can declare what should be done.
 Each action key has a default action assigned. Within the <strong>config.php</strong> file the
 default actions might be adjusted to meet your personal favorites or to follow
@@ -300,8 +300,6 @@ are not in the target class. Setting this parameter makes most sense during run
 time when instantiating the <strong>phpReport</strong> object.</p>
 </dd></dl>
 
-<div class="section" id="configurate-action-parameter">
-<h2>Configurate action parameter.<a class="headerlink" href="#configurate-action-parameter" title="Permalink to this headline">¶</a></h2>
 <p>That’s the place where you define the type of actions to be performed or the method names.</p>
 <p>Actions have a key which will translated in real action names.</p>
 <p>Per default the action ‘init’ will call a method called ‘init’. That’s fairly simple.
@@ -342,7 +340,6 @@ The solution is to declare this string as a default. A : sign at the beginning m
 <p class="admonition-title">Note</p>
 <p>All directives can be altered when initializing a new <strong>phpReport</strong>. Some
 even when calling a method.</p>
-</div>
 </div>
 </div>
 

@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 /*
  * This file is part of the gpoehl/phpReport library.
  *
@@ -8,8 +9,6 @@
  * @link      https://github.com/gpoehl/phpReport/readme
  * @author    Günter Pöhl  <phpReport@gmx.net>
  */
-
-declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
@@ -85,7 +84,7 @@ TABLE1;
         $methodKey = $this->rep->activeMethod[0];
         $headerCol3 = $this->getMethodName() . $headerData;
         $sign = ($this->signs[$methodKey]) ?? '';
-        $color = substr($this->colors[$methodKey],1);
+        $color = substr($this->colors[$methodKey], 1);
         // Modify groupheader and footer background colors. Using hex color codes
         // of a method and increase this by hex(30) * actual Level
         if (substr($methodKey, 0, 5) === 'group') {

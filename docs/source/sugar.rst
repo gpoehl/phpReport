@@ -1,7 +1,7 @@
 Extra sugar
 -----------
 
-The report class has some extra methods to provide you with useful informations.
+The report class has some extra convenience methods to provide you with useful informations.
 
 .. php:class:: Report
 
@@ -25,21 +25,31 @@ The report class has some extra methods to provide you with useful informations.
         :param int|null $dimID: Same as in getRow(). 
         :returns: The requested key.
 
-    .. php:method:: isFirst(): bool
+    .. php:method:: isFirst($level = null): bool
 
             Checks if the current group is the first one within the next higer group.
             e.g. Is it the first invoice for a customer.
 
+            :param string|int|null $level: The group level to be checked. Defaults
+             to the next higher group level.
+
             :returns: True when the current group is the first one within
-             the next higher level. False when not.
+             the givel level. False when not.
 
-    .. php:method:: isLast(): bool
+    .. php:method:: isLast($level = null): bool
 
-            Checks if the current group is the last one within the next higer group.
+            Check if the current group footer action is executed the last time
+            within the group level.
             The question can only be answered in group footers. 
 
+            :param string|int|null $level: The group level to be checked. Defaults
+             to the next higher group level.
+
             :returns: True when the current action is executed the last time within
-             the next higher level. False when not.
+             the given group level. False when not.
+
+            :throws: InvalidArgumentException when method is not called in a group footer
+             or asked for group levels not higher than the current one.
 
     .. php:method:: getLevel($groupName = null): int
 
@@ -83,5 +93,3 @@ The report class has some extra methods to provide you with useful informations.
             :param int $groupLevel: The level of the group.
 
             :returns string: The associated group name of the level.
-
-    

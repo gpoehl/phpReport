@@ -101,6 +101,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sugar.html">Extra sugar</a></li>
 </ul>
 
             
@@ -193,11 +194,11 @@ and not zero values.</p>
 and maximum values of an attribute. Use the min() and max() methods to get
 these values.</p>
 <p>To cumulate any value you can use the sum() or sheet method.</p>
-<p>The sum method cumulates a single value while the sheet method cumulates the value depending on an key.</p>
+<p>The calculate() method cumulates a single value while the sheet() method cumulates the value depending on an key.</p>
 <p>Example</p>
 <div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="nv">$rep</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Report</span> <span class="p">(</span><span class="nv">$this</span><span class="p">))</span>
 <span class="o">-&gt;</span><span class="na">calculate</span> <span class="p">(</span><span class="s1">&#39;amount&#39;</span><span class="p">)</span>
-<span class="o">-&gt;</span><span class="na">calculate</span> <span class="p">(</span><span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$row</span><span class="p">,</span> <span class="nv">$rowKey</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">*</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">pricePerUnit</span><span class="p">;})</span>
+<span class="o">-&gt;</span><span class="na">calculate</span> <span class="p">(</span><span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="nx">fn</span><span class="p">(</span><span class="nv">$row</span><span class="p">,</span> <span class="nv">$rowKey</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">*</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">pricePerUnit</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

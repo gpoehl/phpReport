@@ -27,7 +27,7 @@ these values.
 
 To cumulate any value you can use the sum() or sheet method.
 
-The sum method cumulates a single value while the sheet method cumulates the value depending on an key.
+The calculate() method cumulates a single value while the sheet() method cumulates the value depending on an key.
 
 Example
 
@@ -35,6 +35,6 @@ Example
 
     $rep = (new Report ($this))
     ->calculate ('amount')
-    ->calculate ('price', function($row, $rowKey) {return $row->amount * $row->pricePerUnit;})
+    ->calculate ('price', fn($row, $rowKey) => $row->amount * $row->pricePerUnit)
 
 

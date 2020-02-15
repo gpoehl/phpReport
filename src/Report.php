@@ -120,7 +120,7 @@ class Report {
      * Defaults to null to stay with noData_n action from configuration.
      * @param mixed $rowDetail Action to be executed for each data row of the current dimension.
      * Defaults to null to stay with data_n action from configuration.
-     * @param mixed noGroupChangeParam Action to be executed when data row didn't
+     * @param mixed noGroupChange Action to be executed when data row didn't
      * trigger a group change.
      * Defaults to null to stay with noGroupChangeParam action from configuration.
      * @param mixed $parameters Optional variadic list of additional parameters passed thrue 
@@ -483,12 +483,12 @@ class Report {
      * @return \gpoehl\phpReport\Report
      */
     public function next($row, $rowKey = null): Report {
-        // When current dimension id equals the maximum dimension id the detail
-        // action will be executed. If not the handleDimension() 
-        $values = $this->handleGroupChanges($row, $rowKey);
+        $this->handleGroupChanges($row, $rowKey);
         // icrement row counter
         $this->rc->items[$this->currentDimID]->inc();
-        $this->{$this->dim->addValueMethod}($row, $rowKey);
+        $this->dim->addValues($row, $rowKey, $this->total->items);
+        // When current dimension id equals the maximum dimension id the detail
+        // action will be executed. If not the handleDimension() 
         if ($this->currentDimID < $this->maxDimID) {
             $this->handleDimension($row, $rowKey);
         } elseif ($this->detailMethod) {
@@ -510,19 +510,8 @@ class Report {
      * @param array|object $row The current row.
      * @param int | string | null $rowKey The key of $row. 
      */
-    private function handleGroupChanges($row, $rowKey): array {
-        $indexedValues = [];
-        $values = [];
-        // Storing type of row into a variable doesn't decrease execution time
-        if (is_object($row)) {
-            foreach ($this->dim->groupAttr as $attr) {
-                $indexedValues[] = ($attr instanceof \Closure) ? $attr($row, $rowKey) : $row->$attr;
-            }
-        } else {
-            foreach ($this->dim->groupAttr as $attr) {
-                $indexedValues[] = ($attr instanceof \Closure) ? $attr($row, $rowKey) : $row[$attr];
-            }
-        }
+    private function handleGroupChanges($row, $rowKey): void {
+        $indexedValues = $this->dim->getNewGroupValues($row, $rowKey);
         // Check if group has changed. $diffs has an array with changed group values.
         $diffs = array_diff_assoc($indexedValues, $this->dim->groupValues);
         if (empty($diffs)) {                 // group has not changed
@@ -547,65 +536,6 @@ class Report {
                 $this->mp->level++;
             }
             $this->activeMethod = $this->detailMethod;
-        }
-        return $values;
-    }
-
-    /**
-     * Detect the type of row on the first call in an dimension.
-     * Set addValueMetod variable which will then point to the method to 
-     * be called.
-     * @param array|object $row The current row.
-     * @param int | string | null $rowKey The key of $row. 
-     */
-    private function addFromUnknown($row, $rowKey): void {
-        $this->dim->addValueMethod = 'addFrom' . (is_object($row) ? 'Object' : 'Array');
-        $this->{$this->dim->addValueMethod}($row, $rowKey);
-    }
-
-    /**
-     * Add values to caluclate() or sheet() attributes where row is an object
-     * @param object $row The current row.
-     * @param int | string | null $rowKey The key of $row. 
-     */
-    private function addFromObject(object $row, $rowKey): void {
-        foreach ($this->dim->attrSource as $name => $attr) {
-            switch ($this->dim->attrType[$name]) {
-                case 1:         // Single Variable
-                    $this->total->items[$name]->add($row->$attr);
-                    break;
-                case 2:         // Closure
-                    $this->total->items[$name]->add($attr($row, $rowKey));
-                    break;
-                case 3:         // Array (key <-> value pair for sheets)
-                    $this->total->items[$name]->add([$row->{key($attr)} => $row->{current($attr)}]);
-                    break;
-            }
-        }
-    }
-
-    /**
-     * Add values to caluclate() or sheet() attributes where row is an array
-     * or an scalar value
-     * @param array|mixed Array of $row or just a scalar value when row had
-     * only a key <-> value pair.
-     * @param int | string | null $rowKey The key of $row. 
-     */
-    private function addFromArray($row, $rowKey): void {
-        // calling add() in calculator or sheet class is faster than building an 
-        // array and add call add() in collector class.
-        foreach ($this->dim->attrSource as $name => $attr) {
-            switch ($this->dim->attrType[$name]) {
-                case 1:         // Single Variable
-                    $this->total->items[$name]->add($row[$attr]);
-                    break;
-                case 2:         // Closure
-                    $this->total->items[$name]->add($attr($row, $rowKey));
-                    break;
-                case 3:         // Array (key <-> value pair for sheets)
-                    $this->total->items[$name]->add([$row[key($attr)] => $row[current($attr)]]);
-                    break;
-            }
         }
     }
 
@@ -665,12 +595,10 @@ class Report {
         $dim = $this->dim;
         $this->currentDimID++;
         $this->dim = $this->dims[$this->currentDimID];
-        $this->addValueMethod = $this->dim->addValueMethod;
         // Reset group values of current dim only when previous dim had a group change.
         if ($changed) {
             $this->dim->groupValues = [];
         }
-
         if ($dim->source instanceof \Closure) {
             // method is a callable
             $result = ($dim->source)($row, $rowKey, $this->currentDimID, ... $dim->parameters);
@@ -699,10 +627,8 @@ class Report {
             // Data parameter points to an attribute within an array
             (isset($row[$dim->source])) ? $this->run($row[$dim->source]) : $this->run(null);
         }
-
         $this->currentDimID--;
         $this->dim = $this->dims[$this->currentDimID];
-        $this->addValueMethod = $this->dim->addValueMethod;
     }
 
     /**
@@ -712,7 +638,7 @@ class Report {
      * @return bool true when group has changed, false when not.
      */
     private function noGroupChange($row, $rowKey): bool {
-        if ($this->changedLevel !== 0 || empty($this->dim->groupAttr)) {
+        if ($this->changedLevel !== null || empty($this->dim->groupAttr)) {
             return true;
         }
         $action = $this->dim->noGroupChangeAction;
@@ -808,42 +734,65 @@ class Report {
     public function getLevel(string $groupName = null): int {
         return ($groupName === null) ? $this->mp->level : $this->groups->groupLevel[$groupName];
     }
-    
+
     /**
      * Get the level which triggered a group change
      * @return int|false The group level which triggered a group change. 
      * False when no group change occurred.
      */
-    public function getChangedLevel(){
+    public function getChangedLevel() {
         return $this->changedLevel;
-    }
-    
-    /**
-     * Is current action executed the first time within the next higer level.
-     * @return bool true when the current action is executed the first time within
-     * the next higer level or false when not.
-     */
-    public function isFirst(): bool {
-        // For detail level rowCount() is checked while for other levels
-        // the inGroupCount() is used.
-        if ($this->activeMethod[0] !== 'detail') {
-            return ($this->inGroupCount() === 1);
-        }
-        return ($this->rowCount() === 1);
     }
 
     /**
-     * Return boolean whether the currently executed groupFooter is the
-     * last time called within the next higher level.
-     * In group headers or detail level this can't be answered. It would 
-     * require to read the next row ahead.
-     * @return bool True when it is the last, else false.
+     * Get the dimID for a given level.
+     * @param string|int|null $level The group level for which the dimID will be returned. Defaults to the
+     * current group level.
+     * @return int The dimenion ID for the requested level. 
+     */
+    public function getDimID($level = null) {
+        $level = $this->mp->getLevel($level);
+        return ($level === 0) ? 0 : $this->groups->items[$level]->dimID;
+    }
+
+    /**
+     * Check if the current group action is executed the
+     * first time within the given group level.
+     * @param string|int|null $level The group level to be checked. Defaults to the
+     * next higher group level.
+     * @return bool true when the current action is executed the first time within
+     * the given group level. False when not.
+     */
+    public function isFirst($level = null): bool {
+        // For detail level compare with row counter of last group level.
+        // Detail level can only be checked when in detail action. If $level is not null
+        // it must then match the detail level. 
+        if ($this->activeMethod[0] === 'detail' && ($level === null || $level === $this->mp->level)) {
+            return ($this->rc->items[$this->getDimID($level)]->sum($level - 1) === 1);
+        }
+        return ($this->gc->items[$this->getDimID($level)]->sum($this->getLevel($level) - 1) === 1);
+    }
+
+    /**
+     * Check if the current groupFooter action is executed the
+     * last time within the given group level.
+     * In group headers or detail level this can't be answered (It would 
+     * require to read the next row(s) ahead).
+     * @param string|itn|null $level The group level to be checked. Defaults to the
+     * next higher group level.
+     * @return bool True when it is the last footer within $level, else false.
+     * @throws \InvalidArgumentException when method is not called in a group footer
+     * or asked for group levels not higher than the current one.
      */
     public function isLast($level = null): bool {
         if ($this->activeMethod[0] !== 'groupFooter') {
             throw new \InvalidArgumentException('isLast() can only be answered in groupFooters');
         }
-        return ($this->mp->getLevel() !== $this->changedLevel);
+        $level = ($level === null) ? $this->mp->level - 1 : $this->mp->getLevel($level);
+        if ($level >= $this->mp->level) {
+            throw new \InvalidArgumentException('isLast() can check only for higher group levels');
+        }
+        return ($level > $this->changedLevel);
     }
 
     /**
@@ -902,18 +851,18 @@ class Report {
     public function getGroupValue($group = null) {
         return $this->groups->values[$this->mp->getLevel($group)];
     }
-    
- /**
+
+    /**
      * Get all group names.
      * @return array The group names. Key is the associated level.
      */
     public function getGroupNames(): array {
         return array_flip($this->groups->groupLevel);
     }
-    
+
     /**
      * Get the group name for a given group ID. 
-     * @param int $groupID The ID (level) for which the group name will be returned.
+     * @param int $groupLevel The level (ID) for which the group name will be returned.
      * Defaults to the current level.
      * @return string The group name of the requested level.
      */
@@ -922,5 +871,4 @@ class Report {
         return $this->groups->items[$key]->groupName;
     }
 
-    
 }

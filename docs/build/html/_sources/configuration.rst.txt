@@ -1,7 +1,13 @@
 Configuration
 =============
 
-|project_name| is designed to be very flexible. 
+|project_name| lets you configure the real action to be performed for events 
+which triggers one or more actions.
+
+Whenever an event occurs the action defined to an action key will be performed.
+
+n
+
 
 For each possible action to be executed you can declare what should be done.
 Each action key has a default action assigned. Within the **config.php** file the
@@ -88,8 +94,7 @@ Next to the actions parameter you can also declare the following parameters:
 
 
 
-Configurate action parameter.
-*****************************
+
 
 That's the place where you define the type of actions to be performed or the method names.
 

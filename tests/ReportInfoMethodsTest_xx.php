@@ -21,7 +21,6 @@ class ReportInfoMethodsTest extends TestCase {
     }
 
     public function testIsFirst() {
-        var_dump($this->rep);
         $this->assertSame(True, $this->rep->isFirst());
     }
 

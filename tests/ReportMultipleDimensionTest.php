@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Unit test of Report class handling multiple dimensions
+ * Unit test of Report class. Handling of multiple data dimensions
  */
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
@@ -13,48 +13,50 @@ class ReportMultiDimensionTest extends TestCase {
     /**
      * @dataProvider noDataParamProvider
      */
-    public function testNoDataParam($noDataInDimOption, $expected) {
+    public function testNoDataParameterOfDataMethodWhereDataIsNull($noData, $expected) {
         $row = ['firstGroup' => 'A', 'b' => null];
-        $rowKey = 1;
-        $out = $this->getBase()->rep
-                ->group('a', 'firstGroup')
-                ->data('b', $noDataInDimOption)
-                ->setCallOption(Report::CALL_ALWAYS)
-                ->run([$rowKey => $row]);
-        $this->assertSame('init<<>>totalHeader<<>>aHeader<<>>detail0<<>>' . $expected . 'aFooter<<>>totalFooter<<>>close<<>>', $out);
+        $this->runNoDataInDimension($row, $noData, $expected);
     }
 
-   
     /**
      * @dataProvider noDataParamProvider
      */
-    public function testNoDataViaEmptyArray($noDataInDimOption, $expected) {
+    public function testNoDataParameterOfDataMethodWhereDataIsAnEmptyArray($noData, $expected) {
         $row = ['firstGroup' => 'A', 'b' => []];
-        $rowKey = 1;
+        $this->runNoDataInDimension($row, $noData, $expected);
+    }
+
+    public function runNoDataInDimension($row, $noData, $expected) {
         $out = $this->getBase()->rep
                 ->group('a', 'firstGroup')
-                ->data('b', $noDataInDimOption)
+                ->data('b', $noData)
                 ->setCallOption(Report::CALL_ALWAYS)
-                ->run([$rowKey => $row]);
+                ->run([$row]);
         $this->assertSame('init<<>>totalHeader<<>>aHeader<<>>detail0<<>>' . $expected . 'aFooter<<>>totalFooter<<>>close<<>>', $out);
     }
-    
- public function noDataParamProvider() {
+
+    /**
+     * Parmeter to test all possible action methods when no data are given for dimension > 0.
+     * @return array Array with arrays. They have a description as key. Data is the 
+     * value for the $noData parameter of the data() method and the expected result. 
+     */
+    public function noDataParamProvider(): array {
         return [
-            'Call default method' => [null, 'noDataDim0<<>>'],
-            'No action' => [false, ''],
-            'String' => [' no data in dim<<>>', ' no data in dim<<>>'],
-            'Call named method' => ['myMethod', 'myMethod<<>>'],
-            'Closure' => [function ($dim) {
+            'Call the default method' => [null, 'noDataDim0<<>>'],
+            'No action will executed' => [false, ''],
+            'Output is the given string' => [' no data in dim<<>>', ' no data in dim<<>>'],
+            'Call the given method' => ['myMethod', 'myMethod<<>>'],
+            'Execute the given closure' => [function ($dim) {
                     return 'no data in dim ' . $dim . '<<>>';
                 }, 'no data in dim 0<<>>'],
             'Call method in other class' => [[$this->getOtherClass(), 'anyMethod'], 'Other_anyMethod<<>>'],
         ];
     }
+
     /**
      * @dataProvider rowDetailProvider
      */
-    public function testRowDetail($row, $rowDetail, $expected) {
+    public function testRowDetailParameterOfDataMethod($row, $rowDetail, $expected) {
         $rep = $this->getBase()
                 ->rep
                 ->data('B', null, $rowDetail)
@@ -89,15 +91,17 @@ class ReportMultiDimensionTest extends TestCase {
     /**
      * @dataProvider noGroupChangeProvider
      */
-    public function testNoGroupChange($rows, $noGroupChange, $expected) {
+    public function testNoGroupChangeParameterOfDataMethod($rows, $noGroupChange, $expected) {
         $rep = $this->getBase()
                 ->rep
                 ->group('group1', 0)
                 ->data('C', null, null, $noGroupChange)
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);
+        // First row. Assertion in not really necessary.
         $rep->next($rows[0], 'k1');
         $this->assertSame('init<<>>totalHeader<<>>group1Header<<>>detail0<<>>detail<<>>', $rep->output);
+        // Clear output and test second row which didn't trigger a group change.
         $rep->output = '';
         $rep->next($rows[1], 'k2');
         $this->assertSame($expected, substr($rep->output, 0, -4));
@@ -108,7 +112,7 @@ class ReportMultiDimensionTest extends TestCase {
         return [
             'Call default method' => [$rows, null, 'noGroupChange0<<>>detail0<<>>detail'],
             'No action' => [$rows, false, 'detail0<<>>detail'],
-            'String with replacement' => [$rows, "Row in my dim didn't trigger a group change<<>>", "Row in my dim didn't trigger a group change<<>>detail0<<>>detail"],
+            'String' => [$rows, "Row in my dim didn't trigger a group change<<>>", "Row in my dim didn't trigger a group change<<>>detail0<<>>detail"],
             'Call named method' => [$rows, 'myMethod', 'myMethod<<>>detail0<<>>detail'],
             'Print arguments' => [$rows, 'printArguments', ' arg0=' . json_encode($rows[1]) . ' arg1="k2" arg2=0<<>>detail0<<>>detail'],
             'Closure' => [$rows, function ($row, $rowKey, $dimID) {
@@ -193,8 +197,8 @@ class ReportMultiDimensionTest extends TestCase {
             'Closure calls run' => [$row, null, true]
         ];
     }
-    
-      public function testNextDimOnObjectProperty() {
+
+    public function testNextDimOnObjectProperty() {
         $dimrows = [(object) ['D' => 11, 'E' => '1a'], (object) ['D' => 11, 'E' => '1b']];
         $row = (object) ['A' => 10, 'B' => $dimrows];
         $rep = $this->getBase()
@@ -286,7 +290,6 @@ class ReportMultiDimensionTest extends TestCase {
         $this->assertSame('close', $out[4]);
     }
 
-  
     /**
      * Basic class which executes actions called from Report
      * @return anonymous class
@@ -294,7 +297,6 @@ class ReportMultiDimensionTest extends TestCase {
     public function getBase($printArguments = false) {
 
         return new class($printArguments) {
-
             // Make sure to have a defined set of actions not influenced by defaults
             // of confic class 
             public $config = ['actions' => [
@@ -311,7 +313,6 @@ class ReportMultiDimensionTest extends TestCase {
                     'data_n' => 'detail%'
                 ]
             ];
-            
             public $rep;
             public $printArguments = false;
 

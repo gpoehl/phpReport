@@ -47,9 +47,21 @@ class Dimension {
     // Attributes to be summarized. Key is sum name, value is info how to extract value from row.
     public $row = [];           // Array Current row and rowKey
     public $groupValues = [];   // Array of group values to detect group change
-    // Sting having Unknown or Array or Object to avoid checking type for eaech row
+  
+    
+
+// Sting having Unknown or Array or Object to avoid checking type for eaech row
     // by building appropiate method names
-    public $addValueMethod = 'addFromUnknown';
+//    public $addValueMethod = 'addFromUnknown';
+
+
+
+    public $dataHandler;
+ 
+    public function __construct() {
+        $this->dataHandler = new UnknownDataHandler();
+    }
+
 
     /**
      * 
@@ -66,5 +78,17 @@ class Dimension {
         $this->noGroupChangeParam = $noGroupChangeParam;
         $this->parameters = $parameters;
     }
+    
+    public function getNewGroupValues($row, $rowKey) {
+       return $this->dataHandler->getGroupValues($row, $rowKey, $this);
+    }
+    
+    public function addValues($row, $rowKey, $total) {
+        return $this->dataHandler->addValues($row, $rowKey, $total, $this);
+    }
+    
+   
+    
+    
 
 }
