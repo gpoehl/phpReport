@@ -191,8 +191,8 @@ class ReportTest extends TestCase {
     public function GroupValue_sum_and_rsum_Provider() {
         $data = ['attr0' => 'groupAvalue', 'attr1' => 5, 'attr2' => 6, 'attr3' => 7];
         return ([
-            [0, 1, [2 => 3], array_values($data)],
-            ['attr0', 'attr1', ['attr2' => 'attr3'], $data],
+            [0, 1, [2 , 3], array_values($data)],
+            ['attr0', 'attr1', ['attr2', 'attr3'], $data],
             [
                 function($row) {
                     return $row['attr0'];
@@ -204,8 +204,8 @@ class ReportTest extends TestCase {
                     return [$row['attr2'] => $row['attr3']];
                 },
                 $data],
-            [0, 1, [2 => 3], (object) array_values($data)],
-            ['attr0', 'attr1', ['attr2' => 'attr3'], (object) ($data)],
+            [0, 1, [2, 3], (object) array_values($data)],
+            ['attr0', 'attr1', ['attr2' , 'attr3'], (object) ($data)],
             [
                 function($row) {
                     return $row->attr0;

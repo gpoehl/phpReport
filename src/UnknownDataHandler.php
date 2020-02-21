@@ -16,6 +16,15 @@ namespace gpoehl\phpReport;
  * Detect type of first data row in a dimension
  */
 class UnknownDataHandler {
+    /* @var $dim Dimension */
+    public $dim;
+    /* @var $target Target class set during instantiation of phpReport class */
+    public $target;
+    
+     public function __construct(Dimension $dim, $target) {
+        $this->dim = $dim;
+        $this->target = $target;
+    }
 
     /**
      * Get group values out of the current row.
@@ -30,13 +39,37 @@ class UnknownDataHandler {
      * @param Dimension Object which serves $groupAttr.
      * @return array Indexed array having the group values out of the given row.
      */
-    public function getGroupValues($row, $rowKey, Dimension $dim): array {
+    public function getGroupValues($row, $rowKey): array {
         if (is_object($row)) {
-            $dim->dataHandler = new ObjectDataHandler();
+            $handler = new ObjectDataHandler($this->dim, $this->target);
         } else {
-            $dim->dataHandler = new ArrayDataHandler();
+            $handler = new ArrayDataHandler($this->dim ,$this->target);
         }
-        return $dim->dataHandler->getGroupValues($row, $rowKey, $dim);
+       $handler->dataType = $this->getSourceType($this->dim->dataSource);
+      $handler->groups = $this->getSourceTypes($this->dim->groupSource);
+//        $handler->calcs = $this->dim->calcs;
+        $handler->dimID = $this->dim->id;
+
+        $this->dim->dataHandler = $handler;
+        return $handler->getGroupValues($row, $rowKey);
+    }
+
+    private function getSourceTypes($source) {
+        $sourceTypes = [];
+        foreach ($source as $name => $attr) {
+            $sourceTypes[$name] = [$this->getSourceType($attr), $attr];
+        }
+        return $sourceTypes;
+    }
+
+    private function getSourceType($attr) {
+        if ($attr instanceof \Closure) {
+            return DataHandler::CLOSURE;
+        }
+        if (is_array($attr)) {
+            return (count ($attr) === 1) ? DataHandler::METHOD : DataHandler::CLASSMETHOD;
+        }
+        return DataHandler::ATTRIBUTE;
     }
 
 }

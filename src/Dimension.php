@@ -17,11 +17,17 @@ namespace gpoehl\phpReport;
  * Class Dimension holds data per dimension
  */
 class Dimension {
-
+    public $id;         // The current dimension ID 
+    public $nextID;     // The id of next dimension (just to avoid additions)
+    public $isLastDim = false;  // True for the last dimension
+    
     public $fromLevel;  // Level of first group within dimension
     public $lastLevel;  // Level of last group within dimension
+    
     // Data source for next dimension
-    public $source;
+    public $dataSource;
+    // Source for values to detect group changes. Declared by group(). Key is group name.
+    public $groupSource = [];
     // Array of optional additional parameter to be passed to external methods
     public $parameters;
     public $noDataParam; // Parameter for noData action.
@@ -35,33 +41,25 @@ class Dimension {
     public $detailAction = [];
     // Runtime action to be performed when no group change was triggered.
     public $noGroupChangeAction = [];
-    // Attributes to determine group changes. Given by group(). Key is group name.
-    // Value has info how value is extracted from row. 
-    public $groupAttr = [];
+    
     // Attributes to be summarized. Key is name of calculator or sheet, value 
     // is info how where to find values(s) from row.
-    public $attrSource = [];
+    public $calcs = [];
     // Array having only info about type (string, array, closure) of the groupAttr
     // to avoid expensive is_array() calls.
-    public $attrType = [];
     // Attributes to be summarized. Key is sum name, value is info how to extract value from row.
-    public $row = [];           // Array Current row and rowKey
-    public $groupValues = [];   // Array of group values to detect group change
-  
+   
+    public $row;           // Current data row
+    public $rowKey;        // Key of current data row
     
+    public $groupValues = [];   // Array of group values to detect group change
+    public $dataHandler;        // Object which handles methods related to the type of data row.
 
-// Sting having Unknown or Array or Object to avoid checking type for eaech row
-    // by building appropiate method names
-//    public $addValueMethod = 'addFromUnknown';
-
-
-
-    public $dataHandler;
- 
-    public function __construct() {
-        $this->dataHandler = new UnknownDataHandler();
+    public function __construct(int $id, $target) {
+        $this->id = $id;
+        $this->nextID = ++ $id;
+        $this->dataHandler = new UnknownDataHandler($this, $target);
     }
-
 
     /**
      * 
@@ -72,23 +70,11 @@ class Dimension {
      * with action type as first array element.   
      */
     public function setParameter($source = null, array $noDataParam = null, array $rowDetail = null, array $noGroupChangeParam = null, $parameters = []) {
-        $this->source = $source;
+        $this->dataSource = $source;
         $this->noDataParam = $noDataParam;
         $this->rowDetail = $rowDetail;
         $this->noGroupChangeParam = $noGroupChangeParam;
         $this->parameters = $parameters;
     }
-    
-    public function getNewGroupValues($row, $rowKey) {
-       return $this->dataHandler->getGroupValues($row, $rowKey, $this);
-    }
-    
-    public function addValues($row, $rowKey, $total) {
-        return $this->dataHandler->addValues($row, $rowKey, $total, $this);
-    }
-    
-   
-    
-    
 
-}
+   }

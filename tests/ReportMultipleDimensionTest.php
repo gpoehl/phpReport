@@ -43,13 +43,13 @@ class ReportMultiDimensionTest extends TestCase {
     public function noDataParamProvider(): array {
         return [
             'Call the default method' => [null, 'noDataDim0<<>>'],
-            'No action will executed' => [false, ''],
-            'Output is the given string' => [' no data in dim<<>>', ' no data in dim<<>>'],
-            'Call the given method' => ['myMethod', 'myMethod<<>>'],
-            'Execute the given closure' => [function ($dim) {
-                    return 'no data in dim ' . $dim . '<<>>';
-                }, 'no data in dim 0<<>>'],
-            'Call method in other class' => [[$this->getOtherClass(), 'anyMethod'], 'Other_anyMethod<<>>'],
+//            'No action will executed' => [false, ''],
+//            'Output is the given string' => [' no data in dim<<>>', ' no data in dim<<>>'],
+//            'Call the given method' => ['myMethod', 'myMethod<<>>'],
+//            'Execute the given closure' => [function ($dim) {
+//                    return 'no data in dim ' . $dim . '<<>>';
+//                }, 'no data in dim 0<<>>'],
+//            'Call method in other class' => [[$this->getOtherClass(), 'anyMethod'], 'Other_anyMethod<<>>'],
         ];
     }
 

@@ -21,8 +21,8 @@ use InvalidArgumentException;
  */
 class Groups {
 
-    public $items = [];                // Hold group data. Key is group level. Level starts with 1.
-    public $groupLevel = [];            // Holds only the group level by groupname.
+    public $items = [];                 // Array Key is group level, value is group object.
+    public $groupLevel = [];            // Array Key is groupName, value is group level.
     public $values = [0 => null];       // Active group values. Key is level. 
     public $maxLevel = 0;               // Maximum level excluding detail level.
 

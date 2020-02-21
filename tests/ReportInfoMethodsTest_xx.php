@@ -28,8 +28,8 @@ class ReportInfoMethodsTest extends TestCase {
         $this->assertSame(True, $this->rep->isLast());
     }
 
-    public function testGetCurrentDimId() {
-        $this->assertSame(0, $this->rep->getCurrentDimID());
+    public function testGetDimId() {
+        $this->assertSame(0, $this->rep->getDimID());
     }
 
     public function testLevel() {

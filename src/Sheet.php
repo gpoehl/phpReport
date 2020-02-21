@@ -55,11 +55,11 @@ class Sheet extends AbstractCollector {
      * Add values to sheet item
      * Values will be added to sheet items by
      * calling the add method of calculator class.
-     * The calculator will be instantiated when when he doesn't already exists.
-    * @param iterable $values The iterator key represents the sheet item
+     * The calculator will be instantiated when he doesn't already exists.
+     * @param iterable $values The iterator key represents the sheet item
      * while the value will to be added. 
      */
-     public function add(iterable $values) {
+    public function add(iterable $values) {
         foreach ($values as $key => $value) {
             if (!isset($this->items[$key])) {
                 $this->addItem($key);

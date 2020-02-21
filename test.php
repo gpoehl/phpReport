@@ -4,7 +4,16 @@ require(__DIR__ . '/vendor/autoload.php');
 
 use gpoehl\phpReport\Collector;
 
- 
+$x=[];
+$x[]=1;
+echo current ($x);
+$x[]=2;
+echo current ($x);
+next ($x);
+echo current ($x);
+$x[]=2;
+echo current ($x);
+
 
 
 $a = new Collector();
