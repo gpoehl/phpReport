@@ -36,19 +36,4 @@ class Collector extends AbstractCollector {
         }
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function addItems($item, $fromKey = 0, $toKey = null) {
-        if (is_array($fromkey)) {
-            foreach ($fromKey as $key) {
-                $this->addItem(clone $item, $key);
-            }
-        } else {
-            for ($key = $fromKey; $key <= $toKey; $key ++) {
-                $this->addItem(clone $item, $key);
-            }
-        }
-    }
-
 }

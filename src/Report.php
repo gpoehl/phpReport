@@ -24,7 +24,7 @@ namespace gpoehl\phpReport;
  */
 class Report {
 
-    const VERSION = '1.0.0';
+    const VERSION = '2.0.0';
 
     // Collected return values from executed actions
     public $output;
@@ -56,9 +56,10 @@ class Report {
     public $total;
     public $userConfig;             // Optional user configuration. @see Configurator for details.   
     public $activeMethod;           // The current method (build by getCallable) 
-    private $dims;                  // Array of dimension objects
-    /* @var $dim Dimension */
-    private $dim;                   // The actual dimension. Shortcut of current($dims); 
+    /* @var Dimension[] */
+    private $dims = [];             // Array of date dimension objects
+    /* @var $dim Dimension The actual dimension. Shortcut of current($dims)*/
+    private $dim;                   
     private $changedLevel;          // Highest level of changed group. Null when no change 
     private $groups;                // Groups object which holds array of group objects
     // @property Collector $collector The master collector. All items
@@ -94,16 +95,23 @@ class Report {
         $this->collector->addItem($this->gc, 'gc');
         $this->mp->total = $this->total = Factory::collector();
         $this->collector->addItem($this->total, 'total');
-        $this->dims[] = $this->dim = new Dimension(0, $target);
         return $this;
     }
 
     /**
-     * Declare data for the next dimension.
+     * Set data handler and optionally declare next data dimension.
+     * For each data dimension this method should be called. It must be called
+     * before your can declare groups or call the calculate or sheet methods.
+     * 
      * Next dimension can be next dimension in an multi dimensional array or
      * data of an 1:n relationship where the related data is not part of the
      * current dimension. 
      * 
+     * @param mixed $dataHandler The data handler which gets data out of a data.
+     * You can use 'array' as a shortcut to ArrayDataHandler or 'object' to
+     * ArrayDataHandler.
+     * When the last dimension don't has groups, calculate fields or sheets then
+     * a new dimension will be instantiated when you omit the data() method call. 
      * @param mixed $source Method, callable, closure or attribute name. 
      * Methods, callables and closures must return an iterable data set, null 
      * when no data exists. 
@@ -125,24 +133,11 @@ class Report {
      * @param mixed $parameters Optional variadic list of additional parameters passed thrue 
      * to external methods. 
      */
-    public function data($source, $noData = null, $rowDetail = null, $noGroupChange = null, array $parameters = []): Report {
-//        if (is_array($source) && count($source) === 1) {
-//            // Make sure that method name is set to array index = 1
-//            $source = [null, end($source)];
-//        }
-        if ($noData !== null) {
-            $noData = Helper::buildMethodAction($noData, 'noData_n');
-        }
-        if ($rowDetail !== null) {
-            $rowDetail = Helper::buildMethodAction($rowDetail, 'detail_n');
-        }
-        if ($noGroupChange !== null) {
-            $noGroupChange = Helper::buildMethodAction($noGroupChange, 'noGroupChange_n');
-        }
-        // Write parameter to current dimension!
-        $this->dim->setParameter($source, $noData, $rowDetail, $noGroupChange, $parameters);
-        $this->dims[] = new Dimension($this->dim->nextID, $this->target);
-        $this->dim = next($this->dims);     // The new dimension.
+    public function data($dataHandler, $source = null, $noData = null, $rowDetail = null, $noGroupChange = null, ... $params): Report {
+
+        $this->dim = new Dimension(count($this->dims), $dataHandler, $source, $this->target, $noData, $rowDetail, $noGroupChange, $params);
+        $this->dims[] = $this->dim;
+
         return $this;
     }
 
@@ -165,9 +160,9 @@ class Report {
      * Set to False when default action should not be executed.
      * @return $this Allows chaining of method calls.
      */
-    public function group($name, $value = null, $headerAction = null, $footerAction = null): Report {
+    public function group($name, $value = null, $headerAction = null, $footerAction = null, ...$params): Report {
+        $this->checkThatDimIsDeclared('group', $name);
         $value = $value ?? $name;
-        $this->dim->groupSource[$name] = $value;
         $group = $this->groups->newGroup($name, $this->dim->id);
         if ($headerAction !== null) {
             $group->headerParam = Helper::buildMethodAction($headerAction, 'groupHeader');
@@ -175,6 +170,7 @@ class Report {
         if ($footerAction !== null) {
             $group->footerParam = Helper::buildMethodAction($footerAction, 'groupFooter');
         }
+        $this->dim->dataHandler->addGroup($value, $params);
         $this->gc->addItem(Factory::calculator($this->mp, $group->level - 1, self::XS), $group->level);
         return $this;
     }
@@ -201,26 +197,14 @@ class Report {
      * calculated data are only needed on higher levels.
      * @return mixed $this Allows chaining of method calls.
      */
-    public function calculate(string $name, $value = null, ?int $typ = self::XS, ?int $maxLevel = null): Report {
+    public function calculate(string $name, $value = null, ?int $typ = self::XS, ?int $maxLevel = null, ...$params): Report {
+        $this->checkThatDimIsDeclared('calculate', $name);
         $typ = $typ ?? self::XS;
         $value = $value ?? $name;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $this->total->addItem(Factory::calculator($this->mp, $maxLevel, $typ), $name);
         if ($value !== false) {
-            if ($value instanceOf \Closure) {
-                $type = DataHandler::CLOSURE;
-            } elseif (is_array($value)) {
-                // Valeu is is an array. A method must be called 
-                if (count($attr) === 1) {
-                    // Only method name is given. Must be called in target class
-                    $value = [$this->target, $value[0]];
-                }
-                $type = DataHandler::CLASSMETHOD;
-            } else {
-                // Key and value will be taken directly from row. 
-                $type = DataHandler::ATTRIBUTE;
-            }
-            $this->dim->calcs[$name] = [$type, $value];
+            $this->dim->dataHandler->addCalcItem($name, $value, $params);
         }
         return $this;
     }
@@ -259,26 +243,28 @@ class Report {
      * calculated data are only needed on higher levels.
      * @return mixed $this Allows chaining of method calls.
      */
-    public function sheet(string $name, $value, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null): Report {
+    public function sheet(string $name, $value, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null, ...$params): Report {
+        $this->checkThatDimIsDeclared('sheet', $name);
         $typ = $typ ?? self::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $this->total->addItem(Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey), $name);
         if ($value !== false) {
-            if ($value instanceOf \Closure) {
-                $type = DataHandler::CLOSURE;
-            } elseif (is_array($value[0])) {
-                // $value must be an array. 
-                // First element in this array is an array. A method must be called 
-                // Only method name is given. Must be called in target class
-                $value = (count($value[0]) === 1) ? $value = [$this->target, $value[0]] : $value[0];
-                $type = DataHandler::CLASSMETHOD;
-            } else {
-                // Key and value will be taken directly from row. 
-                $type = DataHandler::SHEETATTRIBUTES;
-            }
-            $this->dim->calcs[$name] = [$type, $value];
+            $this->dim->dataHandler->addSheetItem($name, $value, $params);
         }
         return $this;
+    }
+
+    /**
+     * Check that dim is set correct when methods are called which relates to a dim.
+     * If possible a dim wihout calling the data() method will be instantiated. 
+     * @param string $func The method name where this method was called from
+     * @param string $name The name given to group, calculate or sheet method 
+     * @throws \InvalidArgumentException
+     */
+    private function checkThatDimIsDeclared(string $func, $name): void {
+        if (!isset($this->dim)) {
+            throw new \InvalidArgumentException("Before calling the $func() method for '$name' the data() method must be called.");
+        }
     }
 
     /**
@@ -302,24 +288,21 @@ class Report {
      * eventually call init and totalHeader methods.
      */
     private function finalInitializion(): void {
-        $totalGroupCount = 0;
+        $fromLevel = 0;
 
-        foreach ($this->dims as $dim) {
-            $noOfGroups = count($dim->groupSource);
-            if ($noOfGroups > 0) {
-                $dim->fromLevel = $totalGroupCount + 1;
-                $totalGroupCount += $noOfGroups;
-                $dim->lastLevel = $totalGroupCount;
-            } else {
-                // Dims without groups get lastGroupCount. Required as base level for calculations 
-                $dim->fromLevel = $totalGroupCount;
-            }
-            $dim->lastLevel = $totalGroupCount;
-            $this->rc->addItem(Factory::calculator($this->mp, $dim->lastLevel, self::XS, $dim->id));
+        // Create dummy dimension with array data provider when for last 
+        // dimension data() was not called. This works only when the last
+        // dimension need no calc, sheet or groups.
+        if (empty($this->dims) || !end($this->dims)->isLastDim) {
+            $this->dims[] = new Dimension(count($this->dims), 'array');
         }
-        // Mark last dimension and make first dimension active.
-        $dim = end($this->dims);
-        $dim->isLastDim = true;
+        foreach ($this->dims as $dim) {
+            $lastLevel = $dim->setFromAndLastLevel($fromLevel);
+            $this->rc->addItem(Factory::calculator($this->mp, $lastLevel, self::XS, $dim->id));
+            $fromLevel = $lastLevel;
+        }
+
+        // Make first dimension active.
         $this->dim = reset($this->dims);
 
         $this->mp->gc->setMapper($this->groups->groupLevel);
@@ -383,14 +366,17 @@ class Report {
             $method = $group->footerParam ?? Helper::replacePercent($rep, $this->actions['groupFooter']);
             $group->footerAction = $this->getRuntimeAction('groupFooter', $method);
         }
+
         // Exclude last dimension. Has no data from data() method. 
-        for ($dimID = 0, $ilen = count($this->dims) - 1; $dimID < $ilen; $dimID++) {
-            $dim = $this->dims[$dimID];
-            $method = $dim->noDataParam ?? Helper::replacePercent($dimID, $this->actions['noData_n']);
+        foreach ($this->dims as $dim) {
+            if ($dim->isLastDim) {
+                break;
+            }
+            $method = $dim->noDataParam ?? Helper::replacePercent($dim->id, $this->actions['noData_n']);
             $dim->noDataAction = $this->getRuntimeAction('noData_n', $method);
-            $method = $dim->rowDetail ?? Helper::replacePercent($dimID, $this->actions['data_n']);
+            $method = $dim->rowDetail ?? Helper::replacePercent($dim->id, $this->actions['data_n']);
             $dim->detailAction = $this->getRuntimeAction('data_n', $method);
-            $method = $dim->noGroupChangeParam ?? Helper::replacePercent($dimID, $this->actions['noGroupChange_n']);
+            $method = $dim->noGroupChangeParam ?? Helper::replacePercent($dim->id, $this->actions['noGroupChange_n']);
             $dim->noGroupChangeAction = $this->getRuntimeAction('noGroupChange_n', $method);
         }
     }
@@ -482,25 +468,16 @@ class Report {
         if (isset($this->actions['init'])) {
             $this->finalInitializion();
         }
-        if (!empty($data)) {
-            foreach ($data as $rowKey => $row) {
-                $this->next($row, $rowKey);
-            }
-        } elseIf ($this->dim->id > 0) {
-            $this->noData_n();
-        }
+        $this->runPartial($data);
         if ($this->dim->id === 0) {
             return ($finalize) ? $this->end() : $this;
         }
     }
 
     /**
-     * Specialized run method to handle data of dimenensions with ID > 0 or
-     * batches of first dimension.
-     * Compared to the run() method a few conditions aren't checked which will
-     * speed up processing when working with many dimensions.
-     * Warning: When you use this method for batches of first dimension make
-     * sure to call the run() method at least once and the end() method when 
+     * Iterate over a given data set.
+     * Use to iterate over data sets from data dimension > 0.
+     * Warning: Make sure to call the run() method at least once and the end() method when 
      * you're ready. 
      * @param iterable|null $data
      */
@@ -509,7 +486,7 @@ class Report {
             foreach ($data as $rowKey => $row) {
                 $this->next($row, $rowKey);
             }
-        } else {
+        } elseIf ($this->dim->id > 0) {
             $this->noData_n();
         }
     }
@@ -659,7 +636,7 @@ class Report {
      * @return bool true when group has changed, false when not.
      */
     private function noGroupChange($row, $rowKey): bool {
-        if ($this->changedLevel !== null || empty($this->dim->groupSource)) {
+        if ($this->changedLevel !== null || empty($this->dim->dataHandler->numberOfGroups)) {
             return true;
         }
         $action = $this->dim->noGroupChangeAction;
@@ -729,18 +706,6 @@ class Report {
     }
 
     /**
-     * Get the current dimID. While in groupFooters it's the dim related to the
-     * current group. 
-     * @return int The dimId
-     */
-    public function getCurrentDimID(): int {
-//        if ($this->activeMethod[0] !== 'groupFooter') {
-        return $this->dim->id;
-//        }
-//        return $this->groups->items[$this->mp->level]->dimID;
-    }
-
-    /**
      * ******************************************************************************************
      * Following methods are extra sugar for target object. Not needed for program flow.        *
      * **************************************************************************************** */
@@ -770,6 +735,9 @@ class Report {
      * @return int The dimenion ID for the requested level. 
      */
     public function getDimID($level = null) {
+        if ($level === null) {
+            return $this->dim->id;
+        }
         $level = $this->mp->getLevel($level);
         return ($level === 0) ? 0 : $this->groups->items[$level]->dimID;
     }

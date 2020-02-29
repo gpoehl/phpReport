@@ -111,23 +111,21 @@ TABLE1;
         switch ($method) {
             case 'groupHeader':
             case 'groupFooter':
-                $dimID = $this->rep->getCurrentDimID();
                 return $this->$method(
                                 $this->rep->getGroupValue(),
-                                $this->rep->getRow($dimID),
-                                $this->rep->getRowKey($dimID),
-                                $dimID,
+                                $this->rep->getRow(),
+                                $this->rep->getRowKey(),
+                                $this->rep->getDimID(),
                 );
             case 'detail':
                 return $this->$method($this->rep->getRow(), $this->rep->getRowKey());
             case 'noData_n':
-                return $this->$method($this->rep->getCurrentDimID());
+                return $this->$method($this->rep->getDimID());
             case 'data_n':
-                $dimID = $this->rep->getCurrentDimID();
                 return $this->$method(
-                                $this->rep->getRow($dimID),
-                                $this->rep->getRowKey($dimID),
-                                $dimID,
+                                $this->rep->getRow(),
+                                $this->rep->getRowKey(),
+                                $$this->rep->getDimID(),
                 );
             default:
                 return $this->$method();
@@ -162,7 +160,6 @@ TABLE1;
                 return (string) $name;
             case Report::CLOSURE:
                 return 'closure';
-            case Report::STRING:
             case Report::STRING:
                 return 'string: ' . htmlentities(substr($action, 0, 60));
             default:
@@ -228,7 +225,7 @@ TABLE1;
         $content = $this->renderRowValues($row, $rowKey);
         $content .= $this->renderTotals();
         $content .= $this->renderRowCounter();
-        return $this->renderAction($content, ", Dim = {$this->rep->getCurrentDimID()} RowKey = $rowKey");
+        return $this->renderAction($content, ", Dim = {$this->rep->getDimID()} RowKey = $rowKey");
     }
 
     public function noData(): string {
@@ -241,10 +238,7 @@ TABLE1;
      * @return string Created output 
      */
     public function noData_n(int $dimID): string {
-//        $higherLevel = $this->rep->getLevel() - 1;
-//        $groupName = $this->rep->getGroupName($higherLevel);
         $missingDimID = $dimID + 1;
-//        $val = $this->rep->getGroupValue($higherLevel) ?? 'Null'; // row value
         $content = '' //" Value of higher group level $groupName = $val."
                 . "<br>Row values belongs to dimension $dimID!";
         $content .= $this->renderRowValues($this->rep->getRow($dimID), $this->rep->getRowKey($dimID));

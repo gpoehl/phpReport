@@ -57,7 +57,7 @@ class MajorPropertiesTest extends TestCase {
     }
 
     public function testGetLevelForInvalidGroupName() {
-        $this->expectException(Notice::class);
+        $this->expectNotice();
         $this->stub->getLevel('notExistingGroup');
     }
     

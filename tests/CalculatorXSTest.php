@@ -54,7 +54,7 @@ class CalculatorXSTest extends TestCase {
     }
 
     public function testAddStringFailure() {
-        $this->expectException(Warning::class);
+        $this->expectWarning();
         $this->stack->add('non numeric value');
     }
 

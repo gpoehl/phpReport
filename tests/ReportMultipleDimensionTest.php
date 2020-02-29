@@ -28,8 +28,9 @@ class ReportMultiDimensionTest extends TestCase {
 
     public function runNoDataInDimension($row, $noData, $expected) {
         $out = $this->getBase()->rep
+                ->data('array', 'b', $noData)
                 ->group('a', 'firstGroup')
-                ->data('b', $noData)
+                ->data('array')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([$row]);
         $this->assertSame('init<<>>totalHeader<<>>aHeader<<>>detail0<<>>' . $expected . 'aFooter<<>>totalFooter<<>>close<<>>', $out);
@@ -43,13 +44,13 @@ class ReportMultiDimensionTest extends TestCase {
     public function noDataParamProvider(): array {
         return [
             'Call the default method' => [null, 'noDataDim0<<>>'],
-//            'No action will executed' => [false, ''],
-//            'Output is the given string' => [' no data in dim<<>>', ' no data in dim<<>>'],
-//            'Call the given method' => ['myMethod', 'myMethod<<>>'],
-//            'Execute the given closure' => [function ($dim) {
-//                    return 'no data in dim ' . $dim . '<<>>';
-//                }, 'no data in dim 0<<>>'],
-//            'Call method in other class' => [[$this->getOtherClass(), 'anyMethod'], 'Other_anyMethod<<>>'],
+            'No action will executed' => [false, ''],
+            'Output is the given string' => [' no data in dim<<>>', ' no data in dim<<>>'],
+            'Call the given method' => ['myMethod', 'myMethod<<>>'],
+            'Execute the given closure' => [function ($dim) {
+                    return 'no data in dim ' . $dim . '<<>>';
+                }, 'no data in dim 0<<>>'],
+            'Call method in other class' => [[$this->getOtherClass(), 'anyMethod'], 'Other_anyMethod<<>>'],
         ];
     }
 
@@ -59,7 +60,8 @@ class ReportMultiDimensionTest extends TestCase {
     public function testRowDetailParameterOfDataMethod($row, $rowDetail, $expected) {
         $rep = $this->getBase()
                 ->rep
-                ->data('B', null, $rowDetail)
+                ->data('array', 'B', null, $rowDetail)
+                ->data('array')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);
 
@@ -94,8 +96,9 @@ class ReportMultiDimensionTest extends TestCase {
     public function testNoGroupChangeParameterOfDataMethod($rows, $noGroupChange, $expected) {
         $rep = $this->getBase()
                 ->rep
+                ->data('array', 'C', null, null, $noGroupChange)
                 ->group('group1', 0)
-                ->data('C', null, null, $noGroupChange)
+                ->data('array')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);
         // First row. Assertion in not really necessary.
@@ -129,73 +132,19 @@ class ReportMultiDimensionTest extends TestCase {
         $this->expectException(RuntimeException::class);
         $this->getBase()
                 ->rep
+                ->data('array', 'C', null, null, 'error:No Group Change')
                 ->group('group1', 0)
-                ->data('C', null, null, 'error:No Group Change')
+                ->data('array')
                 ->run([['A', 'B', 'C' => [[1, 3]]], ['A', 'X', 'C' => [[4, 5]]]]);
     }
 
     public function testNoGroupChangeTriggersWarning() {
-        $this->expectException(\PHPUnit\Framework\Error\Notice::class);
+        $this->expectNotice();
         $this->getBase()
                 ->rep
+                ->data('array','C', null, null, 'warning:No Group Change')
                 ->group('group1', 0)
-                ->data('C', null, null, 'warning:No Group Change')
                 ->run([['A', 'B', 'C' => [[1, 3]]], ['A', 'X', 'C' => [[4, 5]]]]);
-    }
-
-    /**
-     * @dataProvider DataSourcesReturnsDataSetProvider
-     */
-    public function testDataSourcesReturnsDataSet($row, $dataSource, $makeClosure = false, $passReport = false) {
-        $rep = $this->getBase(true)
-                ->rep;
-
-        // Create closue to allow passing $rep and call run(). 
-        if ($makeClosure) {
-            $dataSource = function ($row, $rowKey, $dimID, $param1, $param2) use ($rep) {
-                $rep->run([
-                    ['row1', $row[0], $param1],
-                    ['row2', $row[0], $param2]
-                        ]
-                );
-                return false;
-            };
-        }
-        $parameters = ($passReport) ? [$rep, 'P1', 'P2'] : ['P1', 'P2'];
-        $rep->data($dataSource, null, null, null, $parameters)
-                ->setCallOption(Report::CALL_ALWAYS)
-                ->run(null, false);
-
-        $rep->next($row, 'K1');
-        $out = explode('<<>>', substr($rep->output, 0, -4));
-        $this->assertSame('init', $out[0]);
-        $this->assertSame('totalHeader', $out[1]);
-        $this->assertSame('detail0 arg0=' . json_encode($row) . ' arg1="K1" arg2=0', $out[2]);
-        $this->assertSame('detail arg0=' . json_encode(['row1', 'A', 'P1']) . ' arg1=0', $out[3]);
-        $this->assertSame('detail arg0=' . json_encode(['row2', 'A', 'P2']) . ' arg1=1', $out[4]);
-    }
-
-    public function DataSourcesReturnsDataSetProvider() {
-        $row = ['A', 'B'];
-        return [
-            'Method in target' => [$row, ['getNextDimData']],
-            'Method in class of row' => [$this->getRowAsObject($row), ['getNextDimData']],
-            'Method in other class' => [$row, [$this->getOtherClass(), 'getNextDimData']],
-            'Closure' => [
-                $row
-                , function ($row, $rowKey, $dimID, $param1, $param2) {
-                    return ([
-                        ['row1', $row[0], $param1],
-                        ['row2', $row[0], $param2]
-                            ]
-                            );
-                }
-            ],
-            'Method in target calls run' => [$row, ['CallRunWithNextDimData']],
-            'Method in class of row calls run' => [$this->getRowAsObject($row), ['CallRunWithNextDimData'], false, true],
-            'Method in other class calls run' => [$row, [$this->getOtherClass(), 'CallRunWithNextDimData'], false, true],
-            'Closure calls run' => [$row, null, true]
-        ];
     }
 
     public function testNextDimOnObjectProperty() {
@@ -203,7 +152,8 @@ class ReportMultiDimensionTest extends TestCase {
         $row = (object) ['A' => 10, 'B' => $dimrows];
         $rep = $this->getBase()
                 ->rep
-                ->data('B')
+                ->data('object', 'B')
+                ->data('object')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([$row]);
         $this->assertSame('init<<>>totalHeader<<>>detail0<<>>detail<<>>detail<<>>totalFooter<<>>close<<>>', $rep);
@@ -212,9 +162,10 @@ class ReportMultiDimensionTest extends TestCase {
     public function testNoDataDoesNotTriggerGroupChange() {
         $rep = $this->getBase(true)
                 ->rep
+                ->data('array', 'C')
                 ->group('g1', 'A')
                 ->group('g2', 'B')
-                ->data('C')
+                ->data('array')
                 ->group('g3', 'D')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);
@@ -297,6 +248,7 @@ class ReportMultiDimensionTest extends TestCase {
     public function getBase($printArguments = false) {
 
         return new class($printArguments) {
+
             // Make sure to have a defined set of actions not influenced by defaults
             // of confic class 
             public $config = ['actions' => [

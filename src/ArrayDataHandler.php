@@ -14,60 +14,56 @@ declare(strict_types=1);
 namespace gpoehl\phpReport;
 
 /**
- * Methods related to data being arrays
+ * Methods related to data rows being arrays
  */
-class ArrayDataHandler extends DataHandler {
-    
+class ArrayDataHandler {
+
+    use BaseDataHandler;
 
     /**
      * Get group values out of the current row
-     * @param array $row The row which has the group attributes.
+     * @param array $row The current data row.
      * @param int | string | null $rowKey The key of $row. 
-     * @return array Indexed array having the group values out of the given row.
+     * @return array Indexed array having the group values.
      */
     public function getGroupValues(array $row, $rowKey): array {
         $values = [];
-        foreach ($this->groups as list($type, $source)) {
-            switch ($type) {
-                case DataHandler::ATTRIBUTE:
-                    $values[] = $row[$source];
-                    break;
-                case DataHandler::CLOSURE:
-                    $values[] = $source($row, $rowKey, $this->dim->id);
-                    break;
-                case DataHandler::METHOD:
-                    $values[] = $row->{$source[0]}();
-                    break;
-                default: // case DataHandler::CLASSMETHOD:
-                    $values[] = ($source)($row, $rowKey, $this->dim->id);
-            }
+        foreach ($this->groupValueSources as $source) {
+            $values[] = ($source[0] === Helper::ATTRIBUTE) ? $row[$source[1]] :
+                    $source[1]($row, $rowKey, $this->dim->id, ...$source[2]);
         }
         return $values;
     }
 
     /**
      * Add values to caluclate() or sheet() attributes
+     * Note: Adding values here is faster than returning values and calling add()
+     * from report class.
      * @param array $row The current row.
      * @param int | string | null $rowKey The key of $row. 
      * @param array $total The itmes property of the total collector.
      */
     public function addValues(array $row, $rowKey, array $total): void {
-        foreach ($this->dim->calcs as $name => list($type, $attr)) {
-            switch ($type) {
-                case DataHandler::ATTRIBUTE:
+        foreach ($this->calcValueSources as $name => $source) {
+            $attr = $source[1];
+            switch ($source[0]) {
+                case Helper::ATTRIBUTE:
                     $total[$name]->add($row[$attr]);
                     break;
-                case DataHandler::SHEETATTRIBUTES:
+                case Helper::SHEETATTRIBUTES:
                     // call add() with an array having one key=>value element
                     $total[$name]->add([$row[$attr[0]] => $row[$attr[1]]]);
                     break;
-                case DataHandler::CLOSURE:
-                    $total[$name]->add($attr($row, $rowKey, $this->dimID));
+                case Helper::CLOSURE:
+                    $total[$name]->add($attr($row, $rowKey, $this->dim->id, ...$source[2]));
+                    break;
+                case Helper::METHOD:
+                    $total[$name]->add([$this->dim->target, $attr]($row, $rowKey, $this->dim->id, ...$source[2]));
                     break;
                 default:
                     // called method must return an scalar value for calculate()
                     // or an array for sheets.
-                    $total[$name]->add($attr($row, $rowKey, $this->dimID));
+                    $total[$name]->add($attr($row, $rowKey, $this->dim->id, ...$source[2]));
             }
         }
     }
@@ -79,19 +75,16 @@ class ArrayDataHandler extends DataHandler {
      * @return null|false|iterable The data for the next dimension
      */
     public function getDimData(array $row, $rowKey) {
-        switch ($this->dataType) {
-            case DataHandler::ATTRIBUTE:
-                return ($row[$this->dim->dataSource]) ?? null;
-                break;
-            case DataHandler::CLOSURE:
-                return ($this->dim->dataSource)($row, $rowKey, $this->dim->nextID, ... $this->dim->parameters);
-                break;
-            case DataHandler::METHOD:
-                return $this->target->{$this->dim->dataSource[0]}($row, $rowKey, $this->dim->nextID, ... $this->dim->parameters);
-                break;
-            case DataHandler::CLASSMETHOD:
-                return ($this->dim->dataSource)($row, $rowKey, $this->dim->nextID, ... $this->dim->parameters);
-                break;
+        switch ($this->dataSource[0]) {
+            case Helper::ATTRIBUTE:
+                // null when data is not set.
+                return $row[$this->dataSource[1]] ?? null;
+            case Helper::CLOSURE:
+                return ($this->dataSource[1])($row, $rowKey, $this->dim->nextID, ...$this->dataSource[2]);
+            case Helper::METHOD:
+                return ([$this->dim->target, $this->dataSource[1]])($row, $rowKey, $this->dim->nextID, ...$this->dataSource[2]);
+            default: //  CLASSMETHOD
+                return ($this->dataSource[1])($row, $rowKey, $this->dim->nextID, ...$this->dataSource[2]);
         }
     }
 

@@ -50,17 +50,17 @@ class CollectorTest extends TestCase {
     }
 
     public function testAccessWithInvalidKeyProducesNotice() {
-        $this->expectException(Notice::class);
+        $this->expectNotice();
         $a = $this->stack->getItem('missingKey');
     }
 
     public function testArrayAccessWithInvalidKeyProducesNotice() {
-        $this->expectException(Notice::class);
+        $this->expectNotice();
         $a = $this->stack[99];
     }
 
     public function testMagicAccessWithInvalidKeyProducesNotice() {
-        $this->expectException(Notice::class);
+        $this->expectNotice();
         $a = $this->stack->missingKey;
     }
 
