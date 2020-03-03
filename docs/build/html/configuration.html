@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration &mdash; phpReport 1.00 documentation</title>
+  <title>Configuration &mdash; phpReport 2.0.0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.00
+                2.0.0
               </div>
             
           
@@ -88,15 +88,15 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="actions.html">Actions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prototype.html">Prototyping</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calculation.html">Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sugar.html">Extra sugar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -149,7 +149,7 @@
         
             
             
-              <a href="https://github.com/gpoehl/phpReport/blob/master/docs/configuration.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/gpoehl/phpReport/blob/master//docs/configuration.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -168,7 +168,6 @@
 <p><strong>phpReport</strong> lets you configure the real action to be performed for events
 which triggers one or more actions.</p>
 <p>Whenever an event occurs the action defined to an action key will be performed.</p>
-<p>n</p>
 <p>For each possible action to be executed you can declare what should be done.
 Each action key has a default action assigned. Within the <strong>config.php</strong> file the
 default actions might be adjusted to meet your personal favorites or to follow
@@ -230,7 +229,7 @@ how the % sign the will be replaced during run time.</p>
 <td><p>$grandTotalName</p></td>
 </tr>
 <tr class="row-odd"><td><p>totalFooter</p></td>
-<td><p>%Footer%</p></td>
+<td><p>%Footer</p></td>
 <td><p>$grandTotalName</p></td>
 </tr>
 <tr class="row-even"><td><p>groupHeader</p></td>
@@ -301,7 +300,7 @@ time when instantiating the <strong>phpReport</strong> object.</p>
 </dd></dl>
 
 <p>That’s the place where you define the type of actions to be performed or the method names.</p>
-<p>Actions have a key which will translated in real action names.</p>
+<p>Actions have a key which will translated to real action names.</p>
 <p>Per default the action ‘init’ will call a method called ‘init’. That’s fairly simple.
 The same is true alse for the ‘detail’ and ‘close’ actions.</p>
 <p>The deaufault action ‘totalHeader’ is ‘%Header’. The % sign will be replaced by the value of the ‘grandTotalName’.
@@ -363,7 +362,7 @@ even when calling a method.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Günter Pöhl
+        &copy; Copyright 2020, Günter Pöhl
 
     </p>
   </div>

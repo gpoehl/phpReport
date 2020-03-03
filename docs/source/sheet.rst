@@ -12,7 +12,7 @@ The sheet() method instantiates a Sheet or a FixedSheet object. Both of them are
 special variants of the collector object and will be assigned to the total 
 collector ($total). 
 
-For each column in a sheet a calculator object will be instatiated and linked 
+For each column in a sheet a calculator object will be instantiated and linked 
 via the $items array property. 
  
 .. note::
@@ -22,11 +22,7 @@ via the $items array property.
 Group levels are like sheet rows and data keys like sheet colums.
 
 
-
- 
-
-
-.. php:method:: sheet(string $name, $value, $headerAction = null, $footerAction = null)
+.. php:method:: sheet(string $name, $value, $headerAction = null, $footerAction = null, ...$params)
 
     Calculate attributes in a sheet.
 
@@ -38,10 +34,11 @@ Group levels are like sheet rows and data keys like sheet colums.
 
     :param mixed $value: Source of the key and value to be calculated. 
       Must be served in an array with only one entry were key is the array key and value
-      the value. 
+      the value.
+
       Key and attribute name are attribute names when data row is an object or
-      or when row is an array the element keys.
-      It's also possiblbe to use a closure which returns an array [key => value].
+      or when row is an array the element keys. It's also possiblbe to use a 
+      closure which returns an array [key => value].
       False to just instantiate and reference the sheet. To execute the calculation
       call the add() method of the sheet object. This is very useful when 
       getting the key or value to be calculated is complicated and / or you need
@@ -66,6 +63,9 @@ Group levels are like sheet rows and data keys like sheet colums.
     :param int|null $maxLevel: The group level at which the value will be 
       added. Defaults to the maximum level of the dimension. Might be less when
       calculated data are only needed on higher levels.
+
+    :param mixed $params: Variadic parameters to be passed to callables declared 
+     with value parameter. 
 
     :returns: $this which allows method call chaining.
 
@@ -107,4 +107,5 @@ If this in not suitable ksort the $items property of the sheet object.
 .. code-block:: php
 
     $rep = (new Report ($this))
+    ->data('array')
     ->sheet ('sales', ['regionID'=> 'amount'])

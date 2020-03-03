@@ -1,7 +1,7 @@
 phpReport Manual
 ================
 
-Edition for phpReport 1.0
+Edition for phpReport 2.0
 
 by Günter Pöhl
 
@@ -13,16 +13,15 @@ This work is licensed under the GNU Lesser General Public Licensce (LGPL) v3.0
      
    introduction
    actions
-   process
    prototype
    configuration
    dataInput
    dataOutput
    group
    calculation 
-   methods
    sugar
-   
+   methods
+   gettingValues
 
 Indices and tables
 ==================

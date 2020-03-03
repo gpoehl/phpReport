@@ -4,16 +4,25 @@ Data input
 |project_name| doesn't read data itself. What seems to be a lack of functionality
 on the first glance is in reality a huge benefit.
 
-You can use your own methods and models for data retrieval which might include
-authorisation, authentification, caching and much more. 
-You are not limited to the features delivered by a report tool.
+You should use the same tools for data retrieval you are alreay familar with.
+You can even use your data models without any modification.
 
- 
+So when running applications with |project_name| you have
+full control over authorisation, authentification, caching and much more. 
+
 Using your own methods for data retrieval allows you to access data from any
 source (any database and any file type like csc, xml, json, excel sheets, etc.) 
-and also to use data from differents sources within the same job.
+and also to use data from different sources within the same job.
 
-Data rows can be arrays or objects. 
+Out of the box data rows can be arrays or objects. To work with other sources
+just convert them while reading or create your onw data handler.
+
+To tell what data handler must be used call the data method. Only the first
+parameter is needed. All other parametes belongs to multi dimensional data.
+ 
+.. php:method:: data($dataHandler): Report
+
+    :param mixed $dataHandler: The data handler to be used for the current data dimension.
 
 |project_name| accepts data in three different ways.
 
@@ -36,7 +45,7 @@ Multi-Dimensional Data
 ----------------------
 
 Handling of multi-dimensional data makes |project_name| extreme powerful.
-It let's you iterate over nested arrays with the same functionaity as for the
+It let's you iterate over nested arrays with the same functionality as for the
 primary data set. So you can define groups and calculate values for any data
 dimension.
 
@@ -48,17 +57,7 @@ moment you need them. This can save a lot of memory consumpiton.
  
 
 
-
-
-
-
-
-
-
-To pass chunks or the whole dataset to phpReport call the run mehod. For chunks you must set the second paramet (finalize) to false.
-Call run for the last chunck with finalize = true or call the end methhod afterwords.
-
-.. php:method:: data($source, $noData, $rowDetail, $noGroupChange, $parameters) : Report
+.. php:method:: data($dataHandler, $source, $noData, $rowDetail, $noGroupChange, ...$params): Report
 
     Called when group values between two rows are not equal. Each group has
     its own groupHeader. 
@@ -66,9 +65,13 @@ Call run for the last chunck with finalize = true or call the end methhod afterw
     Group headers are called from the changed group level down to the lowest
     declared group (within an data dimension).
 
-    :param mixed $source: The source for the next data dimension.
+    :param mixed $dataHandler: The data handler to be used for the current data dimension.
+    :param mixed $source: The source for the next data dimension. When source is
+     a callable just return the whole the data set or return false and call the 
+     runPartial() method or the next() method for each data row.  
     :param mixed $noData: The action to be executed when $source doesn't return any data.
     :param mixed $rowDetail: The action to be executed for each row returned by $source.
     :param mixed $noGroupChange: The action to be executed when two consecutive rows don't trigger
      a group change.
-    :param array|null $parameters: Any parameter to be passed to $source.
+    :param mixed $params: Variadic parameters to be passed to $source.
+

@@ -34,7 +34,8 @@ Example
 .. code-block:: php
 
     $rep = (new Report ($this))
+    ->data('object')
     ->calculate ('amount')
-    ->calculate ('price', fn($row, $rowKey) => $row->amount * $row->pricePerUnit)
+    ->calculate ('price', fn($row, $rowKey) => $row->amount * $row->pricePerUnit);
 
 

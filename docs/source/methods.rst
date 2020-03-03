@@ -1,22 +1,52 @@
 Overview of methods and properties
 ==================================
 
+Methods to instantiate report class
+-----------------------------------
 
-Methods in phpReport class
---------------------------
-data($source, $noData = null, $rowDetail = null, $noGroupChange = null, array $parameters = null)
+:php:meth:`data` Describe data input
 
-group($name, $value = null, $headerAction = null, $footerAction = null)
+:php:meth:`group` Declare a group to monitor changes between data rows
 
-calculate($name, $value = null, ?int $typ = self::XS, ?int $maxLevel = null)
+:php:meth:`calculate` Declare variable to be calculated (sum, count, min, max)
 
-sheet($name, $key, $value, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null)
+:php:meth:`sheet` Declare variable to be calculated horizontally (having key and value)
+ 
 
-run(?iterable $data, bool $finalize = true)
+Methods for data handling
+-------------------------
 
-next($row, $rowKey = null)
+:php:meth:`run` Start execution with data
 
-end()
+:php:meth:`runPartial` Iterate over a set of data
+
+:php:meth:`next` Take a single data row
+
+:php:meth:`end` Finalize execution
+
+
+Action methods called from report class
+---------------------------------------
+
+:php:meth:`init` First called method to initiialize application 
+
+:php:meth:`close` Last called method to clean up the dishes independent from __destruct method. 
+
+:php:meth:`totalHeader` Called once after init() to build the total header page of the report. 
+
+:php:meth:`totalFooter` Called once before close() to build the total footer page of the report. 
+
+:php:meth:`groupHeader` Called for each new group value(s) 
+
+:php:meth:`groupFooter` Called after detail() but before activating new group value(s).
+
+:php:meth:`detail` Called for each data row in last data dimension.
+
+:php:meth:`noData` Called when no data was given.
+
+:php:meth:`noData_n` Called when no data was given for dimension 'n'.
+
+:php:meth:`noGroupChange_n` Called when groups for dimension 'n' are declared but row didn't trigger a group change.
 
 
 Methods returning information
@@ -55,22 +85,5 @@ Public Properties
 :$rc:  Row count collector
 :$total:  Collector for calculated values, sheets and colloctors
 :$userConfig:  Configuration parameter given during instantiation
-
-
-Action methods called from report class
----------------------------------------
-
-
-:init():  
-:totalHeader():  
-:totalFooter():
-:groupHeader($groupValue, $row, $rowKey, $dimID):
-:groupFooter($groupValue, $row, $rowKey, $dimID):
-:detail($row, $rowKey):
-:close():
-:noData():
-:noData_n ($dimID):
-:noGroupChange_n ($row, $rowKey, $dimID):
-
 
 

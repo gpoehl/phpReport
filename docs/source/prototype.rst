@@ -3,14 +3,16 @@
 Prototyping
 ===========
 
-Prototyping gives information about the program flow, the currently processed 
-data row, the value of group fields and calculated values.
+Before you start writing any code you might want to use the prototyping system
+to generate a report which shows some data of the currently processed row, 
+names of methods which will be called in real life applications, the value of group
+fields and some values out of the calculated fields.
 
 Prototype tells also what the real action would be (e.g. Call method xy or 
-append string 'blabla').
+append string 'foobarbaz').
 
-Very often protoye is a good choice before you start debugging or tracing your
-program. 
+It's also a good idea to use prototyping before you start tracing or debugging
+your application. 
 
 You can call the prototype function at any time by just calling
 

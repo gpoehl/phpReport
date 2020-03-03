@@ -7,7 +7,10 @@ Calculation
    calculator
    sheet
 
-phpReport offers a huge set of calculation.
+|project_name| manages any calculation by using calculor classes orginized in 
+collector classes.
+
+
 
 
 3 Calclulators

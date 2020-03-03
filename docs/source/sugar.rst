@@ -1,11 +1,11 @@
-Extra sugar
------------
+Methods returning information
+-----------------------------
 
-The report class has some extra convenience methods to provide you with useful informations.
+The report class has some extra convenience methods to provide you with useful information.
 
 .. php:class:: Report
 
-    The report class offers a lot of methods wich delivers almost all information
+    The report class offers a lot of methods which delivers almost all information
     you need to create your application.
 
     .. php:method:: getRow(int $dimID = null)

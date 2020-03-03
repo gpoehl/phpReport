@@ -133,9 +133,9 @@ class Report {
      * @param mixed $parameters Optional variadic list of additional parameters passed thrue 
      * to external methods. 
      */
-    public function data($dataHandler, $source = null, $noData = null, $rowDetail = null, $noGroupChange = null, ... $params): Report {
+    public function data($dataHandler, $value = null, $noData = null, $rowDetail = null, $noGroupChange = null, ... $params): Report {
 
-        $this->dim = new Dimension(count($this->dims), $dataHandler, $source, $this->target, $noData, $rowDetail, $noGroupChange, $params);
+        $this->dim = new Dimension(count($this->dims), $dataHandler, $value, $this->target, $noData, $rowDetail, $noGroupChange, $params);
         $this->dims[] = $this->dim;
 
         return $this;

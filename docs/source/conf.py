@@ -18,12 +18,12 @@
 # -- Project information -----------------------------------------------------
 
 project = 'phpReport'
-copyright = '2019, Günter Pöhl'
+copyright = '2020, Günter Pöhl'
 author = 'Günter Pöhl'
 
-version ='1.00'
+version ='2.0.0'
 # The full version, including alpha/beta/rc tags
-release = '1.00'
+release = '2.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -52,8 +52,8 @@ from sphinx.highlighting import lexers
 from pygments.lexers.web import PhpLexer
 
 # enable highlighting for PHP code not between <?php ... ?> by default
-lexers['php'] = PhpLexer(startinline=True)
-lexers['php-annotations'] = PhpLexer(startinline=True)
+lexers['php'] = PhpLexer(startinline=True, lineos=1)
+lexers['php-annotations'] = PhpLexer(startinline=True, lineos=1)
 primary_domain = 'php'
 
 
@@ -75,8 +75,8 @@ html_context = {
 	"display_github": True,
 	"github_user": "gpoehl",
 	"github_repo": project,
-	"github_version": "master/docs/",
-#	"conf_py_path": "/docs/", 
+	"github_version": "master/",
+	"conf_py_path": "/docs/", 
 #	"source_suffix": source_suffix,
 }	
 project_name = '**phpReport**'

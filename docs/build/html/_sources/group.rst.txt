@@ -5,27 +5,22 @@ Compexity in applications usually grows exceptionlly with every addidtional grou
 which needs to be managed.
 
 With |project_name| you only need to call the group() method once for every group.
-If the group doesn't belong to the primary data dimension call the group() method
-after calling the data() method.
+Groups can be controlled in every data dimension. Just call the 
+group() method after calling the related data() method.
 
-A group change occurs when within a data dimension group values of the previous
+A group change occurs when within a data dimension when group values of the previous
 row don't equal those of the current row.
 
 .. tip:: Data don't need to be sorted by groups. But make sure that
          rows are grouped by the group field or you might raise 
          unwanted group changes. 
 
-Once a group change has been detected the appropiate action methods will be executed.
+Once a group change has been detected the appropiate action methods (group headers
+and group footers) will be executed.
 
-.. php:method:: group($name, $value = null, $headerAction = null, $footerAction = null)
+.. php:method:: group($name, $value = null, $headerAction = null, $footerAction = null, ...params)
 
-    Declare a data group. which data field (array element or object property) enCalled when group values between two rows are not equal. Each group has
-    its own groupHeader. 
-
-    Group headers are called from the changed group level down to the lowest
-    declared group (within an data dimension).
-
-    After executing all headers the detail action will be performed.
+    Declare a data group. 
 
     :param string $name: The name to be used for this group. 
      This name will be used to build method names for group headers and footers
@@ -45,6 +40,9 @@ Once a group change has been detected the appropiate action methods will be exec
     :param mixed $footerAction: Set individual group footer action. 
       Null to execte the default action. False to deny any action.
 
+    :param mixed $params: Variadic parameters to be passed to callables declared 
+     with value parameter. 
+
     :returns: $this which allows method call chaining.
 
 
@@ -53,6 +51,7 @@ Example
 .. code-block:: php
 
     $rep = (new Report ($this))
+    ->data('object')
     ->group ('region')
     ->group ('year', fn($row) => substr($row->saleDate, 0, 4))
     ->group ('month', fn($row) => substr($row->saleDate, 5, 2))

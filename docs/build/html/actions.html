@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Actions &mdash; phpReport 1.00 documentation</title>
+  <title>Actions &mdash; phpReport 2.0.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="The overall process flow" href="process.html" />
+    <link rel="next" title="Prototyping" href="prototype.html" />
     <link rel="prev" title="Introduction" href="introduction.html" /> 
 </head>
 
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.00
+                2.0.0
               </div>
             
           
@@ -96,14 +96,15 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prototype.html">Prototyping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calculation.html">Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -156,7 +157,7 @@
         
             
             
-              <a href="https://github.com/gpoehl/phpReport/blob/master/docs/actions.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/gpoehl/phpReport/blob/master//docs/actions.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -172,32 +173,33 @@
             
   <div class="section" id="actions">
 <h1>Actions<a class="headerlink" href="#actions" title="Permalink to this headline">¶</a></h1>
-<p>Before we start to learn any details about using phpReport we need to know
+<p>Before we start to learn any details about using <strong>phpReport</strong> we need to know
 something about actions.</p>
-<p>As soon as you call the run method phpReport checks what has be done next. Whenever
-an event occurs phpReport executes an action.</p>
-<p>Executing an action can result in</p>
+<p>Calling the run() method starts the execution and <strong>phpReport</strong> takes control over the
+program flow. Whenever an important event occurs an action might be exectued.</p>
+<p>Typical actions are:</p>
 <ul class="simple">
-<li><p>call a method in the target class (your report class)</p></li>
-<li><p>call a method in any class</p></li>
+<li><p>call a method in the target object (The target parameter of the report class)</p></li>
 <li><p>append a string to the output</p></li>
-<li><p>execute a closure</p></li>
+<li><p>execute a callable</p></li>
 <li><p>call a method in the prototyp class</p></li>
-<li><p>do nothing</p></li>
 </ul>
-<p>The kind of actions to be executed as well as the method names to be called will
-be declared in the configuration file. This configuration can be altered during
-instantiation of phpReport and also when calling data and group methods.</p>
-<p>Each action is related to an action key.</p>
-<p>Actions will be executed following this rules:
-1) Is an action an string the string will be appended to $output.
-2) If action is a method name the method will called when the method exist.
-3) x
-4) Y</p>
+<p>Within the configuration file you can specify exactly what action will be executed.
+During instantiation of the report class you might replace some of the configuration
+parameters.</p>
+<p>Events like a group change will trigger an individual groupHeader action for defined
+groups. To be able to execute different action types the group()
+method also allows replacing the default action.</p>
+<p>The default rules are simple:
+1) If action is a string this string will be appended to $output.
+2) If action is a method name the method will only be called when the method exist.
+The returned value will be appended to $output.
+3) If action is a callable the returned value will be appended to $output.</p>
+<p>The above rules can be altered by calling the setCallOption().</p>
 <div class="section" id="action-methods">
 <h2>Action methods<a class="headerlink" href="#action-methods" title="Permalink to this headline">¶</a></h2>
-<p>phpReport might call one of the following action methods in that target class
-when related events occur.</p>
+<p>The deault for most event actions is calling a method in the target class.
+The following description of methods are referring to the default method names.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The method names below are the method keys. Method keys are mapped
@@ -209,7 +211,7 @@ to real method names by several options and rules.</p>
 <dl class="method">
 <dt id="init">
 <code class="sig-name descname">init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#init" title="Permalink to this definition">¶</a></dt>
-<dd><p>First called method which allows you to initialize report properties independent
+<dd><p>First called method which allows you to initialize application properties independent
 from the __construct method.</p>
 </dd></dl>
 
@@ -346,7 +348,7 @@ Ignoring this case, trigger a warning or throw an exception are valid options.</
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="process.html" class="btn btn-neutral float-right" title="The overall process flow" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="prototype.html" class="btn btn-neutral float-right" title="Prototyping" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="introduction.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -358,7 +360,7 @@ Ignoring this case, trigger a warning or throw an exception are valid options.</
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Günter Pöhl
+        &copy; Copyright 2020, Günter Pöhl
 
     </p>
   </div>

@@ -2,38 +2,46 @@
 Introduction
 ============
 
-phpReport simplifies building of reports or batch like applications by handling
-of all tasks related to group changes and by calculating desired values. 
+|project_name| is designed to be the backbone for all applications needing 
+control over group changes or when calculation of totals and subtotals is required.
+This is usually the case for reports but there are a lot of other use cases.
 
-phpReport integrates without configuration into any framework. It's usage is 
-simple enough to deal with easy tasks and powerful enough to work also with most
-complex data structures.
+|project_name| integrates into any framework without configuration. You don't 
+have to extend your classes from a |project_name| class. This allows extending
+them from any other (framework) class.  
 
-To fetch data from a database or any other source use your own (and well known) 
-methods. PhpReport will work with this data no matter if you provide a simple
-data set or an multi dimensional array. Getting joined data during data
-processing is also possible.
+Use of |project_name| is very simple even when you work with very 
+complex data structures.  
 
-How does it work?
------------------
+Data retrieval is done by your own (framework) methods. |project_name| will work with
+this data no matter if you provide a data set or an multi dimensional array. 
+Joining data, even between different sources, is also easy to accomplish.
 
-After instantiation of the report class you declare which fields holds values
-to be compared to detect group changes by calling the group() method.
+Getting started
+---------------
+
+After instantiation of the report class call the data() method to specifiy which
+the data handler to be used. The data handler is responsible to return values from a data row.
+Out of the box there are an ArrayDataHandler and an ObjectDataHandler. You can
+also use the 'array' or 'object' aliases. 
+
+Then call the group() method for each group that will be controlled. 
 
 To declare which values should be cumulated call the calculate() or the sheet()
 methods.
 
 Then pass your data to the run() method.
 
-At certain events PhpReport will then call methods in your class where you might
-want to prepare your output. 
+At certain events defined actions will be executed. As you can imagine thats the
+place to do whatever needs to be done.
 
 .. note::
-   phpReport integrates fully with your environment and any framework.
-   So you have full access to all your business rules implemented in 
-   your existing models. 
+   You have full access to all your existing models. No matter if these are
+   data models or models implementing your business rules. 
+    
 
-A simple report might look like
+A report which controls two groups and calculates totals may look like
+this example.
 
 .. code-block:: php
 
@@ -43,11 +51,12 @@ A simple report might look like
    // $data = get your data from any source
    ..
 
-   // in any method or in a other class (e.g. your controller) 
+   // It might also be a good idea to instantiate the Report in your controller. 
    $this->rep = (new Report($this)) 
-   ->group('customer')
+   ->data('object')
+   ->group('customer')         
    ->group('invoice', 'invoiceID')
-   ->calulate('sales', funcion($row){return $row->amount * $row->price;})
+   ->calulate('sales', fn($row) => $row->amount * $row->price)
    ->run($data);
    echo $this->rep->output;
    
@@ -60,7 +69,7 @@ A simple report might look like
    } 
 
    public function invoiceHeader($invoice, $row){
-       return "<h3>Invoidce $invoice</h3>";
+       return "<h3>Invoice ID = $invoice</h3>";
    } 
 
    // Will be called for each data row
@@ -69,7 +78,7 @@ A simple report might look like
    } 
 
    public function invoiceFooter($invoice, $row){
-       return "Total of invoice $invoice = " . $this->rep->total->sales->sum();
+       return "Total sales for invoice $invoice = " . $this->rep->total->sales->sum();
    } 
 
    public function customerFooter($customer, $row){
@@ -87,22 +96,8 @@ A simple report might look like
 
  
 
-Prototyping
------------
-  
-  Before you start writing any code you might want to use the prototyping system
-  to generate a report which shows some data of the currently processed row, 
-  names of methods which will be called in real life reports, the value of group
-  fields and some values out of the calculated fields.
-
-  It's also a good idea to use prototyping before you start tracing or debugging
-  your report. 
-  To find out how to use protoyping see :ref:`prototype-label`. 
  
 
-
-PhpReport has no dependencies. Your class can extend from any class you want.
-To avoid naming conflicts you can configure phpReport.
 Main features are:
 
 Data handling
@@ -110,7 +105,7 @@ Data handling
   method. phpReport will the iterate over this dataset and execute certain actions.
 
   It is not required to build a dataset upfront. You can optionally call the run
-  method wihout any data and call the next method once for each data row.
+  method without any data and call the next method once for each data row.
   This might save a lot of memory and processing time.
 
   phpReport is also able to handle multi-dimensional arrays. Calling the data method
@@ -129,10 +124,9 @@ Calculation values
   a not null or not zero value as well as figure out the min and max value.
 
 Sheets
-  Sheets are a very powerful when you need calulated values horizontally. Assume 
+  Sheets are a very powerful to calculate values horizontally. Assume 
   you want to present your calculated data in a table grouped by month. All you need
-  to do is calling the sheet method and tell
-  phpReport where to find (or how to build) the key (month) and
+  to do is calling the sheet method and tell where to find the key (month) and
   where to find the value.
 
 Group changes
@@ -146,7 +140,7 @@ Group changes
 
 Prototyping
   Beginners and experienced users of phpReport can benefit from the prototype system.
-  Prototyint lets you know which method would habe been called, what data row triggered
+  Prototying lets you know which method would habe been called, what data row triggered
   the actions, what are the values of the group fields and the values of calculated
   fields.
   [Prototyping](prototype.rst)

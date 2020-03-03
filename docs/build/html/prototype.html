@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Prototyping &mdash; phpReport 1.00 documentation</title>
+  <title>Prototyping &mdash; phpReport 2.0.0 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuration" href="configuration.html" />
-    <link rel="prev" title="The overall process flow" href="process.html" /> 
+    <link rel="prev" title="Actions" href="actions.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.00
+                2.0.0
               </div>
             
           
@@ -88,14 +88,15 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="actions.html">Actions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Prototyping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calculation.html">Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -148,7 +149,7 @@
         
             
             
-              <a href="https://github.com/gpoehl/phpReport/blob/master/docs/prototype.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/gpoehl/phpReport/blob/master//docs/prototype.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -164,12 +165,14 @@
             
   <div class="section" id="prototyping">
 <span id="prototype-label"></span><h1>Prototyping<a class="headerlink" href="#prototyping" title="Permalink to this headline">¶</a></h1>
-<p>Prototyping gives information about the program flow, the currently processed
-data row, the value of group fields and calculated values.</p>
+<p>Before you start writing any code you might want to use the prototyping system
+to generate a report which shows some data of the currently processed row,
+names of methods which will be called in real life applications, the value of group
+fields and some values out of the calculated fields.</p>
 <p>Prototype tells also what the real action would be (e.g. Call method xy or
-append string ‘blabla’).</p>
-<p>Very often protoye is a good choice before you start debugging or tracing your
-program.</p>
+append string ‘foobarbaz’).</p>
+<p>It’s also a good idea to use prototyping before you start tracing or debugging
+your application.</p>
 <p>You can call the prototype function at any time by just calling</p>
 <div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="nv">$rep</span><span class="o">-&gt;</span><span class="na">prototype</span><span class="p">();</span>
 </pre></div>
@@ -216,7 +219,7 @@ also possible to alter the call action at any time.</p>
         <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="process.html" class="btn btn-neutral float-left" title="The overall process flow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="actions.html" class="btn btn-neutral float-left" title="Actions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -225,7 +228,7 @@ also possible to alter the call action at any time.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Günter Pöhl
+        &copy; Copyright 2020, Günter Pöhl
 
     </p>
   </div>

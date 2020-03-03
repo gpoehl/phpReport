@@ -53,4 +53,5 @@ $this->rep->*collectorName*->items[*itemName*].
     $rep->rc->{0};
     $rep->rc->[0];
  
-
+.. include:: rowCounter.rst
+.. include:: groupCounter.rst

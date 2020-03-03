@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Collector &mdash; phpReport 1.00 documentation</title>
+  <title>Collector &mdash; phpReport 2.0.0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.00
+                2.0.0
               </div>
             
           
@@ -88,7 +88,6 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="actions.html">Actions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prototype.html">Prototyping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
@@ -102,11 +101,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#accessing-values">Accessing values</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#row-counter">Row counter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#group-counter">Group counter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculator.html">Calculator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sheet.html">Sheet</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -161,7 +164,7 @@
         
             
             
-              <a href="https://github.com/gpoehl/phpReport/blob/master/docs/collector.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/gpoehl/phpReport/blob/master//docs/collector.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -220,6 +223,85 @@ like</p>
 </div>
 </div>
 </div>
+<div class="section" id="row-counter">
+<h1>Row counter<a class="headerlink" href="#row-counter" title="Permalink to this headline">¶</a></h1>
+<p><strong>phpReport</strong> always counts all read data rows.</p>
+<p>For each data dimension one CalculatorXS object will be instantiated as an item
+within an collector named <strong>rc</strong>.</p>
+<p>Using the same objects for incrementing counters as calculating any values provides
+you the same methods for accessing the results. This includes also that row
+counters are available at each group level.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only the last data diminsion has counters for all group levels.
+First data dimensions serve counters down to the group(s) declared
+in it.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$this-&gt;rep = new Report();
+//
+// Some code here ...
+//
+$this-&gt;rep-&gt;rc-&gt;items[*dimensionID*]-&gt;sum(*level*).
+</pre></div>
+</div>
+<p>Example:
+.. code-block:: php</p>
+<blockquote>
+<div><p>$this-&gt;rep = new Report();
+$rc = $this-&gt;rep-&gt;rc;
+// sum of rows read in all data dimensions at the current group level
+$rc-&gt;sum();
+// sum of rows read in all data dimensions at group level = 2
+$rc-&gt;sum(2);
+// sum of rows read in data dimensions 0 at current group level
+$rep-&gt;rc-&gt;{0}-&gt;sum();
+$rep-&gt;rc-&gt;items[0]-&gt;sum();     // That’s the same
+// sum of rows read in data dimensions 1 at group level = 2
+$rep-&gt;rc-&gt;{1}-&gt;sum(2);
+$rep-&gt;rc-&gt;items[1]-&gt;sum(2);     // That’s the same</p>
+</div></blockquote>
+</div>
+<div class="section" id="group-counter">
+<h1>Group counter<a class="headerlink" href="#group-counter" title="Permalink to this headline">¶</a></h1>
+<p>As soon as you declare groups <strong>phpReport</strong> counts how often a group occurs
+in the higher level group.</p>
+<p>For each group one CalculatorXS object will be instantiated as an item
+within an collector named <strong>gc</strong>.</p>
+<p>Group counters are, like any other calculated value, available at each group level.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Default group levels are usually not what you want. You have to ask for
+the sum of a higher level and not of the current level.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Use a negative value for the group level. -1 means the level above
+the current level.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$this-&gt;rep = new Report();
+//
+// Some code here ...
+//
+$this-&gt;rep-&gt;gc-&gt;items[*group*]-&gt;sum(*level*).
+</pre></div>
+</div>
+<p>Example:
+.. code-block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$this-&gt;rep = new Report();
+$gc = $this-&gt;rep-&gt;gc;
+// Sum of group in the group above the current group.
+$gc-&gt;sum(-1);
+// sum of group  data dimensions at group level = 2
+$rc-&gt;sum(2);
+// sum of rows read in data dimensions 0 at current group level
+$rep-&gt;rc-&gt;{0}-&gt;sum();
+$rep-&gt;rc-&gt;items[0]-&gt;sum();     // That&#39;s the same
+// sum of rows read in data dimensions 1 at group level = 2
+$rep-&gt;rc-&gt;{1}-&gt;sum(2);
+$rep-&gt;rc-&gt;items[1]-&gt;sum(2);     // That&#39;s the same
+</pre></div>
+</div>
+</div>
 
 
            </div>
@@ -241,7 +323,7 @@ like</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Günter Pöhl
+        &copy; Copyright 2020, Günter Pöhl
 
     </p>
   </div>

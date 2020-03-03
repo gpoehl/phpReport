@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Calculation &mdash; phpReport 1.00 documentation</title>
+  <title>Calculation &mdash; phpReport 2.0.0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.00
+                2.0.0
               </div>
             
           
@@ -88,7 +88,6 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="actions.html">Actions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="process.html">The overall process flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prototype.html">Prototyping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
@@ -96,12 +95,15 @@
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Calculation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="collector.html">Collector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="collector.html#row-counter">Row counter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="collector.html#group-counter">Group counter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calculator.html">Calculator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sheet.html">Sheet</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sugar.html">Extra sugar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -154,7 +156,7 @@
         
             
             
-              <a href="https://github.com/gpoehl/phpReport/blob/master/docs/calculation.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/gpoehl/phpReport/blob/master//docs/calculation.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -179,6 +181,8 @@
 <li class="toctree-l2"><a class="reference internal" href="collector.html#accessing-values">Accessing values</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="collector.html#row-counter">Row counter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collector.html#group-counter">Group counter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calculator.html">Calculator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sheet.html">Sheet</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="sheet.html#fixedsheet-class">FixedSheet class</a></li>
@@ -187,7 +191,8 @@
 </li>
 </ul>
 </div>
-<p>phpReport offers a huge set of calculation.</p>
+<p><strong>phpReport</strong> manages any calculation by using calculor classes orginized in
+collector classes.</p>
 <p>3 Calclulators
 A Collector class
 Sheets</p>
@@ -213,7 +218,7 @@ Sheets</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Günter Pöhl
+        &copy; Copyright 2020, Günter Pöhl
 
     </p>
   </div>

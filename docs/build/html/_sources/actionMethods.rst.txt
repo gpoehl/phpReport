@@ -1,9 +1,9 @@
 Action methods
 ..............
 
-phpReport might call one of the following action methods in that target class
-when related events occur.
-
+The deault for most event actions is calling a method in the target class.
+The following description of methods are referring to the default method names.
+ 
 .. note:: The method names below are the method keys. Method keys are mapped
           to real method names by several options and rules.
 
@@ -14,12 +14,12 @@ These methods are called even when no data are provided.
 
 .. php:method:: init()
 
-    First called method which allows you to initialize report properties independent
+    First called method which allows you to initialize application properties independent
     from the __construct method.  
 
 .. php:method:: close()
         
-        Last called method to clean up the dishes independent from __destruct method.
+    Last called method to clean up the dishes independent from __destruct method.
 
 .. php:method:: totalHeader()
 

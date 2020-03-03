@@ -6,9 +6,6 @@ which triggers one or more actions.
 
 Whenever an event occurs the action defined to an action key will be performed.
 
-n
-
-
 For each possible action to be executed you can declare what should be done.
 Each action key has a default action assigned. Within the **config.php** file the
 default actions might be adjusted to meet your personal favorites or to follow 
@@ -46,7 +43,7 @@ how the % sign the will be replaced during run time.
           - %Header
           - $grandTotalName
         * - totalFooter    
-          - %Footer%
+          - %Footer
           - $grandTotalName
         * - groupHeader    
           - %Header
@@ -93,14 +90,9 @@ Next to the actions parameter you can also declare the following parameters:
     time when instantiating the |project_name| object. 
 
 
-
-
-
 That's the place where you define the type of actions to be performed or the method names.
 
-
-
-Actions have a key which will translated in real action names.
+Actions have a key which will translated to real action names.
 
 Per default the action 'init' will call a method called 'init'. That's fairly simple.
 The same is true alse for the 'detail' and 'close' actions.
