@@ -35,7 +35,6 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Getting values" href="gettingValues.html" />
     <link rel="prev" title="Methods returning information" href="sugar.html" /> 
 </head>
 
@@ -93,17 +92,17 @@
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="calculation.html">Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aggregation.html">Aggregation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Overview of methods and properties</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#methods-to-instantiate-report-class">Methods to instantiate report class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#methods-for-data-handling">Methods for data handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#action-methods-called-from-report-class">Action methods called from report class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#methods-returning-information">Methods returning information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#public-properties">Public Properties</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#action-methods-called-from-report-class">Action methods called from report class</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -176,8 +175,8 @@
 <h2>Methods to instantiate report class<a class="headerlink" href="#methods-to-instantiate-report-class" title="Permalink to this headline">¶</a></h2>
 <p><code class="xref php php-meth docutils literal notranslate"><span class="pre">data</span></code> Describe data input</p>
 <p><a class="reference internal" href="group.html#group" title="group"><code class="xref php php-meth docutils literal notranslate"><span class="pre">group</span></code></a> Declare a group to monitor changes between data rows</p>
-<p><code class="xref php php-meth docutils literal notranslate"><span class="pre">calculate</span></code> Declare variable to be calculated (sum, count, min, max)</p>
-<p><code class="xref php php-meth docutils literal notranslate"><span class="pre">sheet</span></code> Declare variable to be calculated horizontally (having key and value)</p>
+<p><code class="xref php php-meth docutils literal notranslate"><span class="pre">aggregate</span></code> Declare variable to provide aggregate functons (sum, count, min, max)</p>
+<p><code class="xref php php-meth docutils literal notranslate"><span class="pre">sheet</span></code> Declare variable to be aggregated horizontally (having key and value)</p>
 </div>
 <div class="section" id="methods-for-data-handling">
 <h2>Methods for data handling<a class="headerlink" href="#methods-for-data-handling" title="Permalink to this headline">¶</a></h2>
@@ -185,6 +184,19 @@
 <p><code class="xref php php-meth docutils literal notranslate"><span class="pre">runPartial</span></code> Iterate over a set of data</p>
 <p><code class="xref php php-meth docutils literal notranslate"><span class="pre">next</span></code> Take a single data row</p>
 <p><code class="xref php php-meth docutils literal notranslate"><span class="pre">end</span></code> Finalize execution</p>
+</div>
+<div class="section" id="action-methods-called-from-report-class">
+<h2>Action methods called from report class<a class="headerlink" href="#action-methods-called-from-report-class" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="actions.html#init" title="init"><code class="xref php php-meth docutils literal notranslate"><span class="pre">init</span></code></a> First called method to initiialize application</p>
+<p><a class="reference internal" href="actions.html#close" title="close"><code class="xref php php-meth docutils literal notranslate"><span class="pre">close</span></code></a> Last called method to clean up the dishes independent from __destruct method.</p>
+<p><a class="reference internal" href="actions.html#totalHeader" title="totalHeader"><code class="xref php php-meth docutils literal notranslate"><span class="pre">totalHeader</span></code></a> Called once after init() to build the total header page of the report.</p>
+<p><a class="reference internal" href="actions.html#totalFooter" title="totalFooter"><code class="xref php php-meth docutils literal notranslate"><span class="pre">totalFooter</span></code></a> Called once before close() to build the total footer page of the report.</p>
+<p><a class="reference internal" href="actions.html#groupHeader" title="groupHeader"><code class="xref php php-meth docutils literal notranslate"><span class="pre">groupHeader</span></code></a> Called for each new group value(s)</p>
+<p><a class="reference internal" href="actions.html#groupFooter" title="groupFooter"><code class="xref php php-meth docutils literal notranslate"><span class="pre">groupFooter</span></code></a> Called after detail() but before activating new group value(s).</p>
+<p><a class="reference internal" href="actions.html#detail" title="detail"><code class="xref php php-meth docutils literal notranslate"><span class="pre">detail</span></code></a> Called for each data row in last data dimension.</p>
+<p><a class="reference internal" href="actions.html#noData" title="noData"><code class="xref php php-meth docutils literal notranslate"><span class="pre">noData</span></code></a> Called when no data was given.</p>
+<p><a class="reference internal" href="actions.html#noData_n" title="noData_n"><code class="xref php php-meth docutils literal notranslate"><span class="pre">noData_n</span></code></a> Called when no data was given for dimension ‘n’.</p>
+<p><a class="reference internal" href="actions.html#noGroupChange_n" title="noGroupChange_n"><code class="xref php php-meth docutils literal notranslate"><span class="pre">noGroupChange_n</span></code></a> Called when groups for dimension ‘n’ are declared but row didn’t trigger a group change.</p>
 </div>
 <div class="section" id="methods-returning-information">
 <h2>Methods returning information<a class="headerlink" href="#methods-returning-information" title="Permalink to this headline">¶</a></h2>
@@ -215,25 +227,12 @@
 <dd class="field-odd"><p>Row count collector</p>
 </dd>
 <dt class="field-even">$total</dt>
-<dd class="field-even"><p>Collector for calculated values, sheets and colloctors</p>
+<dd class="field-even"><p>Collector for calculators, sheets and collectors</p>
 </dd>
 <dt class="field-odd">$userConfig</dt>
 <dd class="field-odd"><p>Configuration parameter given during instantiation</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="action-methods-called-from-report-class">
-<h2>Action methods called from report class<a class="headerlink" href="#action-methods-called-from-report-class" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="actions.html#init" title="init"><code class="xref php php-meth docutils literal notranslate"><span class="pre">init</span></code></a> First called method to initiialize application</p>
-<p><a class="reference internal" href="actions.html#close" title="close"><code class="xref php php-meth docutils literal notranslate"><span class="pre">close</span></code></a> Last called method to clean up the dishes independent from __destruct method.</p>
-<p><a class="reference internal" href="actions.html#totalHeader" title="totalHeader"><code class="xref php php-meth docutils literal notranslate"><span class="pre">totalHeader</span></code></a> Called once after init() to build the total header page of the report.</p>
-<p><a class="reference internal" href="actions.html#totalFooter" title="totalFooter"><code class="xref php php-meth docutils literal notranslate"><span class="pre">totalFooter</span></code></a> Called once before close() to build the total footer page of the report.</p>
-<p><a class="reference internal" href="actions.html#groupHeader" title="groupHeader"><code class="xref php php-meth docutils literal notranslate"><span class="pre">groupHeader</span></code></a> Called for each new group value(s)</p>
-<p><a class="reference internal" href="actions.html#groupFooter" title="groupFooter"><code class="xref php php-meth docutils literal notranslate"><span class="pre">groupFooter</span></code></a> Called after detail() but before activating new group value(s).</p>
-<p><a class="reference internal" href="actions.html#detail" title="detail"><code class="xref php php-meth docutils literal notranslate"><span class="pre">detail</span></code></a> Called for each data row in last data dimension.</p>
-<p><a class="reference internal" href="actions.html#noData" title="noData"><code class="xref php php-meth docutils literal notranslate"><span class="pre">noData</span></code></a> Called when no data was given.</p>
-<p><a class="reference internal" href="actions.html#noData_n" title="noData_n"><code class="xref php php-meth docutils literal notranslate"><span class="pre">noData_n</span></code></a> Called when no data was given for dimension ‘n’.</p>
-<p><a class="reference internal" href="actions.html#noGroupChange_n" title="noGroupChange_n"><code class="xref php php-meth docutils literal notranslate"><span class="pre">noGroupChange_n</span></code></a> Called when groups for dimension ‘n’ are declared but row didn’t trigger a group change.</p>
 </div>
 </div>
 
@@ -244,8 +243,6 @@
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="gettingValues.html" class="btn btn-neutral float-right" title="Getting values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="sugar.html" class="btn btn-neutral float-left" title="Methods returning information" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

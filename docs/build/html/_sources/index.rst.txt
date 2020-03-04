@@ -18,10 +18,10 @@ This work is licensed under the GNU Lesser General Public Licensce (LGPL) v3.0
    dataInput
    dataOutput
    group
-   calculation 
+   aggregation 
+   gettingValues
    sugar
    methods
-   gettingValues
 
 Indices and tables
 ==================

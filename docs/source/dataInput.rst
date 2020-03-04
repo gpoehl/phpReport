@@ -46,7 +46,7 @@ Multi-Dimensional Data
 
 Handling of multi-dimensional data makes |project_name| extreme powerful.
 It let's you iterate over nested arrays with the same functionality as for the
-primary data set. So you can define groups and calculate values for any data
+primary data set. So you can define groups and aggregate values for any data
 dimension.
 
 Data dimension can exist in form of nested arrays, object methods delivering

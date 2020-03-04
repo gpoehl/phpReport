@@ -8,7 +8,7 @@ In other words we cout how many different values of a certain group has been pro
 For each group one CalculatorXS object will be instantiated as an item
 within an collector named **gc**.
 
-Group counters are, like any other calculated value, available at each group level. 
+Group counters are, like any other aggregation methods, available at each group level. 
 
 .. attention:: 
     Make sure you access the correct gc item. To get the counter of
@@ -28,6 +28,7 @@ Group counters are, like any other calculated value, available at each group lev
     $this->rep->gc->items[*group*]->sum(*level*).
 
 Example:
+
 .. code-block:: 
 
     $this->rep = new Report();

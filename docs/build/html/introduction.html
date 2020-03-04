@@ -96,10 +96,10 @@
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="calculation.html">Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aggregation.html">Aggregation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -171,9 +171,9 @@
 <p><strong>phpReport</strong> is designed to be the backbone for all applications needing
 control over group changes or when calculation of totals and subtotals is required.
 This is usually the case for reports but there are a lot of other use cases.</p>
-<p><strong>phpReport</strong> integrates into any framework without configuration. You don’t
-have to extend your classes from a <strong>phpReport</strong> class. This allows extending
-them from any other (framework) class.</p>
+<p><strong>phpReport</strong> integrates into any framework without configuration. You’ll never have
+do extend your classes to use <strong>phpReport</strong>. So your application can still extend
+from any framework class.</p>
 <p>Use of <strong>phpReport</strong> is very simple even when you work with very
 complex data structures.</p>
 <p>Data retrieval is done by your own (framework) methods. <strong>phpReport</strong> will work with
@@ -186,8 +186,8 @@ the data handler to be used. The data handler is responsible to return values fr
 Out of the box there are an ArrayDataHandler and an ObjectDataHandler. You can
 also use the ‘array’ or ‘object’ aliases.</p>
 <p>Then call the group() method for each group that will be controlled.</p>
-<p>To declare which values should be cumulated call the calculate() or the sheet()
-methods.</p>
+<p>Use the aggregate() method to get aggregate functions for an field / attribute. The
+sheet() method organizes these in an horizontal way like in a spreadsheet.</p>
 <p>Then pass your data to the run() method.</p>
 <p>At certain events defined actions will be executed. As you can imagine thats the
 place to do whatever needs to be done.</p>
@@ -196,7 +196,7 @@ place to do whatever needs to be done.</p>
 <p>You have full access to all your existing models. No matter if these are
 data models or models implementing your business rules.</p>
 </div>
-<p>A report which controls two groups and calculates totals may look like
+<p>A report which controls two groups and summarizes totals may look like
 this example.</p>
 <div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="k">use</span> <span class="nx">gpoehl\phpreport\Report</span><span class="p">;</span>
 <span class="nv">$rep</span><span class="p">;</span>
@@ -209,7 +209,7 @@ this example.</p>
 <span class="o">-&gt;</span><span class="na">data</span><span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
 <span class="o">-&gt;</span><span class="na">group</span><span class="p">(</span><span class="s1">&#39;customer&#39;</span><span class="p">)</span>
 <span class="o">-&gt;</span><span class="na">group</span><span class="p">(</span><span class="s1">&#39;invoice&#39;</span><span class="p">,</span> <span class="s1">&#39;invoiceID&#39;</span><span class="p">)</span>
-<span class="o">-&gt;</span><span class="na">calulate</span><span class="p">(</span><span class="s1">&#39;sales&#39;</span><span class="p">,</span> <span class="nx">fn</span><span class="p">(</span><span class="nv">$row</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">*</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">price</span><span class="p">)</span>
+<span class="o">-&gt;</span><span class="na">aggregate</span><span class="p">(</span><span class="s1">&#39;sales&#39;</span><span class="p">,</span> <span class="nx">fn</span><span class="p">(</span><span class="nv">$row</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">*</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">price</span><span class="p">)</span>
 <span class="o">-&gt;</span><span class="na">run</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
 <span class="k">echo</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">rep</span><span class="o">-&gt;</span><span class="na">output</span><span class="p">;</span>
 
@@ -258,16 +258,16 @@ This might save a lot of memory and processing time.</p>
 tells which element contains the sub-array. phpReport will then iterate of the
 sub-array. Sub-array can also have elements where you want specific actions when
 the value changes. So call the group method after the data method to declare
-this element. Same is true for values to be calculated.</p>
+this element. Same is true for values to be aggregated.</p>
 <p>phpReport might also getting related data to a given row. See data section for
 details.
-Out of the box phpReport calculates row counters.</p>
+Out of the box phpReport offers row counters.</p>
 </dd>
-<dt>Calculation values</dt><dd><p>With phpReport it’s easy to calculate values. While calling the calculate method
+<dt>Aggregating values</dt><dd><p>With phpReport it’s easy to aggregate values. While calling the aggregate method
 your values are cumulated. Your might also let phpReport count how often you got
 a not null or not zero value as well as figure out the min and max value.</p>
 </dd>
-<dt>Sheets</dt><dd><p>Sheets are a very powerful to calculate values horizontally. Assume
+<dt>Sheets</dt><dd><p>Sheets are a very powerful to aggregate values horizontally. Assume
 you want to present your calculated data in a table grouped by month. All you need
 to do is calling the sheet method and tell where to find the key (month) and
 where to find the value.</p>
@@ -277,12 +277,12 @@ executes certain actions like calling group header and group footer methods.
 See actions section for more details.
 To let phpReport know which attributes or elements should be monitored call the
 group method once for for each group.
-Out of the box phpReport calculates group counters which lets you know how often
+Out of the box phpReport offers group counters which lets you know how often
 a certain value (or group) occurs in an other group.</p>
 </dd>
 <dt>Prototyping</dt><dd><p>Beginners and experienced users of phpReport can benefit from the prototype system.
 Prototying lets you know which method would habe been called, what data row triggered
-the actions, what are the values of the group fields and the values of calculated
+the actions, what are the values of the group fields and the values of aggregated
 fields.
 [Prototyping](prototype.rst)</p>
 </dd>

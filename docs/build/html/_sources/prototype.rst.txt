@@ -6,7 +6,7 @@ Prototyping
 Before you start writing any code you might want to use the prototyping system
 to generate a report which shows some data of the currently processed row, 
 names of methods which will be called in real life applications, the value of group
-fields and some values out of the calculated fields.
+fields and some values out of the aggregated fields.
 
 Prototype tells also what the real action would be (e.g. Call method xy or 
 append string 'foobarbaz').

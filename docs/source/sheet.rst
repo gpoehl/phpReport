@@ -1,10 +1,10 @@
 Sheet
 -----
 
-Calculate values in an tabular form like in a spreadsheet.
+Aggregate values in an tabular form like in a spreadsheet.
 
 Sometimes a sheet can eliminate the need for declaring a group or a data dimension.
-You can also calculate the same value in different sheets so that results are
+You can also aggregate the same value in different sheets so that results are
 grouped by different keys.
 
 
@@ -24,7 +24,7 @@ Group levels are like sheet rows and data keys like sheet colums.
 
 .. php:method:: sheet(string $name, $value, $headerAction = null, $footerAction = null, ...$params)
 
-    Calculate attributes in a sheet.
+    Aggregate attributes in a sheet.
 
     Sheet is a collection of calculators for a horizontal representation of a value.
     Call this method once for each sheet. 
@@ -32,7 +32,7 @@ Group levels are like sheet rows and data keys like sheet colums.
     :param string $name: Unique name to reference the sheet object. The
       reference will be hold in $this->total.
 
-    :param mixed $value: Source of the key and value to be calculated. 
+    :param mixed $value: Source of the key and value to be aggregated. 
       Must be served in an array with only one entry were key is the array key and value
       the value.
 
@@ -62,7 +62,7 @@ Group levels are like sheet rows and data keys like sheet colums.
 
     :param int|null $maxLevel: The group level at which the value will be 
       added. Defaults to the maximum level of the dimension. Might be less when
-      calculated data are only needed on higher levels.
+      aggregated data are only needed on higher levels.
 
     :param mixed $params: Variadic parameters to be passed to callables declared 
      with value parameter. 

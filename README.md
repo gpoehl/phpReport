@@ -1,29 +1,37 @@
 # phpReport
-PHP library to help creating reports, data grids or run data driven tasks.
 
-**phpReport** primarily manages all tasks related to group changes and cumulutes selected values.
+Backbone for reports and all applications dealing with group changes and aggregating values.  
 
-When **phpReport** detects a group change related header and footer actions will be triggered. Actions are usually methods or closures. 
+phpReport is a modern PHP library designed handle all tasks related to group 
+changes and to provide aggregate funcions on each group level.
 
-Due to the design of **phpReport** you can use it for your most complex tasks. There are no limitations as you have always full control over the program flow.
+Whenever values of declared groups aren't equal between two consecutive row
+assigned actions will be executed. Actions are usually methods to be 
+called in the application class(e.g. groupHeader and groupFooter methods). Actions
+are the right place to build your output or to do whatever needs to done. 
 
-**phpReport** can run with any data source. So can can use your existing data models with all your business models accessable.
-It handles even multi-dimensional arrays or one to many relationsships declared in your models.
+Other values can be declared to provide aggregate functions like sum, min, max. They
+may optionally also aggregated in a sheet. All aggregate funcions as well as a 
+lot of different build in counters are available at any time for each group level. 
 
-**phpReport** does not read any data itself. The best way to get data is using the methods of your own php framwork. But you can use any data access method and pass data row by row or the dataset to **phpReport**. Within one task you can even mix data from any resource like database tables, json files, excel tables and much more.
+One of the main advantages of phpReport is the seemless integration into your current
+environment which also includes all frameworks. Without any configuration you can
+use all your classes, objects and data models. 
 
-The same is true for the desired output of your task. You can write data to a database table, a file (eg. excel file), an HTML string, generate a pdf document or send emails. Of course you can do it all together.  
+Even data retrieval is completely under your control. phpReport accepts any
+kind of data and is able to combine data from different sources. Combination means 
+that you can join any data sources or work with multi-dimensional arrays. Group changes
+and aggregate functions works over all data combinations (we call it dimensions).
+
+Feeding data to phpReport can be separated from the actual application. This means, for example, 
+that a controller or a data access class can switch from lazy to eager loading 
+or from getting all data at once to reading them in batches to minimize memory. 
+The application will not notice this change.  
 
 Requirements
 ============
 
-**phpReport** has no dependencies. It only requires PHP 7.3.0 or later. 
-
-Support us
-==========
-
-Consider supporting development of phpReport with a donation of any value. [Donation button][1] can be found on the
-[main page of the documentation][1].
+The only requirement for **phpReport** is PHP 7.3.0 or later. 
 
 Installation
 ============
@@ -34,39 +42,82 @@ Official installation method is via composer and its packagist package [gpoehl/p
 $ composer require gpoehl/phpReport
 ```
 
+
+The same is true for the desired output of your task. You can write data to a database table, a file (eg. excel file), an HTML string, generate a pdf document or send emails. Of course you can do it all together.  
+
+
+Support us
+==========
+
+Consider supporting development of phpReport with a donation of any value. [Donation button][1] can be found on the
+[main page of the documentation][1].
+
+
 Usage
 =====
 
-A typical usage of the library would be as follows:
+The following example shows a basic program structure with two declared groups
+and two values to be calculated.
 
 ```php
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+    require_once __DIR__ . '/vendor/autoload.php';
 
-$rep = (new \gpoehl\phpReport($this))
-->group('region', 'regionID')                     
-->group('customer', 'customerID')   
-->sum('sales', 'mySalesColumn')
-->sum('tax', 'myTaxColumn')
-->run($data);                                        // $data holds the data set 
-echo $rep;
+    use gpoehl\phpreport\Report;
 
-```
-public method regionHeader($regionID, $row){
-   // your code
-}
-public method customerHeader($customerID, $row){
-   // your code
-}
-public method customerFooter($customerID, $row){
-   // your code
-}
-public method regionFooter($regionID, $row){
-   // your code
-}
+    class MyFirstReport {
 
+        public $rep;
+        
+        /**
+        * It might also be a good idea to instantiate the Report in your
+        * controller and feed $rep with the desired data.
+        /*
+        public function __construct()
+            $data = getDataFromAnyRessource();
+            $this->rep = (new Report($this)) 
+            ->data('object')
+            ->group('customer')         
+            ->group('invoice', 'invoiceID')
+            ->aggregate('sales', fn($row) => $row->amount * $row->price)
+            ->run($data);
+            echo $this->rep->output;
+        }
 
+        public function init(){
+            return "<h1>My very first report</h1>";
+        } 
+
+        public function customerHeader($customer, $row){
+            return "<h2>Customer $customer</h2>" . $customer->address;
+        } 
+
+        public function invoiceHeader($invoice, $row){
+            return "<h3>Invoice ID = $invoice</h3>";
+        } 
+
+        // Will be called for each data row
+        public function detail($row, $rowKey){
+            return "<br>$row->item: $row->description";
+        } 
+
+        public function invoiceFooter($invoice, $row){
+            return "Total sales for invoice $invoice = " . $this->rep->total->sales->sum();
+        } 
+
+        public function customerFooter($customer, $row){
+            return "Total sales for customer $customer = " . $this->rep->total->sales->sum();
+        }
+
+        public function totalFooter(){
+            return 
+                "Total sales = $this->rep->total->sales->sum()" .
+                "Total number of customers: $this->rep->gc->customer->sum()" .
+                "Total number of invoices:  $this->rep->gc->invoice->sum()" .
+                "Total number of rows:  $this->rep->rc->sum()" ;
+        } 
+   }   
 ```
 
 
@@ -74,46 +125,25 @@ public method regionFooter($regionID, $row){
 Setup & Configuration
 =====================
 
-All [configuration directives](https://phpReport.github.io/configuration.html) have defaults which might be altered in the configuration file.
-All directives can also declared as configuration parameter during instantiaton of phpReport.
-
-Configuration allows adopting method names to meet your organisation rules.
-
-
-```php
-<?php
-// Example of creating a new report and setting new rule for 'noData' action. 
-$rep = new \gpoehl\phpReport($this, [
-    // instead of calling the noData action return given string when no data was found
-    'actions' => ['noData' => 'No data found.'],      
-    ]);
-
-```
-
+phpReport is designed to be very flexible. Check the config.php file and make
+desired changes. Adapt action method names to follow your own organisation rules. 
 
 Online manual
 =============
 
-Online manual is not yet ready. The current version can be viewed at https://gpoehl.github.io/.
+The current version can be viewed at [1]
 
-For general questions or troubleshooting please use the [phpReport tag](https://stackoverflow.com/questions/tagged/phpReport) at Stack Overflow (and not the project's issue tracker).
-
-Contributing
-============
-
-Please read before submitting issues and pull requests the [CONTRIBUTING.md](https://github.com/gpoehl/phpRepor/blob/development/.github/CONTRIBUTING.md) file.
 
 Unit Testing
 ============
 
 Unit testing for phpReport is done using [PHPUnit](https://phpunit.de/).
 
-To execute tests, run `vendor/bin/phpunit` from the command line while in the phpReport root directory.
+To execute tests, run `vendor\bin\phpunit` from the command line while in the phpReport root directory.
 
-Any assistance writing unit tests for phpReport is greatly appreciated. If you'd like to help, please
-note that any PHP file located in the `/tests/` directory will be autoloaded when unit testing.
 
-[1]: https://phpReport.github.io
+
+[1]: https://phpreport.readthedocs.io/en/latest/
 
 
 
