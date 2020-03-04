@@ -1,5 +1,6 @@
 # phpReport
 
+
 Backbone for reports and all other batch like applications.  
 
 phpReport is a modern PHP library designed to handle all tasks related to group 
@@ -13,7 +14,7 @@ called in the application class(e.g. groupHeader and groupFooter methods). Actio
 are the right place to build your output or to do whatever needs to done. 
 
 Other values can be declared to provide aggregate functions like sum, min, max. They
-may optionally also calculated in a sheet. All aggregate funcions as well as a 
+may optionally also aggregated in a sheet. All aggregate funcions as well as a 
 lot of different build in counters are available at any time for each group level. 
 
 One of the main advantages of phpReport is the seemless integration into your current
@@ -51,9 +52,8 @@ The same is true for the desired output of your task. You can write data to a da
 Support us
 ==========
 
-Consider supporting development of phpReport with a donation of any value. [Donation button][1] can be found on the
-[main page of the documentation][1].
-
+Consider supporting development of phpReport with a donation of any value. The
+sponsor button can be found in the menu bar. 
 
 Usage
 =====
@@ -122,6 +122,16 @@ and two values to be calculated.
    }   
 ```
 
+Prototyping
+===========
+Before developing any action methods have a look at the prototyping options. Prototype
+generates a default report showing a lot of interesting stuff. 
+
+
+```php
+    $this->rep = (new Report($this))
+    ->setCallOption(Report::CALL_PROTOTYPE);
+```
 
 
 Setup & Configuration
@@ -130,10 +140,6 @@ Setup & Configuration
 phpReport is designed to be very flexible. Check the config.php file and make
 desired changes. Adapt action method names to follow your own organisation rules. 
 
-Prototyping
-=============
-
-To start getting output without writing action methods have a look at the prototyping options.
 
 
 Unit Testing
@@ -142,10 +148,3 @@ Unit Testing
 Unit testing for phpReport is done using [PHPUnit](https://phpunit.de/).
 
 To execute tests, run `vendor\bin\phpunit` from the command line while in the phpReport root directory.
-
-
-
-[1]: https://phpreport.readthedocs.io/en/latest/
-
-
-
