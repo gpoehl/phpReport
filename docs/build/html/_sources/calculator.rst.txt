@@ -25,9 +25,9 @@ and maximum values of an attribute. Use the min() and max() methods to get
 these values.
 
 
-To cumulate any value you can use the sum() or sheet method.
-
-The calculate() method cumulates a single value while the sheet() method cumulates the value depending on an key.
+The aggregate() method instantiates a calculator object which provides aggregate functions.
+The sheet() method instanditates a sheet colletor which holds many calculator objects.
+ 
 
 Example
 
@@ -35,7 +35,7 @@ Example
 
     $rep = (new Report ($this))
     ->data('object')
-    ->calculate ('amount')
-    ->calculate ('price', fn($row, $rowKey) => $row->amount * $row->pricePerUnit);
+    ->aggregate ('amount')
+    ->aggregate ('price', fn($row, $rowKey) => $row->amount * $row->pricePerUnit);
 
 

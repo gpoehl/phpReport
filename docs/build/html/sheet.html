@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Methods returning information" href="sugar.html" />
+    <link rel="next" title="Getting values" href="gettingValues.html" />
     <link rel="prev" title="Calculator" href="calculator.html" /> 
 </head>
 
@@ -93,7 +93,7 @@
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="calculation.html">Calculation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="aggregation.html">Aggregation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="collector.html">Collector</a></li>
 <li class="toctree-l2"><a class="reference internal" href="collector.html#row-counter">Row counter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="collector.html#group-counter">Group counter</a></li>
@@ -105,9 +105,9 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -153,7 +153,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="calculation.html">Calculation</a> &raquo;</li>
+          <li><a href="aggregation.html">Aggregation</a> &raquo;</li>
         
       <li>Sheet</li>
     
@@ -178,9 +178,9 @@
             
   <div class="section" id="sheet">
 <h1>Sheet<a class="headerlink" href="#sheet" title="Permalink to this headline">¶</a></h1>
-<p>Calculate values in an tabular form like in a spreadsheet.</p>
+<p>Aggregate values in an tabular form like in a spreadsheet.</p>
 <p>Sometimes a sheet can eliminate the need for declaring a group or a data dimension.
-You can also calculate the same value in different sheets so that results are
+You can also aggregate the same value in different sheets so that results are
 grouped by different keys.</p>
 <p>The sheet() method instantiates a Sheet or a FixedSheet object. Both of them are
 special variants of the collector object and will be assigned to the total
@@ -196,7 +196,7 @@ same type.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">sheet</code><span class="sig-paren">(</span><em class="sig-param">string $name</em>, <em class="sig-param">$value</em>, <em class="sig-param">$headerAction = null</em>, <em class="sig-param">$footerAction = null</em>, <em class="sig-param">...$params</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculate attributes in a sheet.</p>
+<dd><p>Aggregate attributes in a sheet.</p>
 <p>Sheet is a collection of calculators for a horizontal representation of a value.
 Call this method once for each sheet.</p>
 <dl class="field-list simple">
@@ -204,7 +204,7 @@ Call this method once for each sheet.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>$name</strong> (<em>string</em>) – Unique name to reference the sheet object. The
 reference will be hold in $this-&gt;total.</p></li>
-<li><p><strong>$value</strong> (<em>mixed</em>) – <p>Source of the key and value to be calculated.
+<li><p><strong>$value</strong> (<em>mixed</em>) – <p>Source of the key and value to be aggregated.
 Must be served in an array with only one entry were key is the array key and value
 the value.</p>
 <p>Key and attribute name are attribute names when data row is an object or
@@ -231,7 +231,7 @@ Null for sheets where calculators are instantiated for each key value.</p></li>
 will be icremented until $toKey is reached.</p></li>
 <li><p><strong>$maxLevel</strong> (<em>int|null</em>) – The group level at which the value will be
 added. Defaults to the maximum level of the dimension. Might be less when
-calculated data are only needed on higher levels.</p></li>
+aggregated data are only needed on higher levels.</p></li>
 <li><p><strong>$params</strong> (<em>mixed</em>) – Variadic parameters to be passed to callables declared
 with value parameter.</p></li>
 </ul>
@@ -284,7 +284,7 @@ If this in not suitable ksort the $items property of the sheet object.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="sugar.html" class="btn btn-neutral float-right" title="Methods returning information" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="gettingValues.html" class="btn btn-neutral float-right" title="Getting values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="calculator.html" class="btn btn-neutral float-left" title="Calculator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

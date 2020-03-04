@@ -8,9 +8,9 @@ Methods to instantiate report class
 
 :php:meth:`group` Declare a group to monitor changes between data rows
 
-:php:meth:`calculate` Declare variable to be calculated (sum, count, min, max)
+:php:meth:`aggregate` Declare variable to provide aggregate functons (sum, count, min, max)
 
-:php:meth:`sheet` Declare variable to be calculated horizontally (having key and value)
+:php:meth:`sheet` Declare variable to be aggregated horizontally (having key and value)
  
 
 Methods for data handling
@@ -83,7 +83,7 @@ Public Properties
 :$output:  String with concatenated return values from actions 
 :$gc:  Group count collector
 :$rc:  Row count collector
-:$total:  Collector for calculated values, sheets and colloctors
+:$total:  Collector for calculators, sheets and collectors
 :$userConfig:  Configuration parameter given during instantiation
 
 

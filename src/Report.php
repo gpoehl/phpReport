@@ -101,7 +101,7 @@ class Report {
     /**
      * Set data handler and optionally declare next data dimension.
      * For each data dimension this method should be called. It must be called
-     * before your can declare groups or call the calculate or sheet methods.
+     * before your can declare groups or call the aggregate or sheet methods.
      * 
      * Next dimension can be next dimension in an multi dimensional array or
      * data of an 1:n relationship where the related data is not part of the
@@ -110,7 +110,7 @@ class Report {
      * @param mixed $dataHandler The data handler which gets data out of a data.
      * You can use 'array' as a shortcut to ArrayDataHandler or 'object' to
      * ArrayDataHandler.
-     * When the last dimension don't has groups, calculate fields or sheets then
+     * If the last dimension don't has groups, aggregate or sheet declarations
      * a new dimension will be instantiated when you omit the data() method call. 
      * @param mixed $source Method, callable, closure or attribute name. 
      * Methods, callables and closures must return an iterable data set, null 
@@ -176,16 +176,17 @@ class Report {
     }
 
     /**
-     * Calculate attributes.
-     * Call this method once for each attribute to be calculated.
-     * Results of calculation are available at each group level at any time.
-     * @param string $name Unique name to reference the calculator object. The
+     * Aggregate values.
+     * Instantiate an calulator object to aggregate declared value and provide
+     * aggregate functions.
+     * Aggregation functions are available at each group level at any time.
+     * @param string $name Unique name to reference a calculator object. The
      * reference will be hold in $this->total.
-     * @param mixed $value Source of the value to be calculated. It's the attribute name 
+     * @param mixed $value Source of the value to be aggregated. It's the attribute name 
      * when data row is an object or the key name when data row is an array.
      * It's also possiblbe to use a closure which returns the value. 
      * When the $value parameter is null it defaults to the content of $name parameter.  
-     * Use False when the value should not be calculated automaticly. In this case
+     * Use False when the value should not be aggregation automaticly. In this case
      * only the referece to the calculator object will be established. Use the
      * add() method of the $total collector or from the calculator to caluclate
      * values.  
@@ -194,11 +195,11 @@ class Report {
      * and XL. Defaults to XS.
      * @param int|null $maxLevel The group level at which the value will be 
      * added. Defaults to the maximum level of the dimension. Might be less when
-     * calculated data are only needed on higher levels.
+     * aggregated data are only needed on higher levels.
      * @return mixed $this Allows chaining of method calls.
      */
-    public function calculate(string $name, $value = null, ?int $typ = self::XS, ?int $maxLevel = null, ...$params): Report {
-        $this->checkThatDimIsDeclared('calculate', $name);
+    public function aggregate(string $name, $value = null, ?int $typ = self::XS, ?int $maxLevel = null, ...$params): Report {
+        $this->checkThatDimIsDeclared('aggregate', $name);
         $typ = $typ ?? self::XS;
         $value = $value ?? $name;
         $maxLevel = $this->checkMaxLevel($maxLevel);
@@ -210,13 +211,13 @@ class Report {
     }
 
     /**
-     * Calculate attributes in a sheet.
+     * Aggreate values in a sheet.
      * Sheet is a collection of calculators for a horizontal representation of a value.
      * Call this method once for each sheet. 
      * @param string $name Unique name to reference the sheet object. The
      * reference will be hold in $this->total.
      * 
-     * @param mixed $value Source of the key and value to be calculated. Must be
+     * @param mixed $value Source of the key and value to be aggregated. Must be
      * served in an array with only one entry were key is the array key and value
      * the value. 
      * 
@@ -226,7 +227,7 @@ class Report {
      * 
      * False to just instantiate and reference the sheet. To execute the calculation
      * call the add() method of the sheet object. This is very useful when 
-     * getting the key or value to be calculated is complicated and / or you need
+     * getting the key or value to be aggregated is complex and / or you need
      * these data on the detail level. 
      * 
      * @param int|null $typ The calculator type. 
@@ -240,7 +241,7 @@ class Report {
      * will be icremented until $toKey is reached.
      * @param int|null $maxLevel The group level at which the value will be 
      * added. Defaults to the maximum level of the dimension. Might be less when
-     * calculated data are only needed on higher levels.
+     * aggregated data are only needed on higher levels.
      * @return mixed $this Allows chaining of method calls.
      */
     public function sheet(string $name, $value, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null, ...$params): Report {
@@ -258,7 +259,7 @@ class Report {
      * Check that dim is set correct when methods are called which relates to a dim.
      * If possible a dim wihout calling the data() method will be instantiated. 
      * @param string $func The method name where this method was called from
-     * @param string $name The name given to group, calculate or sheet method 
+     * @param string $name The name given to group, aggregate or sheet method 
      * @throws \InvalidArgumentException
      */
     private function checkThatDimIsDeclared(string $func, $name): void {
@@ -537,7 +538,7 @@ class Report {
             return;
         }
 
-        // Group has changed. Calculate index of the highest changed group.
+        // Group has changed. Determine index of the highest changed group.
         $changedLevelInDim = key($diffs);
         $this->changedLevel = $changedLevelInDim + $this->dim->fromLevel;
         $this->dim->groupValues = $indexedValues;

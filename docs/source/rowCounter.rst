@@ -24,6 +24,7 @@ counters are available at each group level.
     $this->rep->rc->items[*dimensionID*]->sum(*level*).
 
 Example:
+
 .. code-block:: php
 
     $this->rep = new Report();
