@@ -46,25 +46,27 @@ this example.
 .. code-block:: php
 
     use gpoehl\phpreport\Report;
+
     require_once(__DIR__ . '/../vendor/autoload.php');
    
     class MyFirstReport {
 
+        // The report object. Use $rep->output to render the output. 
         public $rep;
         
         /**
         * It might also be a good idea to instantiate the Report in your
-        * controller and feed $rep with the desired data.
-        /*
-        public function __construct(){
-            $data = getDataFromAnyRessource();
+        * controller.
+        */
+        public function __construct($data){
+            // initialize report
             $this->rep = (new Report($this)) 
             ->data('object')
             ->group('customer')         
             ->group('invoice', 'invoiceID')
-            ->aggregate('sales', fn($row) => $row->amount * $row->price)
-            ->run($data);
-            echo $this->rep->output;
+            ->aggregate('sales', fn($row) => $row->amount * $row->price);
+            // Start execution. $data is an iterable having some data rows
+            $this->rep->run($data);
         }
 
         public function init(){
@@ -84,6 +86,7 @@ this example.
             return "<br>$row->item: $row->description";
         } 
 
+        // $row in footer methods is the previous row, not the one which triggered the group change.
         public function invoiceFooter($invoice, $row){
             return "Total sales for invoice $invoice = " . $this->rep->total->sales->sum();
         } 
