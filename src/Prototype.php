@@ -296,7 +296,7 @@ TABLE1;
      */
     private function renderTotals(): string {
         if (empty($this->rep->total->items)) {
-            return "\n" . sprintf($this->contentTable, 'Calculated attributes:', 'Nothing to be summarized.');
+            return "\n" . sprintf($this->contentTable, 'Aggregated attributes:', 'Nothing to be summarized.');
         }
         $out = "<table border='1'" . ' style="border-collapse: collapse">'
                 . "\n<tr><th>Name</th><th>sum</th><th>nn</th><th>nz</th><th>min</th><th>max</th></tr>";
@@ -316,13 +316,13 @@ TABLE1;
                 $out .= '<td>-</td><td>-</td>';
             }
         }
-        return "\n" . sprintf($this->contentTable, 'Calculated attributes:', $out . '</table>');
+        return "\n" . sprintf($this->contentTable, 'Aggregated attributes:', $out . '</table>');
     }
 
     /**
      * Not yet implemented!!!!!!!!!!!!!
      * Render sheets on current level
-     * Totals has names of calculate attributes, sum, nn and nz
+     * Totals has names of aggregated attributes, sum, nn and nz
      * @param int $level
      * @return string html table of total values
      */

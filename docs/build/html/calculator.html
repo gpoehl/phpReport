@@ -93,7 +93,7 @@
 <li class="toctree-l1"><a class="reference internal" href="dataInput.html">Data input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataOutput.html">Data output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group.html">Group changes</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="calculation.html">Calculation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="aggregation.html">Aggregation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="collector.html">Collector</a></li>
 <li class="toctree-l2"><a class="reference internal" href="collector.html#row-counter">Row counter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="collector.html#group-counter">Group counter</a></li>
@@ -101,9 +101,9 @@
 <li class="toctree-l2"><a class="reference internal" href="sheet.html">Sheet</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sugar.html">Methods returning information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="methods.html">Overview of methods and properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gettingValues.html">Getting values</a></li>
 </ul>
 
             
@@ -149,7 +149,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="calculation.html">Calculation</a> &raquo;</li>
+          <li><a href="aggregation.html">Aggregation</a> &raquo;</li>
         
       <li>Calculator</li>
     
@@ -195,13 +195,13 @@ and not zero values.</p>
 <p>The CalculatorXL class extends the Calculator class and detects the minimum
 and maximum values of an attribute. Use the min() and max() methods to get
 these values.</p>
-<p>To cumulate any value you can use the sum() or sheet method.</p>
-<p>The calculate() method cumulates a single value while the sheet() method cumulates the value depending on an key.</p>
+<p>The aggregate() method instantiates a calculator object which provides aggregate functions.
+The sheet() method instanditates a sheet colletor which holds many calculator objects.</p>
 <p>Example</p>
 <div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="nv">$rep</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Report</span> <span class="p">(</span><span class="nv">$this</span><span class="p">))</span>
 <span class="o">-&gt;</span><span class="na">data</span><span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
-<span class="o">-&gt;</span><span class="na">calculate</span> <span class="p">(</span><span class="s1">&#39;amount&#39;</span><span class="p">)</span>
-<span class="o">-&gt;</span><span class="na">calculate</span> <span class="p">(</span><span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="nx">fn</span><span class="p">(</span><span class="nv">$row</span><span class="p">,</span> <span class="nv">$rowKey</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">*</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">pricePerUnit</span><span class="p">);</span>
+<span class="o">-&gt;</span><span class="na">aggregate</span> <span class="p">(</span><span class="s1">&#39;amount&#39;</span><span class="p">)</span>
+<span class="o">-&gt;</span><span class="na">aggregate</span> <span class="p">(</span><span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="nx">fn</span><span class="p">(</span><span class="nv">$row</span><span class="p">,</span> <span class="nv">$rowKey</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">amount</span> <span class="o">*</span> <span class="nv">$row</span><span class="o">-&gt;</span><span class="na">pricePerUnit</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>

@@ -101,10 +101,10 @@ class ReportTest extends TestCase {
          $rep = (new Report($this->getBase()))
                 ->group('a');
     }
-     public function testDimensionMustBeDeclaredBeforeCalculate(){
-         $this->expectExceptionMessage("Before calling the calculate() method for 'a' the data() method must be called.");
+     public function testDimensionMustBeDeclaredBeforeAggreate(){
+         $this->expectExceptionMessage("Before calling the aggregate() method for 'a' the data() method must be called.");
          $rep = (new Report($this->getBase()))
-                ->calculate('a');
+                ->aggregate('a');
     }
      public function testDimensionMustBeDeclaredBeforeSheet(){
          $this->expectExceptionMessage("Before calling the sheet() method for 'a' the data() method must be called.");
@@ -205,7 +205,7 @@ class ReportTest extends TestCase {
                  ->data($handler)
                 ->setCallOption(Report::CALL_PROTOTYPE)
                 ->group('A', $a0)
-                ->calculate('B', $a1)
+                ->aggregate('B', $a1)
                 ->sheet('C', $a2);
         $out = $rep->run([$row]);
         $this->assertStringContainsString('groupAvalue', $out);
@@ -263,7 +263,7 @@ class ReportTest extends TestCase {
                 ->group('a', 'ga')
                 ->group('b', 'gb')
                 ->group('c', 'gc')
-                ->calculate('d', 'a2')
+                ->aggregate('d', 'a2')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);
         // First row exectues all headers

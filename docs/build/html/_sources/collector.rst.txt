@@ -1,7 +1,7 @@
 Collector
 =========
 
-phpReport has a very powerful feature to calculate values and increment counters.
+phpReport has a very powerful feature to aggregate values and increment counters.
 Each value and counter is implemented as a calculator object. These objects 
 will be assigned to one collector.
 
@@ -28,18 +28,18 @@ Total collector
 ---------------
 
 The total collector is named **total**. The collector is used to hold all calculator
-objects instantiated by the calculate() method and the sheet objects instantiated
+objects instantiated by the aggregate() method and the sheet objects instantiated
 by the sheet() method.
 
 You can assign further collectors, sheets or calculators to this total collector
 or any other collector in this tree.
-So it's possible to build a hirachichal structure of calculated values.
+So it's possible to build a hirachichal structure of aggregated values.
 
 
 Accessing values
 ----------------
 
-There are multiple options to access calculated values. The long version looks
+There are multiple options to access a calculater object. The long version looks
 like
 
 $this->rep->*collectorName*->items[*itemName*].

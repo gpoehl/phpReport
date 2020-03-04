@@ -61,7 +61,7 @@ class ArrayDataHandler {
                     $total[$name]->add([$this->dim->target, $attr]($row, $rowKey, $this->dim->id, ...$source[2]));
                     break;
                 default:
-                    // called method must return an scalar value for calculate()
+                    // called method must return an scalar value for aggregate()
                     // or an array for sheets.
                     $total[$name]->add($attr($row, $rowKey, $this->dim->id, ...$source[2]));
             }
