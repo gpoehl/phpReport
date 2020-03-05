@@ -125,7 +125,7 @@ and two values to be aggregated.
 
 Prototyping
 ===========
-Before developing any action method have a look at the setting call options. Prototype
+Before developing any action method have a look at the setCallOption() method. Prototype
 generates a default report showing a lot of interesting stuff. 
 
 
