@@ -63,7 +63,7 @@ and two values to be aggregated.
 
 ```php
 <?php
-        use gpoehl\phpreport\Report;
+    use gpoehl\phpreport\Report;
 
     require_once(__DIR__ . '/../vendor/autoload.php');
    
