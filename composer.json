@@ -1,6 +1,6 @@
 {
     "name": "gpoehl/phpreport",
-    "description": "Backbone for reports and other applications dealing with data sets. Handles group changes, calculates totals, subtotals, min, max and much more.",
+    "description": "Backbone for reports or any batch like application. Manages group changes and provides aggregate functions. Integrates seemless into any environment.",
     "license": "LGPL-3.0-or-later",
     "authors": [
         {
@@ -12,9 +12,13 @@
         "report",
         "grouping",
         "group change",
-        "total",
-        "subtotals"
+        "totals",
+        "subtotals",
+        "sheets"
     ],
+    "archive": {
+        "exclude": ["/docs",  "/docs/build"]
+    },
     "require": {
         "php": "^7.3"
     },

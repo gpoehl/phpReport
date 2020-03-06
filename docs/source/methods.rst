@@ -51,31 +51,29 @@ Action methods called from report class
 
 Methods returning information
 -----------------------------
-getRow(int $dimID = null)
 
-getRowKey(int $dimID = null)
+:php:meth:`getRow` Get the active row for the requested dimension.
 
-getCurrentDimID()
+:php:meth:`getRowKey` Get the key of active row for the requested dimension.
 
-prototype ()
+:php:meth:`getGroupNames` Get names for all declared groups.
 
-setCallAction()
+:php:meth:`getGroupName` Get name for a requested or current group level.
 
-getGroupNames()
+:php:meth:`getGroupValues` Get current values for all declared groups.
 
-getGroupName(int $groupID = null)
+:php:meth:`getGroupValue` Get current value for the requested or current group.
 
-getGroupValues()
+:php:meth:`getLevel` Get the current group level or the level associated with the group name.
 
-getGroupValue($groupID = null)
+:php:meth:`getChangedLevel` Get the level which triggered the group change.
 
-getLevel()
+:php:meth:`getDimID` Get the dimension id related to a group level or the current dimension id.
 
-getGroupLevel(string $groupName)
+:php:meth:`isFirst` Bool if the action for the current or given level called the first time.
 
-isFirst()
+:php:meth:`isLast` Bool if the action for the current or given level called the last time.
 
-isLast()
 
 Public Properties
 -----------------
@@ -86,4 +84,7 @@ Public Properties
 :$total:  Collector for calculators, sheets and collectors
 :$userConfig:  Configuration parameter given during instantiation
 
-
+Prototyping methods
+-------------------
+:php:meth:`prototype` Call prototype method realted to current action.
+:php:meth:`setCallAction` Alter targets for actions to be executed.

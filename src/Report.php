@@ -24,7 +24,7 @@ namespace gpoehl\phpReport;
  */
 class Report {
 
-    const VERSION = '2.0.0';
+    const VERSION = '2.0.1';
 
     // Collected return values from executed actions
     public $output;
@@ -58,8 +58,8 @@ class Report {
     public $activeMethod;           // The current method (build by getCallable) 
     /* @var Dimension[] */
     private $dims = [];             // Array of date dimension objects
-    /* @var $dim Dimension The actual dimension. Shortcut of current($dims)*/
-    private $dim;                   
+    /* @var $dim Dimension The actual dimension. Shortcut of current($dims) */
+    private $dim;
     private $changedLevel;          // Highest level of changed group. Null when no change 
     private $groups;                // Groups object which holds array of group objects
     // @property Collector $collector The master collector. All items
@@ -142,10 +142,10 @@ class Report {
     }
 
     /**
-     * Declare attribute to be grouped.
+     * Declare group to be managed.
      * This method must be called once for each attribute to be grouped.
      * Values of attributes will be compared to values of previous row. When 
-     * they are not the same defined footer and header actions will be performed.   
+     * they are not equal defined footer and header actions will be performed.   
      * @param string $name The group name. Can be the same as the attribute name.
      * This name will be used to build method names (depending on configuration
      * parameters). Must be unique between all dimensions.
@@ -719,7 +719,7 @@ class Report {
     public function getLevel(string $groupName = null): int {
         return ($groupName === null) ? $this->mp->level : $this->groups->groupLevel[$groupName];
     }
-
+    
     /**
      * Get the level which triggered a group change
      * @return int|false The group level which triggered a group change. 
@@ -730,12 +730,12 @@ class Report {
     }
 
     /**
-     * Get the dimID for a given level.
+     * Get the dimID related to a group level.
      * @param string|int|null $level The group level for which the dimID will be returned. Defaults to the
      * current group level.
      * @return int The dimenion ID for the requested level. 
      */
-    public function getDimID($level = null) {
+    public function getDimID($level = null):int {
         if ($level === null) {
             return $this->dim->id;
         }
@@ -784,12 +784,12 @@ class Report {
     }
 
     /**
-     * Get last row read for a given dimension
+     * Get active row for a given dimension.
      * @param int $dimID The dimension id. Defaults to null.
      * When $dimID is null rows of the current dimID will be returned.
-     * If $dimID is negative row of the current dimID minus the given value
-     * will be returned.
-     * @return mixed The last row read in the given dimension 
+     * If $dimID is negative the value will be subtracted from the current 
+     * data dimension.
+     * @return mixed The active data row for the requested dimension. 
      */
     public function getRow(int $dimID = null) {
         if ($dimID === null) {
@@ -802,12 +802,12 @@ class Report {
     }
 
     /**
-     * Get the key of last read row for a given dimension
+     * Get the key of active row for the requested dimension. 
      * @param int $dimID The dimension id. Defaults to null.
-     * When $dimID is null or negative method getCurrentDimID() will be called.
-     * If $dimID is negative this value will be subtracted from the result of 
-     * the getCurrentDimID() call.
-     * @return mixed The key of last read row on dimension $dimID 
+     * When $dimID is null row key of the current dimID will be returned.
+     * If $dimID is negative the value will be subtracted from the current 
+     * data dimension.
+     * @return mixed The key of the active row for the requested dimension.
      */
     public function getRowKey(int $dimID = null) {
         if ($dimID === null) {

@@ -10,24 +10,24 @@ The report class has some extra convenience methods to provide you with useful i
 
     .. php:method:: getRow(int $dimID = null)
 
-        Get the currently active row for the requested dimension. 
+        Get the active row for the requested dimension. 
 
         :param int|null $dimID: The data dimension for which you want the current row. 
             Defaults to the current data dimension.  
             If $dimID is negative the value will be subtracted from the current 
             data dimension.
-        :returns: The requested row.
+        :returns: The active data row for the requested dimension.
 
     .. php:method:: getRowKey($dimID)
 
-        Get the key of the currently active row for the requested dimension. 
+        Get key of the active row for the requested dimension. 
 
         :param int|null $dimID: Same as in getRow(). 
         :returns: The requested key.
 
     .. php:method:: isFirst($level = null): bool
 
-            Checks if the current group is the first one within the next higer group.
+            Checks if the current group is the first one within the next higher group.
             e.g. Is it the first invoice for a customer.
 
             :param string|int|null $level: The group level to be checked. Defaults
@@ -93,3 +93,12 @@ The report class has some extra convenience methods to provide you with useful i
             :param int $groupLevel: The level of the group.
 
             :returns string: The associated group name of the level.
+
+ .. php:method:: getDimId(mixed $level): int
+
+            Get the dimension ID for a given group level.
+
+            :param mixed $groupLevel: The level of the group. Defaults to the 
+             current level.
+
+            :returns int: The dimension id.
