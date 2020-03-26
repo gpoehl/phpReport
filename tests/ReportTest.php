@@ -6,24 +6,42 @@ declare(strict_types=1);
  * Unit test of Report class.
  * For tests with multiple dimensions see ReportMultipleDimensionTest file
  */
-use gpoehl\phpReport\Collector;
+
 use gpoehl\phpReport\CalculatorXS;
+use gpoehl\phpReport\Collector;
+use gpoehl\phpReport\Helper;
 use gpoehl\phpReport\MajorProperties;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
 class ReportTest extends TestCase {
 
-    public function testConstructor() {
+    /**
+     * @dataProvider paramsProvider
+     */
+    public function testConstructor($data, $expected) {
         $rep = (new Report($this->getBase(), [
-                    'actions' => ['noData' => 'nodata'],
-                    'userConfig' => 'myConfig',
-        ]));
+                    'actions' => ['noData' => 'nodata']]));
         $this->assertInstanceOf(MajorProperties::class, $rep->mp);
         $this->assertInstanceOf(Collector::class, $rep->rc);
         $this->assertInstanceOf(Collector::class, $rep->gc);
         $this->assertInstanceOf(Collector::class, $rep->total);
-        $this->assertSame('myConfig', $rep->userConfig);
+        $this->assertSame([], $rep->params);
+    }
+
+    /**
+     * @dataProvider paramsProvider
+     */
+    public function testConstructorWithParams($rep, $expected) {
+        $this->assertSame($expected, $rep->params);
+    }
+
+    public function paramsProvider() {
+        return [
+            'One param' => [new Report($this->getBase(), null, 'myParam'), ['myParam']],
+            'More params' => [new Report($this->getBase(), null, 'myParam1', 'myParam2', 'myParam3'), ['myParam1', 'myParam2', 'myParam3']],
+            'One param as assoc array' => [new Report($this->getBase(), null, ['p1' => 'param1', 'p2' => 'param2', 'p3' => 'param3']), [['p1' => 'param1', 'p2' => 'param2', 'p3' => 'param3']]],
+        ];
     }
 
     /**
@@ -42,7 +60,7 @@ class ReportTest extends TestCase {
     public function noDataProvider() {
         return [
             'Data set equals null' => [null, 'nodata, '],
-            'Data set is an empty array' =>[[], 'nodata, '],
+            'Data set is an empty array' => [[], 'nodata, '],
         ];
     }
 
@@ -60,7 +78,7 @@ class ReportTest extends TestCase {
 
     public function testRun_FinalizeIsFalse() {
         $rep = (new Report($this->getBase()))
-                 ->data('array')
+                ->data('array')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([['A']], false)
                 ->end();
@@ -70,7 +88,7 @@ class ReportTest extends TestCase {
     public function testCallEndMethodWhenFinalizeIsTrueFails() {
         $this->expectException(Error::class);
         $rep = (new Report($this->getBase()))
-                 ->data('array')
+                ->data('array')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(['A'])               // run returns a string
                 ->end();                   // method chaining works only on objects.
@@ -78,7 +96,7 @@ class ReportTest extends TestCase {
 
     public function testChunkOfRowsWithOptionFinalizeIsFalseAndNext() {
         $rep = (new Report($this->getBase()))
-                 ->data('array')
+                ->data('array')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([['A'], ['B']], false)
                 ->next(['C'])
@@ -88,33 +106,35 @@ class ReportTest extends TestCase {
 
     public function testNextForOneRowNoGroups() {
         $rep = (new Report($this->getBase()))
-                 ->data('array')
+                ->data('array')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false)
                 ->next(['A'])
                 ->end();
         $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
     }
-    
-    public function testDimensionMustBeDeclaredBeforeGroup(){
-         $this->expectExceptionMessage("Before calling the group() method for 'a' the data() method must be called.");
-         $rep = (new Report($this->getBase()))
+
+    public function testDimensionMustBeDeclaredBeforeGroup() {
+        $this->expectExceptionMessage("Before calling the group() method for 'a' the data() method must be called.");
+        $rep = (new Report($this->getBase()))
                 ->group('a');
     }
-     public function testDimensionMustBeDeclaredBeforeAggreate(){
-         $this->expectExceptionMessage("Before calling the aggregate() method for 'a' the data() method must be called.");
-         $rep = (new Report($this->getBase()))
+
+    public function testDimensionMustBeDeclaredBeforeAggreate() {
+        $this->expectExceptionMessage("Before calling the aggregate() method for 'a' the data() method must be called.");
+        $rep = (new Report($this->getBase()))
                 ->aggregate('a');
     }
-     public function testDimensionMustBeDeclaredBeforeSheet(){
-         $this->expectExceptionMessage("Before calling the sheet() method for 'a' the data() method must be called.");
-         $rep = (new Report($this->getBase()))
+
+    public function testDimensionMustBeDeclaredBeforeSheet() {
+        $this->expectExceptionMessage("Before calling the sheet() method for 'a' the data() method must be called.");
+        $rep = (new Report($this->getBase()))
                 ->sheet('a', 'b');
     }
 
     public function testGroupsOnOneRow() {
         $rep = (new Report($this->getBase()))
-                 ->data('array')
+                ->data('array')
                 ->group('a', 'firstGroup')
                 ->group('b', 'secondGroup')
                 ->setCallOption(Report::CALL_ALWAYS)
@@ -136,7 +156,7 @@ class ReportTest extends TestCase {
                             return 'closure';                           // Closure
                         },
                     ]]))
-                                 ->data('array')
+                ->data('array')
                 ->setCallOption($option)
                 ->run(null);
         $this->assertStringContainsString($ex1, $rep);
@@ -162,11 +182,9 @@ class ReportTest extends TestCase {
                         'totalHeader' => [$this->getOtherClass(), 'staticCallMethod'], // Static callable
                         'noData' => [$this->getBase(), 'callMethod'], // Object callable
                         'totalFooter' => 'callMissing', // Missing method forces prototype
-                        'close' => function() {
-                            return 'closure';                           // Closure
-                        },
+                        'close' => fn() => 'closure', // Closure
                     ]]))
-                                 ->data('array')
+                ->data('array')
                 ->setCallOption(Report::CALL_EXISTING)
                 ->run(null);
         $this->assertStringNotContainsString('init', $rep);
@@ -179,7 +197,7 @@ class ReportTest extends TestCase {
     public function testPrototype() {
         $proto = $this->getPrototype();
         $rep = (new Report($proto))
-                 ->data('array')
+                ->data('array')
                 ->group('a', 0)
                 ->setCallOption(Report::CALL_ALWAYS);
         $proto->report = $rep;
@@ -202,7 +220,7 @@ class ReportTest extends TestCase {
      */
     public function testGroupValue_sum_and_rsum($a0, $a1, $a2, $row, $handler) {
         $rep = (new Report($this->getBase()))
-                 ->data($handler)
+                ->data($handler)
                 ->setCallOption(Report::CALL_PROTOTYPE)
                 ->group('A', $a0)
                 ->aggregate('B', $a1)
@@ -216,7 +234,7 @@ class ReportTest extends TestCase {
     public function GroupValue_sum_and_rsum_Provider() {
         $data = ['attr0' => 'groupAvalue', 'attr1' => 5, 'attr2' => 6, 'attr3' => 7];
         return ([
-            [0, 1, [2 , 3], array_values($data), 'array'],
+            [0, 1, [2, 3], array_values($data), 'array'],
             ['attr0', 'attr1', ['attr2', 'attr3'], $data, 'array'],
             [
                 function($row) {
@@ -230,7 +248,7 @@ class ReportTest extends TestCase {
                 },
                 $data, 'array'],
             [0, 1, [2, 3], (object) array_values($data), 'object'],
-            ['attr0', 'attr1', ['attr2' , 'attr3'], (object) ($data), 'object'],
+            ['attr0', 'attr1', ['attr2', 'attr3'], (object) ($data), 'object'],
             [
                 function($row) {
                     return $row->attr0;
@@ -252,14 +270,14 @@ class ReportTest extends TestCase {
     public function testNoGroups() {
         $rep = (new Report($this->getBase()))
                 ->setCallOption(Report::CALL_ALWAYS)
-                 ->data('array')
+                ->data('array')
                 ->run([['A'], ['B']]);
         $this->assertSame('init, totalHeader, detail, detail, totalFooter, close, ', $rep);
     }
 
     public function testFlowWithGroupChangesOnMultipleGroups() {
         $rep = (new Report($this->getBase()))
-                 ->data('array')
+                ->data('array')
                 ->group('a', 'ga')
                 ->group('b', 'gb')
                 ->group('c', 'gc')
@@ -304,13 +322,37 @@ class ReportTest extends TestCase {
         $this->assertSame(3, $rep->gc->b->sum(0));      // Total b groups
         $this->assertSame(5, $rep->gc->c->sum(0));      // Total c groups
     }
+    
+     /**
+     * @dataProvider buildMethodsByGroupNameProvider
+     */
+    public function testBuildMethodsByGroupName($rule, $name, $expectedHeader, $expectedFooter) {
+        $rep = (new Report($this->getBase(),
+                [
+                    'actions' => ['groupHeader' => 'header%', 'groupFooter' => 'footer%'],
+                    'buildMethodsByGroupName' => $rule
+                    ]))
+                ->data('array')
+                ->group($name, 'ga')
+                ->setCallOption(Report::CALL_ALWAYS)
+                ->run([['ga' => 1, 'gb' => 2]]);
+        $this->assertSame('init, totalHeader, ' . $expectedHeader . ', detail, ' . $expectedFooter . ', totalFooter, close, ', $rep);   
+    }
+
+    public function buildMethodsByGroupNameProvider() {
+        return [
+            [true, 'a',  'headera', 'footera'],
+            ['ucfirst', 'a',  'headerA', 'footerA'],
+            [false, 'a',  'header1', 'footer1'],
+        ];
+    }
 
     /**
      * @dataProvider headerAndFooterActionProvider
      */
     public function testHeaderAndFooterActions($headerAction, $footerAction, $expectedHeader, $expectedFooter) {
         $rep = (new Report($this->getBase()))
-                 ->data('array')
+                ->data('array')
                 ->group('a', 'ga')
                 ->group('b', 'gb', $headerAction, $footerAction)
                 ->setCallOption(Report::CALL_ALWAYS)

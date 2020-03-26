@@ -1,14 +1,56 @@
 # phpReport
 
+phpReport is a modern PHP library designed to be a solid foundation for all
+applications working with data sets. 
 
-Backbone for reports and all other batch like applications.  
+Ranging from simple reports to complex tasks like writing invoices
+ - there are no limits to use this library. 
 
-phpReport is a modern PHP library designed to handle all tasks related to group 
-changes and to provide aggregate functions on each group level.
+The open architecture integrates seamless within your environment. 
+Your're welcome to use all your data models and components representing your 
+business know how as well as any PHP framework or ORM (Object Relation Mapper)
+like Popel, Doctrine, Eloquent or Cycle.
+
+Basicly phpReport awaits data and compares values between two consecutive rows.
+When they're not equal user defined actions (e.g. group header or footer method)
+are executed. This leads to well structured applications which interacts closely with this library.
+ 
+To let you choose the best access strategy for reading data you might feed them to phpReport
+all at once, in batches or row by row.
+
+
+
+
+As you can also use any data access tool there are no limitations of data sources.
+
+source you need 
+You can even combine (like a join) data from different sources or work with multi dimensional arrays. 
+
+
+If none of the existing data handler classes fit's your needs you can write your
+own dedicated handler or use other tool like phpSpreadsheet to read Excel sheets,
+con
+and pass data to one of t as aData rows are pTo work with data rows Data rows are 
+
+
+ 
+
+The structural design of aggregating values serves methods like sum, count
+(including not null and not zero values), min and max. 
+To aggregate values in sheets just combine values with a column key. 
+
+All results are available at any time, for each group level and in any combination
+of sheet columns or aggregated fields.
+
+ 
+
+
+
+
 
 Documentation can be viewed at https://phpreport.readthedocs.io/en/latest/
 
-Whenever values of declared groups aren't equal between two consecutive rows
+Whenever values of declared groups aren't equal 
 assigned actions will be executed. Actions are usually methods to be 
 called in the application class(e.g. groupHeader and groupFooter methods). Actions
 are the right place to build your output or to do whatever needs to done. 
@@ -34,7 +76,7 @@ The application will not notice this change.
 Requirements
 ============
 
-The only requirement for **phpReport** is PHP 7.3.0 or later. 
+The only requirement for **phpReport** is PHP 7.4.0 or later. 
 
 Installation
 ============
@@ -140,7 +182,6 @@ Setup & Configuration
 
 phpReport is designed to be very flexible. Check the config.php file and make
 desired changes. Adapt action method names to follow your own organisation rules. 
-
 
 
 Unit Testing

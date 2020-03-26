@@ -1,16 +1,14 @@
 <?php
-
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the gpoehl/phpReport library.
+ *
+ * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
+ * @copyright ©2019 Günter Pöhl
+ * @link      https://github.com/gpoehl/phpReport/readme
+ * @author    Günter Pöhl  <phpReport@gmx.net>
  */
 
-/**
- * Description of Testclass
- *
- * @author Günter
- */
+declare(strict_types=1);
 class Testclass {
 
     public static function getStaticValueFromArray($row, $rowKey, $dimID, array $params) {

@@ -17,34 +17,26 @@ namespace gpoehl\phpReport;
  */
 class Group {
 
-    public $groupName;          // The name of group
-    public $level;              // The group level
-    public $dimID;              // The dim this group belongs to. 
-    public $headerParam;        // header parameter given by group().
-    public $footerParam;        // footer parameter given by group().
-    public $headerAction = [];  // Runtime header action to be performed on group change
-    public $footerAction = [];  // Runtime footer action to be performed on group change
+    public string $groupName;          // The name of group
+    public int $level;              // The group level
+    public int $dimID;              // The dim this group belongs to. 
+
+    /** @var header action having action type and action. % sign was replaced */
+    public array $headerAction;
+
+    /** @var header action having action type and action. % sign was replaced */
+    public array $footerAction;
+
+    /** @var prepared header action to be executed */
+    public ?array $runtimeHeaderAction;
+
+    /** @var prepared footer action to be executed */
+    public ?array $runtimeFooterAction;
 
     public function __construct(string $groupName, int $level, int $dimID) {
         $this->groupName = $groupName;
         $this->level = $level;
         $this->dimID = $dimID;
-    }
-
-    /**
-     * Build variable part of method name for group header or group footer.
-     * @param Group The group for which the % sign might be replaced
-     * @param array $configParam The configuration parameter valid for the given
-     * group.
-     * @return array Config param where % sign is replaced by groupName or Level
-     */
-    public function getGroupNameReplacement($buildMethodsByGroupName) {
-        If ($buildMethodsByGroupName === 'ucfirst') {
-            return ucfirst($this->groupName);
-        } elseif ($buildMethodsByGroupName === true) {
-            return $this->groupName;
-        }
-        return $this->level;
     }
 
 }

@@ -24,11 +24,7 @@ namespace gpoehl\phpReport;
  */
 class Report {
 
-    const VERSION = '2.0.1';
-
-    // Collected return values from executed actions
-    public $output;
-
+    const VERSION = '2.1.0';
     // Rules to execute actions
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
@@ -46,55 +42,94 @@ class Report {
     const WARNING = 5;
     const ERROR = 6;
 
-    // @property MajorProperties $mp Holds major properties to be passed to cumulator objects
-    public $mp;
-    // @property Collector $rc Collector for row counters
-    public $rc;
-    // @property Collector $gc Collector for group counters
-    public $gc;
-    // @property Collector $total Collector of sum attributes and sheets to be cumulated
-    public $total;
-    public $userConfig;             // Optional user configuration. @see Configurator for details.   
-    public $activeMethod;           // The current method (build by getCallable) 
-    /* @var Dimension[] */
-    private $dims = [];             // Array of date dimension objects
-    /* @var $dim Dimension The actual dimension. Shortcut of current($dims) */
-    private $dim;
-    private $changedLevel;          // Highest level of changed group. Null when no change 
-    private $groups;                // Groups object which holds array of group objects
-    // @property Collector $collector The master collector. All items
-    // within this collector will cumumlated to higher level on group change.
-    private $collector;
-    private $target;                   // Object which holds the methods to be called. Usally passed as $this
-    private $callOption = self::CALL_EXISTING;      // One of the execution rules above
-    // @property Prototype $prototyp Prototyp object to serve prototyp actions
-    private $prototype = null;
-    private $actions = [];             // Configurable mapping of action keys to actions.
-    private $buildMethodsByGroupName;  // Indicates how group names should be build.
-    private $lowestHeader = 0;         // Level of lowest header called to be used as start index for footers.
-    private $detailMethod = [];        // Run time detail action   
-    private $needFooter = false;       // Bool to avoid execution of footer actions on first row.
+    /** Collected return values from executed actions. */
+    public ?string $output = null;
+
+    /** @var Major properties to be passed to calculator objects. */
+    public MajorProperties $mp;
+
+    /** @var Collection of row counters. One row counter per dimension, */
+    public Collector $rc;
+
+    /** @var Collection of group counters. One group counter per group. */
+    public Collector $gc;
+
+    /** @var Collection of aggregate values, sheets and other collectors */
+    public Collector $total;
+
+    /** @var Arrray of the varadic parameters given at instantiaton.
+     * They can be used as an alternate way to pass parameters between
+     * objects (e.g. from a controller to a report class). */
+    public array $params;
+
+    /** @var The current action. Null when no action will be executed for the current event. */
+    public ?array $currentAction;
+
+    /** @var array[] Array of arrays with possible actions loaded from config file
+     *  indexed by the action key. 
+     *  The currently executed action will be stored in $currentAcion. This gives
+     * prototype access to the action to be 
+      acce */
+    private array $actions = [];
+
+    /** @var array|null The runTimeAction for 'detail' event.  
+     *  Null when action will not be executed. */
+    private ?array $detailAction = [];
+
+    /** @var Dimension[] An arrray of data dimension objects. */
+    private array $dims = [];
+
+    /** @var The actual dimension object. Shortcut of current($dims). */
+    private Dimension $dim;
+
+    /** @var Highest level of changed group. Null when no group change detected. */
+    private ?int $changedLevel;
+
+    /** @var Groups object which holds any groups regardless of the related dimension. */
+    private Groups $groups;
+
+    /** @var object Object which implements methods for event actions.
+     * Usally passed as $this.
+     * @todo Check if it is possible to pass a class name and call static methods
+     */
+    private $target;
+
+    /** @var The option how and where event actions will be executed. */
+    private int $callOption = self::CALL_EXISTING;
+
+    /** @var The prototype object which executes prototype actions. Will be 
+      instantiated only when really needed. */
+    private Prototype $prototype;
+
+    /** mixed Rule how group names will be build. See configuration documentaion. */
+    private $buildMethodsByGroupName;
+
+    /** Last level within the current dimension used as starting index for executing footer actions. */
+    private int $lowestHeader = 0;         // Level of lowest header called to be used as start index for footers.
+
+    /** @var Avoid execution of footer actions on first row. */
+    private bool $needFooter = false;
 
     /**
-     * Load parameter from config file and save given parameters.
+     * Instantiate a new report object
+     * Set reference to a target object and merge config parameters into 
+     * parameters from config file.
      * @param object $target Object which holds the methods to be called. Usually passed as $this.
      * @param array|null $config Dynamic configuration to replace defaults set in config.php file.
+     * @param mixed ...$params Optional parameters to be passed around. They are
+     * kept in the public $params array but not used by this library. 
      */
-    public function __construct($target, array $config = null) {
+    public function __construct(object $target, array $config = null, ...$params) {
         $this->target = $target;
+        $this->params = $params;
         $conf = Factory::configurator($config);
         $this->groups = new Groups($conf->grandTotalName);
         $this->buildMethodsByGroupName = $conf->buildMethodsByGroupName;
         $this->actions = $conf->actions;
-        $this->userConfig = $conf->userConfig;
         $this->mp = Factory::properties();
-        $this->collector = Factory::collector();
         $this->mp->rc = $this->rc = Factory::collector();
-        $this->collector->addItem($this->rc, 'rc');
         $this->mp->gc = $this->gc = Factory::collector();
-        $this->collector->addItem($this->gc, 'gc');
         $this->mp->total = $this->total = Factory::collector();
-        $this->collector->addItem($this->total, 'total');
         return $this;
     }
 
@@ -112,7 +147,7 @@ class Report {
      * ArrayDataHandler.
      * If the last dimension don't has groups, aggregate or sheet declarations
      * a new dimension will be instantiated when you omit the data() method call. 
-     * @param mixed $source Method, callable, closure or attribute name. 
+     * @param mixed $value Method, callable, closure or attribute name. 
      * Methods, callables and closures must return an iterable data set, null 
      * when no data exists. 
      * They can also pass data themselves to the run() or next() methods. In this
@@ -123,53 +158,84 @@ class Report {
      * Attribute name is the name of an attribute when current row is an object
      * or the array key when current row is an array.
      * 
-     * @param mixed $noData Action to be executed when $data don't have any data.
-     * Defaults to null to stay with noData_n action from configuration.
-     * @param mixed $rowDetail Action to be executed for each data row of the current dimension.
-     * Defaults to null to stay with data_n action from configuration.
+     * @param mixed $noDataAction Action to be executed when $data don't have any data.
+     * Null to use defualt noData_n action from configuration.
+     * @param mixed $dataAction Action to be executed for each data row of the current dimension.
+     * Null to use default data_n action from configuration.
      * @param mixed noGroupChange Action to be executed when data row didn't
      * trigger a group change.
-     * Defaults to null to stay with noGroupChangeParam action from configuration.
-     * @param mixed $parameters Optional variadic list of additional parameters passed thrue 
+     * Null to use default noGroupChange_n action from configuration.
+     * @param mixed ...$parameters Optional list of additional parameters passed 
      * to external methods. 
      */
-    public function data($dataHandler, $value = null, $noData = null, $rowDetail = null, $noGroupChange = null, ... $params): Report {
+    public function data($dataHandler, $value = null, $noDataAction = null, $dataAction = null, $noGroupChangeAction = null, ... $params): self {
+        $dimID = count($this->dims);
+        $actions['noData'] = ($noDataAction !== null) ? Helper::buildMethodAction($noDataAction, 'noData_n') :
+                Helper::replacePercent($dimID, $this->actions['noData_n']);
+        $actions['data'] = ($dataAction !== null) ? Helper::buildMethodAction($dataAction, 'data_n') :
+                Helper::replacePercent($dimID, $this->actions['data_n']);
+        $actions['noGroupChange'] = ($noGroupChangeAction !== null) ? Helper::buildMethodAction($noGroupChangeAction, 'noGroupChange_n') :
+                Helper::replacePercent($dimID, $this->actions['noGroupChange_n']);
 
-        $this->dim = new Dimension(count($this->dims), $dataHandler, $value, $this->target, $noData, $rowDetail, $noGroupChange, $params);
+        $this->dim = new Dimension($dimID, $dataHandler, $value, $this->target, $actions, $params);
         $this->dims[] = $this->dim;
-
         return $this;
     }
 
     /**
-     * Declare group to be managed.
-     * This method must be called once for each attribute to be grouped.
-     * Values of attributes will be compared to values of previous row. When 
-     * they are not equal defined footer and header actions will be performed.   
-     * @param string $name The group name. Can be the same as the attribute name.
+     * Declare a new data group.
+     * Call method once for each data group after calling the data() method.
+     * Values will be compared between two consecutive data rows. When 
+     * they aren't equal defined footer and header actions will be executed.
+     *    
+     * @param string $name The group name.
      * This name will be used to build method names (depending on configuration
      * parameters). Must be unique between all dimensions.
-     * @param mixed $value Source of the group value. Use the attribute name 
-     * when data row is an object or the key name when data row is an array.
-     * It's also possiblbe to use a callable (a closusre or an array having 
-     * class and method parameters). 
-     * When the $value parameter is null it defaults to the content of $name parameter.   
+     * 
+     * @param int|string|\Closure|array|null $value How to get the group value. 
+     * It can be one of the following:
+     * 
+     * - Name or index of an array element when data row is an array.
+     * - The object property name when data row is an object.
+     * - A callback returning a value.
+     * - A callable array (may contain an object or class name and must contain a method name) returning a value.
+     * - Null. The group name will be used as array key or property name.
+     *  
+     *  * The signature of an anonymous function or callable method should be:
+     * `function($row, $rowKey, $dimID, $param1, ..., $param9)`.
+     * 
+     * ```php
+     * fn($user, $rowkey) => $user->firstName . ' ' . $user->lastName 
+     * ```
+     * 
+     * The signature of an anonymous function or callable method is specified by
+     * the datahander class of this dimension.
+     * Same is true for the content of callables with an array. 
+     * Both depends mainly if the data row is an data object or an array. It's 
+     * obvious that an data object don't need the current row as a parameter while
+     * the latter repquries it. 
+     * 
      * @param mixed $headerAction Overwrite individual group header action. 
-     * Set to False when default action should not be executed.
+     * False when default header action should not be executed.
      * @param mixed $footerAction Overwrite individual group footer action. 
-     * Set to False when default action should not be executed.
-     * @return $this Allows chaining of method calls.
+     * False when default footer action should not be executed.
+     * @param mixed ...$params Optional list of parameters passed `unpacked`
+     * to anonymous functions and callables getting the group value.
      */
-    public function group($name, $value = null, $headerAction = null, $footerAction = null, ...$params): Report {
+    public function group($name, $value = null, $headerAction = null, $footerAction = null, ...$params): self {
         $this->checkThatDimIsDeclared('group', $name);
-        $value = $value ?? $name;
+        $value ??= $name;
         $group = $this->groups->newGroup($name, $this->dim->id);
-        if ($headerAction !== null) {
-            $group->headerParam = Helper::buildMethodAction($headerAction, 'groupHeader');
+        If ($this->buildMethodsByGroupName === 'ucfirst') {
+            $replacement = ucfirst($name);
+        } else {
+            $replacement = ($this->buildMethodsByGroupName) ? $name : (string) $group->level;
         }
-        if ($footerAction !== null) {
-            $group->footerParam = Helper::buildMethodAction($footerAction, 'groupFooter');
-        }
+
+        $group->headerAction = ($headerAction !== null) ? Helper::buildMethodAction($headerAction, 'groupHeader') :
+                Helper::replacePercent($replacement, $this->actions['groupHeader']);
+        $group->footerAction = ($footerAction !== null) ? Helper::buildMethodAction($footerAction, 'groupFooter') :
+                Helper::replacePercent($replacement, $this->actions['groupFooter']);
         $this->dim->dataHandler->addGroup($value, $params);
         $this->gc->addItem(Factory::calculator($this->mp, $group->level - 1, self::XS), $group->level);
         return $this;
@@ -196,12 +262,13 @@ class Report {
      * @param int|null $maxLevel The group level at which the value will be 
      * added. Defaults to the maximum level of the dimension. Might be less when
      * aggregated data are only needed on higher levels.
-     * @return mixed $this Allows chaining of method calls.
+     * @param mixed ...$params Optional list of parameters passed `unpacked`
+     * to anonymous functions and callables getting value.
      */
-    public function aggregate(string $name, $value = null, ?int $typ = self::XS, ?int $maxLevel = null, ...$params): Report {
+    public function aggregate(string $name, $value = null, ?int $typ = self::XS, ?int $maxLevel = null, ...$params): self {
         $this->checkThatDimIsDeclared('aggregate', $name);
-        $typ = $typ ?? self::XS;
-        $value = $value ?? $name;
+        $typ ??= self::XS;
+        $value ??= $name;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $this->total->addItem(Factory::calculator($this->mp, $maxLevel, $typ), $name);
         if ($value !== false) {
@@ -242,11 +309,12 @@ class Report {
      * @param int|null $maxLevel The group level at which the value will be 
      * added. Defaults to the maximum level of the dimension. Might be less when
      * aggregated data are only needed on higher levels.
-     * @return mixed $this Allows chaining of method calls.
+     * @param mixed ...$params Optional list of parameters passed `unpacked`
+     * to anonymous functions and callables getting the sheet key =>value pair.
      */
-    public function sheet(string $name, $value, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null, ...$params): Report {
+    public function sheet(string $name, $value, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null, ...$params): self {
         $this->checkThatDimIsDeclared('sheet', $name);
-        $typ = $typ ?? self::XS;
+        $typ ??= self::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $this->total->addItem(Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey), $name);
         if ($value !== false) {
@@ -262,7 +330,7 @@ class Report {
      * @param string $name The name given to group, aggregate or sheet method 
      * @throws \InvalidArgumentException
      */
-    private function checkThatDimIsDeclared(string $func, $name): void {
+    private function checkThatDimIsDeclared(string $func, string $name): void {
         if (!isset($this->dim)) {
             throw new \InvalidArgumentException("Before calling the $func() method for '$name' the data() method must be called.");
         }
@@ -302,29 +370,25 @@ class Report {
             $this->rc->addItem(Factory::calculator($this->mp, $lastLevel, self::XS, $dim->id));
             $fromLevel = $lastLevel;
         }
-
-        // Make first dimension active.
         $this->dim = reset($this->dims);
-
         $this->mp->gc->setMapper($this->groups->groupLevel);
-
         $this->mp->groupLevel = $this->groups->groupLevel;
         $this->mp->lastLevel = $dim->lastLevel;
+        $this->executeAction('init');
+        $this->executeAction('totalHeader');
+        unset($this->actions['init'], $this->actions['totalHeader'], $this->actions['groupHeader'], $this->actions['groupFooter'] ,
+              $this->actions['noData_n'], $this->actions['data_n'], $this->actions['noGroupChange_n']  );
         $this->setRunTimeActions();
-        $this->callMethod('init');
-        $this->callMethod('totalHeader');
-        // init and report headers are done. Array elements are no longer needed.
-        unset($this->actions['init'], $this->actions['totalHeader']);
-        $this->activeMethod = $this->detailMethod;
+        $this->currentAction = $this->detailAction;
     }
 
     /**
-     * Get prototype data for the last called owner method.
+     * Get prototype data for the current method called in $target.
      * @return string A html formatted table with some information related to
-     * the last called method.
+     * the last executed action.
      */
     public function prototype(): string {
-        if ($this->prototype === null) {
+        if (!isset($this->prototype)) {
             $this->prototype = new Prototype($this);
         }
         return $this->prototype->magic();
@@ -337,18 +401,17 @@ class Report {
      * The call option influences which call action will be executed and if 
      * methods are called in the owner or the prototye object.
      * @param int $callOption One of the CALL_x constants.
-     * @return Report $this to allow method chaining
      * @throws InvalidArgumentException
      */
-    public function setCallOption(int $callOption): Report {
+    public function setCallOption(int $callOption): self {
         if ($callOption < 0 || $callOption > 3) {
             throw new \InvalidArgumentException('Invalid call option');
         }
-        if ($callOption >= self::CALL_PROTOTYPE && $this->prototype === null) {
+        if ($callOption >= self::CALL_PROTOTYPE && !isset($this->prototype)) {
             $this->prototype = new Prototype($this);
         }
         $this->callOption = $callOption;
-        // only when run() was called
+        // Rebuild runTimeActions only when finalInitialisation wasn't done already.  
         if (!isset($this->actions['init'])) {
             $this->setRunTimeActions();
         }
@@ -359,26 +422,19 @@ class Report {
      * Set runtime actions for all actions which might be executed more than once.
      */
     private function setRunTimeActions(): void {
-        $this->detailMethod = $this->getRuntimeAction('detail', $this->actions['detail']);
+        $this->detailAction = $this->getRuntimeAction('detail', $this->actions['detail']);
         foreach ($this->groups->items as $group) {
-            $rep = $group->getGroupNameReplacement($this->buildMethodsByGroupName);
-            $method = $group->headerParam ?? Helper::replacePercent($rep, $this->actions['groupHeader']);
-            $group->headerAction = $this->getRuntimeAction('groupHeader', $method);
-            $method = $group->footerParam ?? Helper::replacePercent($rep, $this->actions['groupFooter']);
-            $group->footerAction = $this->getRuntimeAction('groupFooter', $method);
+            $group->runtimeHeaderAction = $this->getRuntimeAction('groupHeader', $group->headerAction);
+            $group->runtimeFooterAction = $this->getRuntimeAction('groupFooter', $group->footerAction);
         }
 
         // Exclude last dimension. Has no data from data() method. 
         foreach ($this->dims as $dim) {
-            if ($dim->isLastDim) {
-                break;
+            if (!$dim->isLastDim) {
+                $dim->runtimeNoDataAction = $this->getRuntimeAction('noData_n', $dim->actions['noData']);
+                $dim->runtimeNoGroupChangeAction = $this->getRuntimeAction('noGroupChange_n', $dim->actions['noGroupChange']);
+                $dim->runtimeDetailAction = $this->getRuntimeAction('data_n', $dim->actions['data']);
             }
-            $method = $dim->noDataParam ?? Helper::replacePercent($dim->id, $this->actions['noData_n']);
-            $dim->noDataAction = $this->getRuntimeAction('noData_n', $method);
-            $method = $dim->rowDetail ?? Helper::replacePercent($dim->id, $this->actions['data_n']);
-            $dim->detailAction = $this->getRuntimeAction('data_n', $method);
-            $method = $dim->noGroupChangeParam ?? Helper::replacePercent($dim->id, $this->actions['noGroupChange_n']);
-            $dim->noGroupChangeAction = $this->getRuntimeAction('noGroupChange_n', $method);
         }
     }
 
@@ -437,15 +493,14 @@ class Report {
     }
 
     /**
-     * Call simple methods like init, totalheader and their conterparts
-     * Those functions are called only once.
-     * @param string $key The key of $this->actions
+     * Execute actions which don't have parameters and are executed only once.
+     * @param string $key The action key of $this->actions
      */
-    private function callMethod(string $key): void {
-        $method = $this->getRuntimeAction($key, $this->actions[$key]);
-        if ($method) {
-            $this->activeMethod = $method;
-            $this->output .= ($method[1] === self::STRING) ? $method[2] : $method[2]();
+    private function executeAction(string $key): void {
+        $action = $this->getRuntimeAction($key, $this->actions[$key]);
+        if ($action) {
+            $this->currentAction = $action;
+            $this->output .= ($action[1] === self::STRING) ? $action[2] : $action[2]();
         }
     }
 
@@ -478,11 +533,11 @@ class Report {
     /**
      * Iterate over a given data set.
      * Use to iterate over data sets from data dimension > 0.
-     * Warning: Make sure to call the run() method at least once and the end() method when 
+     * Note: Make sure to call the run() method at least once and the end() method when 
      * you're ready. 
      * @param iterable|null $data
      */
-    public function runPartial(?iterable $data) {
+    public function runPartial(?iterable $data) :void {
         if (!empty($data)) {
             foreach ($data as $rowKey => $row) {
                 $this->next($row, $rowKey);
@@ -494,12 +549,10 @@ class Report {
 
     /**
      * Handles a single row.
-     * Method is called from run() or directly on user request.
      * @param array|object $row Data row to be processed.
      * @param string|int|null $rowKey Optional key of $row. Defaults to null.
-     * @return \gpoehl\phpReport\Report
      */
-    public function next($row, $rowKey = null): Report {
+    public function next($row, $rowKey = null): self {
         $this->handleGroupChanges($row, $rowKey);
         // icrement row counter
         $this->rc->items[$this->dim->id]->inc();
@@ -507,9 +560,9 @@ class Report {
         // Handle next dimension or execute detail action.
         if (!$this->dim->isLastDim) {
             $this->handleDimension($row, $rowKey);
-        } elseif ($this->detailMethod) {
+        } elseif ($this->detailAction) {
             // Detail action. Can't be a string action so don't check for it.
-            $this->output .= ($this->detailMethod[2])($row, $rowKey);
+            $this->output .= ($this->detailAction[2])($row, $rowKey);
         }
         return $this;
     }
@@ -556,10 +609,10 @@ class Report {
         $groupValues = array_slice($indexedValues, $changedLevelInDim);
         foreach ($groupValues as $groupValue) {
             $this->gc->items[$this->mp->level]->inc();
-            $this->ExcuteHeaderAndFooterActions($this->groups->items[$this->mp->level]->headerAction, $groupValue);
+            $this->ExcuteHeaderAndFooterActions($this->groups->items[$this->mp->level]->runtimeHeaderAction, $groupValue);
             $this->mp->level++;
         }
-        $this->activeMethod = $this->detailMethod;
+        $this->currentAction = $this->detailAction;
     }
 
     /**
@@ -574,8 +627,10 @@ class Report {
         foreach ($groupValues as $level => $groupValue) {
             // set dim related to current group level 
             $this->dim = $this->dims[$this->groups->items[$this->mp->level]->dimID];
-            $this->ExcuteHeaderAndFooterActions($this->groups->items[$this->mp->level]->footerAction, $groupValue);
-            $this->collector->cumulateToNextLevel();
+            $this->ExcuteHeaderAndFooterActions($this->groups->items[$this->mp->level]->runtimeFooterAction, $groupValue);
+            $this->rc->cumulateToNextLevel();
+            $this->gc->cumulateToNextLevel();
+            $this->total->cumulateToNextLevel();
             $this->mp->level--;
         }
     }
@@ -595,9 +650,8 @@ class Report {
             if ($action[1] === self::STRING) {
                 $this->output .= $action[2];
             } else {
-                $this->activeMethod = $action;
-                $this->output .= $action[2](
-                        $groupValue, $this->dim->row, $this->dim->rowKey, $this->dim->id);
+                $this->currentAction = $action;
+                $this->output .= $action[2]($groupValue, $this->dim->row, $this->dim->rowKey, $this->dim->id);
             }
         }
     }
@@ -621,7 +675,6 @@ class Report {
         if ($changed) {
             $this->dim->groupValues = [];
         }
-        // get next dimension data and 
         $result = $dim->dataHandler->getDimData($row, $rowKey);
         if ($result !== false) {
             $this->runPartial($result);
@@ -640,7 +693,7 @@ class Report {
         if ($this->changedLevel !== null || empty($this->dim->dataHandler->numberOfGroups)) {
             return true;
         }
-        $action = $this->dim->noGroupChangeAction;
+        $action = $this->dim->runtimeNoGroupChangeAction;
         if ($action) {
             switch ($action[1]) {
                 case self::WARNING:
@@ -649,10 +702,10 @@ class Report {
                 case self::ERROR:
                     throw new \RuntimeException($action[2] . " RowKey = $rowKey");
                 default:
-                    $this->activeMethod = $action;
-                    $this->output .= ($action[1] === self::STRING) ? $action[2] : $action[2](
-                                    $this->dim->row, $this->dim->rowKey, $this->dim->id);
-                    $this->activeMethod = $this->detailMethod;
+                    $this->currentAction = $action;
+                    $this->output .= ($action[1] === self::STRING) ? $action[2] :
+                            $action[2]($this->dim->row, $this->dim->rowKey, $this->dim->id);
+                    $this->currentAction = $this->detailAction;
             }
         }
         return false;
@@ -664,12 +717,12 @@ class Report {
      * @param type $rowKey
      */
     private function rowDetail($row, $rowKey): void {
-        $action = $this->dim->detailAction;
+        $action = $this->dim->runtimeDetailAction;
         if ($action) {
-            $this->activeMethod = $action;
-            $this->output .= ($action[1] === self::STRING) ? $action[2] : $action[2](
-                            $this->dim->row, $this->dim->rowKey, $this->dim->id);
-            $this->activeMethod = $this->detailMethod;
+            $this->currentAction = $action;
+            $this->output .= ($action[1] === self::STRING) ? $action[2] :
+                    $action[2]($this->dim->row, $this->dim->rowKey, $this->dim->id);
+            $this->currentAction = $this->detailAction;
         }
     }
 
@@ -681,14 +734,14 @@ class Report {
      */
     public function end(): ?string {
         if ($this->rc->items[0]->sum(0) === 0) {
-            $this->callMethod('noData');
+            $this->executeAction('noData');
         } else {
             $this->changedLevel = 0;
             $this->handleFooters(1);
             $this->mp->level = 0;
         }
-        $this->callMethod('totalFooter');
-        $this->callMethod('close');
+        $this->executeAction('totalFooter');
+        $this->executeAction('close');
         return $this->output;
     }
 
@@ -698,9 +751,9 @@ class Report {
      */
     private function noData_n(): void {
         $this->dim = prev($this->dims);
-        $action = $this->dim->noDataAction;
+        $action = $this->dim->runtimeNoDataAction;
         if ($action) {
-            $this->activeMethod = $action;
+            $this->currentAction = $action;
             $this->output .= ($action[1] === self::STRING) ? $action[2] : $action[2]($this->dim->id);
         }
         $this->dim = next($this->dims);
@@ -719,13 +772,13 @@ class Report {
     public function getLevel(string $groupName = null): int {
         return ($groupName === null) ? $this->mp->level : $this->groups->groupLevel[$groupName];
     }
-    
+
     /**
      * Get the level which triggered a group change
-     * @return int|false The group level which triggered a group change. 
-     * False when no group change occurred.
+     * @return int|nulle The group level which triggered a group change. 
+     * Null when no group change occurred.
      */
-    public function getChangedLevel() {
+    public function getChangedLevel() : ?int {
         return $this->changedLevel;
     }
 
@@ -735,7 +788,7 @@ class Report {
      * current group level.
      * @return int The dimenion ID for the requested level. 
      */
-    public function getDimID($level = null):int {
+    public function getDimID($level = null): int {
         if ($level === null) {
             return $this->dim->id;
         }
@@ -755,7 +808,7 @@ class Report {
         // For detail level compare with row counter of last group level.
         // Detail level can only be checked when in detail action. If $level is not null
         // it must then match the detail level. 
-        if ($this->activeMethod[0] === 'detail' && ($level === null || $level === $this->mp->level)) {
+        if ($this->currentAction[0] === 'detail' && ($level === null || $level === $this->mp->level)) {
             return ($this->rc->items[$this->getDimID($level)]->sum($level - 1) === 1);
         }
         return ($this->gc->items[$this->getDimID($level)]->sum($this->getLevel($level) - 1) === 1);
@@ -773,7 +826,7 @@ class Report {
      * or asked for group levels not higher than the current one.
      */
     public function isLast($level = null): bool {
-        if ($this->activeMethod[0] !== 'groupFooter') {
+        if ($this->currentAction[0] !== 'groupFooter') {
             throw new \InvalidArgumentException('isLast() can only be answered in groupFooters');
         }
         $level = ($level === null) ? $this->mp->level - 1 : $this->mp->getLevel($level);
@@ -857,8 +910,8 @@ class Report {
      * @return string The group name of the requested level.
      */
     public function getGroupName(int $groupLevel = null): string {
-        $key = $groupLevel ?? $this->mp->level;
-        return $this->groups->items[$key]->groupName;
+        $groupLevel ??= $this->mp->level;
+        return $this->groups->items[$groupLevel]->groupName;
     }
 
 }

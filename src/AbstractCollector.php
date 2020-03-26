@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace gpoehl\phpReport;
 
 /**
- * AbstractCollector is the base class of Collector and sheet classes.
+ * Base class of Collector and sheet classes.
  * Class is declared as abstract to avoid instantiation. It has no abstract
  * methods.
  */

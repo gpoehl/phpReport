@@ -17,11 +17,4 @@ class GroupTest extends TestCase {
         $this->assertSame(1, $group->dimID);
     }
 
-    public function testgetGroupNameReplacement()  {
-        $group = new Group('groupA', 2, 1);
-        $this->assertSame(2, $group->getGroupNameReplacement(false));
-        $this->assertSame('GroupA', $group->getGroupNameReplacement('ucfirst'));
-        $this->assertSame('groupA', $group->getGroupNameReplacement(true));
-    }
-
 }
