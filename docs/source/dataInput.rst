@@ -4,8 +4,8 @@ Data input
 |project_name| doesn't read data itself. What seems to be a lack of functionality
 on the first glance is in reality a huge benefit.
 
-You should use the same tools for data retrieval you are alreay familar with.
-You can even use your data models without any modification.
+You can use the same tools for data retrieval you are alreay familar with.
+You can even use any ORM tools or your own data models without any modification.
 
 So when running applications with |project_name| you have
 full control over authorisation, authentification, caching and much more. 

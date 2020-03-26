@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace gpoehl\phpReport;
 
 /**
- * Collector holds calculator and sheet items
+ * Collector to hold calculator and sheet items as well as other collectors
  */
 class Collector extends AbstractCollector {
 
@@ -34,6 +34,10 @@ class Collector extends AbstractCollector {
         } else {
             $this->items[] = $item;
         }
+    }
+    
+    public function aaaShowFuncName(){
+        
     }
 
 }

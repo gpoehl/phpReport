@@ -33,13 +33,13 @@ class Helper {
     /**
      * Evaluate the action typ and build the method action.
      * Depending of the value of $baseAction the action typ will be set.
-     * @param mixed $baseAction One the actions set during configuration 
+     * @param mixed $baseAction Base or raw action set by configuration 
      * @param string $key The action key
-     * @param bool $allowPercentSign Is the % sign allowed in $baseAction
+     * @param bool $allowPercentSign Is the % sign allowed in $baseAction. Defaults to false
      * @return array Array having the action typ and $baseAction 
      * @throws InvalidArgumentException
      */
-    public static function buildMethodAction($baseAction, string $key, bool $allowPercentSign = false) {
+    public static function buildMethodAction($baseAction, string $key, bool $allowPercentSign = false): array {
         if ($baseAction === false) {
             return [Report::METHOD, $baseAction];
         }
@@ -78,10 +78,10 @@ class Helper {
      */
     private static function buildMethodActionFromString(string $baseAction, string $key, bool $allowPercentSign): array {
         if ($key === 'noGroupChange_n') {
-            if (substr($baseAction, 0, 8) === 'warning:') {
+            if (strtolower(substr($baseAction, 0, 8)) === 'warning:') {
                 return [Report::WARNING, substr($baseAction, 8)];
             }
-            if (substr($baseAction, 0, 6) === 'error:') {
+            if (strtolower(substr($baseAction, 0, 6)) === 'error:') {
                 return [Report::ERROR, substr($baseAction, 6)];
             }
         }
@@ -100,15 +100,14 @@ class Helper {
     public static function isValidName(string $name, bool $allowPercentSign = false): bool {
         if ($allowPercentSign) {
             return (bool) preg_match(self::$pattern_n, $name);
-        } else {
-            return (bool) preg_match(self::$pattern, $name);
         }
+        return (bool) preg_match(self::$pattern, $name);
     }
 
     /**
-     * Replace percent sign (%) in method action
+     * Replace percent sign (%) in method action.
      * % sign in callables will not be replaced. 
-     * @param string|ing $replacemet The replacement for the %sign
+     * @param string|int $replacemet The replacement for the %sign
      * @param array $methodAction Method action is an array having the action type
      * in the first element and the action in the second element.
      * @return array The modified method action
@@ -178,7 +177,7 @@ class Helper {
         }
 
         if (count($source) === 1) {
-            if (is_array(current($source))) { 
+            if (is_array(current($source))) {
                 // first array element is an array and will be handled as a callable 
                 return self::getMethodType($source[0]);
             }

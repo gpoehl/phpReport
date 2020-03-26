@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
-
 /**
  * Class Dimension holds data per dimension
  */
@@ -25,31 +24,34 @@ class Dimension {
     public $fromLevel;  // Level of first group within dimension
     public $lastLevel;  // Level of last group within dimension
     public $target;     // Default class for user methods called in dataHandler
-    public $noDataParam; // Parameter for noData action.
-    public $noGroupChangeParam; // Parameter for noGroupChange action.
-    // Action to be performed on each data row in dimimension which is not the 
-    // last dimension. For last dimension rows detail action is performed. 
-    public $rowDetail;
-    // Runtime action to be performed when no data are given via $data. Has type and action.
-    public $noDataAction = [];
-    // Runtime action to be performed for each data row.
-    public $detailAction = [];
-    // Runtime action to be performed when no group change was triggered.
-    public $noGroupChangeAction = [];
+
+    /** @var Array of actions. Key is action key, value is an array having action 
+     * type and action. The % sign in action is replaced by the dimID 
+     */
+    public ?array $actions;
+
+    /** @var prepared noData action to be executed */
+    public ?array $runtimeNoDataAction = [];
+
+    /** @var prepared noGroupChange action to be executed */
+    public ?array $runtimeNoGroupChangeAction = [];
+
+    /** @var prepared detail action to be executed */
+    public ?array $runtimeDetailAction = [];
+    
     public $row;           // Current data row
     public $rowKey;        // Key of current data row
     public $groupValues = [];   // Array of group values to detect group change
+   public $groupNames = [];     // Array of group names. Not indexed 
     public $dataHandler;        // Object which handles methods related to the type of data row.
 
-    public function __construct(int $id, $dataHandler, $source = null, $target = null, $noData = null, $rowDetail = null, $noGroupChange = null, ...$params) {
+    public function __construct(int $id, $dataHandler, $source = null, $target = null, ?array $actions = null, ...$params) {
         $this->id = $id;
         $this->nextID = ++$id;
         $this->isLastDim = ($source === null);
         $this->dataHandler = $this->getDataHandler($dataHandler, $source, $params);
         $this->target = $target;
-        $this->setConfigParam($noData, $this->noDataParam, 'noData_n');
-        $this->setConfigParam($rowDetail, $this->rowDetail, 'detail_n');
-        $this->setConfigParam($noGroupChange, $this->noGroupChangeParam, 'noGroupChange_n');
+        $this->actions = $actions;
     }
 
     /**
@@ -73,13 +75,7 @@ class Dimension {
                     throw new \InvalidArgumentException("DataHandler $dataHandler does not exist.");
                 }
         }
-         return new $dataHandler($this, $source, $params);
-    }
-
-    private function setConfigParam($value, &$param, $configName) {
-        if ($value !== null) {
-            $param = Helper::buildMethodAction($value, $configName);
-        }
+        return new $dataHandler($this, $source, $params);
     }
 
     /**

@@ -20,10 +20,12 @@ class ObjectDataHandler {
     use BaseDataHandler;
 
     /**
-     * Get group values out of the current row
+     * Get group values out of the current row.
+     * When no groups are declared an empty array will be returned.
+     * 
      * @param Object $row The current data row.
      * @param int | string | null $rowKey The key of $row. 
-     * @return array Indexed array having the group values.
+     * @return array Array of all group values from given $row.
      */
     public function getGroupValues(Object $row, $rowKey): array {
         $values = [];

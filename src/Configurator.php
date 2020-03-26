@@ -17,22 +17,25 @@ use Exception;
 
 /**
  * Configurator handles configuration options
- * Load config file and merge with configuration parameter
+ * It loads the config file and merges configuration parameters
  */
 class Configurator {
     
     /**
-     * @var array $actions Action to be executed on key events.
+     * @var array[] An array of all possible actions.
+     * Action names are mapped to actions to be exected.
      * Key is the action name while value is an array having the the action
      * type at first element and the action to be executed as second element.
-     * Action can be a method name to be called (defaults within the owner class),
-     * a closure or a string to be appended to $output.
+     * Action is usually a method to be called within the owner class or 
+     * a string to be appended to $output. But there are much more options.
+     * Please check the documentation.
      * 
-     * Percent sign (%) in groupHeader and groupFooter will be replaced by a 
+     * The percent sign (%) in groupHeader and groupFooter will be replaced by a 
      * pattern build depending on $buildMethodsByGroupName rules.
-     * Percent sign in totalHeader and totalFooter will be replaced by the value
-     * of $grandTotalName.
-     * Percent sign in data_n and noData_n will be replaced by number of dimension.
+     * The percent sign in totalHeader and totalFooter actions will be replaced 
+     * by the value of $grandTotalName.
+     * In data_n and noData_n actions the percent sign will be replaced by the
+     * current dimension id.
      */
     public $actions = [
         'init' => [Report::METHOD, 'init'],
@@ -48,7 +51,8 @@ class Configurator {
         'data_n' => [Report::METHOD, false],
         'noGroupChange_n' => [Report::ERROR, "error:Current row in dimension % didn't trigger a group change."],
     ];
-    // $buildMethodsByGroupName can be true, false or 'ucfirst'
+    
+    /** @var true | false | 'ucfirst' Rule to build method groupheader and -footer names. */ 
     public $buildMethodsByGroupName = true;
 
     /**
@@ -62,10 +66,11 @@ class Configurator {
      * To trigger a warning precede a text message with 'warning:'. To throw a
      * runTimeException precede a text message with 'error:'.
      */
-    // Name of the grand total group (Level = 0)
-    public $grandTotalName = 'total';
-    // optional parameters
-    public $userConfig;
+    
+    /** @var The name of the grand total group (Level = 0). */ 
+    public string $grandTotalName = 'total';
+   
+    /** @var Name and location of the configuration file. */
     static $filename = '/../config.php';
 
     /**
@@ -80,7 +85,7 @@ class Configurator {
     /**
      * Load configuration from configuration file.
      * Parameters from config file will replace default values.
-     * @throws Exception
+     * @throws Exception When file can not be loaded.
      */
     private function loadConfigurationFile(): void {
         if (!is_readable(__DIR__ . self::$filename)) {
@@ -107,9 +112,6 @@ class Configurator {
                     break;
                 case 'grandTotalName':
                     $this->setGrandTotalName($value);
-                    break;
-                case 'userConfig':
-                    $this->userConfig = $value;
                     break;
                 case 'actions':
                     $this->setActions($value);
@@ -160,7 +162,7 @@ class Configurator {
      * @param array $actions 
      * @throws InvalidArgumentException
      */
-    private function setActions($actions) {
+    private function setActions(array $actions) :void {
         foreach ($actions as $key => $baseAction) {
             // Make sure method key is valid
             if (!isset($this->actions[$key])) {
@@ -177,7 +179,7 @@ class Configurator {
     /**
      * Replace % sign in totalHeader and totalFooter actions with GrandTotalName
      */
-    private function finalize() {
+    private function finalize() :void {
         foreach (['totalHeader', 'totalFooter'] as $key) {
             $this->actions[$key] = Helper::replacePercent($this->grandTotalName, $this->actions[$key]);
         }

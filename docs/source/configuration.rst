@@ -83,13 +83,6 @@ Next to the actions parameter you can also declare the following parameters:
     groupFooter will be replaced by the group names. When false by the numeric group
     level.
 
-.. php:attr:: userConfig 
-
-    This parameter will just be passed to methods called in classes which
-    are not in the target class. Setting this parameter makes most sense during run 
-    time when instantiating the |project_name| object. 
-
-
 That's the place where you define the type of actions to be performed or the method names.
 
 Actions have a key which will translated to real action names.
