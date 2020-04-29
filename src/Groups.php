@@ -57,13 +57,4 @@ class Groups {
         return $group;
     }
 
-    /**
-     * Keep group values by level
-     * @param int $fromLevel The starting level of $values
-     * @param array $values
-     */
-    public function setValues(int $fromLevel, array $values): void {
-        array_splice($this->values, $fromLevel, count($this->values), $values);
-    }
-
 }

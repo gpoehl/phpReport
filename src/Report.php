@@ -66,8 +66,8 @@ class Report {
     public ?array $currentAction;
 
     /** @var array[] Array of arrays with possible actions loaded from config file
-     *  indexed by the action key. 
-     *  The currently executed action will be stored in $currentAcion. This gives
+     * indexed by the action key. 
+     * The currently executed action will be stored in $currentAcion. This gives
      * prototype access to the action to be 
       acce */
     private array $actions = [];
@@ -103,10 +103,14 @@ class Report {
 
     /** mixed Rule how group names will be build. See configuration documentaion. */
     private $buildMethodsByGroupName;
-    
-    private $lowestHeader = 0;         // Level of lowest header called to be used as start index for footers
-private $needFooter = false;       // Bool to avoid execution of footer actions on first row.
-      /**
+
+    /** var Group level of lowest called header. This wil be the first footer.
+     * The group level of the last dimension can't be used. When a dimension has
+     * no data rows header for this (and following) dimension wasn't executed.
+     */
+    private int $lowestHeader = 0;
+
+    /**
      * Instantiate a new report object
      * Set reference to a target object and merge config parameters into 
      * parameters from config file.
@@ -567,12 +571,9 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
     /**
      * Detect group changes and execute related actions. 
      * 
-     * Detect if a group has changed within the current dimension.
      * Group change is true when values of group attributes in current row 
-     * are not equal with values of group attributes in previous row of same dimension.
-     * The level of highest changed group is stored at $this->changedLevel.
+     * are not equal with group values of previous row in same dimension.
      * When group has changed header and footer actions will be executed.
-     * 
      * @param array|object $row The current row.
      * @param int | string | null $rowKey The key of $row. 
      */
@@ -583,6 +584,7 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
         $diffs = array_diff_assoc($indexedValues, $this->dim->groupValues);
         if (empty($diffs)) {                 // group has not changed
             $this->changedLevel = null;
+//            $this->dim->activateValues($row, $rowKey, null);
             $this->dim->row = $row;
             $this->dim->rowKey = $rowKey;
             return;
@@ -590,22 +592,18 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
         // Group has changed. Determine index of the highest changed group.
         $changedLevelInDim = key($diffs);
         $this->changedLevel = $changedLevelInDim + $this->dim->fromLevel;
+        // No footer when row is the very first one (in dimension). 
+        if ($this->dim->row !== null) {
+            $this->handleFooters();
+        }
+              
+        $this->dim->activateValues($row, $rowKey, $indexedValues);
         
-        
-         ($this->needFooter) ? $this->handleFooters($this->changedLevel) : $this->needFooter = true;
-        // Make new $row and group values active. 
-        $this->dim->row = $row;
-        $this->dim->rowKey = $rowKey;
-        $this->dim->groupValues = $indexedValues;
-        $this->groups->setValues($this->dim->fromLevel, $indexedValues);
-        
-//        $this->groups->setValues($this->dim->fromLevel, $indexedValues);
         // Call Header methods;
         $this->lowestHeader = $this->dim->lastLevel;
         $this->mp->level = $this->changedLevel;
         // Headers from changed group in dim to last group in dim
-        $groupValues = array_slice($indexedValues, $changedLevelInDim);
-        foreach ($groupValues as $groupValue) {
+        foreach (array_slice($indexedValues, $changedLevelInDim) as $groupValue) {
             $this->gc->items[$this->mp->level]->inc();
             $this->ExcuteHeaderAndFooterActions($this->groups->items[$this->mp->level]->runtimeHeaderAction, $groupValue);
             $this->mp->level++;
@@ -615,44 +613,22 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
 
     /**
      * Handle footers from lowest header level up to changed level.
-     * Handle footers from lowest group in dim up to changed level in dim
-     * or for all groups in dim when ??????.
-     * @param int $changedLevel Highest level of changed group.
+     * After executing a footer all counter and totals must be cumulated to next level.
      */
-    private function handleFooters_new(int $changedLevel): void {
-        if ($this->dim->groupValues === []) {
-            return;
-        }
-        $end = $this->dim->lastLevel;
-        $start = $this->dim->fromLevel + $changedLevel -1;
-        $length = $end - $start ;
-        $footerGroups = array_reverse(array_slice($this->groups->items, $start, $length), true);
-        foreach ($footerGroups as $group) {
-            $this->mp->level = $group->level;
+    private function handleFooters(): void {
+        for ($this->mp->level = $this->lowestHeader; $this->mp->level >= $this->changedLevel; $this->mp->level--) {
+            $group = $this->groups->items[$this->mp->level];
+            $this->dim = $this->dims[$group->dimID];
             $this->ExcuteHeaderAndFooterActions($group->runtimeFooterAction, $this->dim->groupValues[$group->level - $this->dim->fromLevel]);
             $this->rc->cumulateToNextLevel();
             $this->gc->cumulateToNextLevel();
             $this->total->cumulateToNextLevel();
         }
     }
-    
-    private function handleFooters(int $changedLevel): void {
-        $groupValues = array_reverse(array_slice($this->groups->values, $changedLevel));
-        $this->mp->level = $this->lowestHeader;
-        foreach ($groupValues as $level => $groupValue) {
-            // set dim related to current group level 
-            $this->dim = $this->dims[$this->groups->items[$this->mp->level]->dimID];
-            $this->ExcuteHeaderAndFooterActions($this->groups->items[$this->mp->level]->runtimeFooterAction, $groupValue);
-            $this->rc->cumulateToNextLevel();
-            $this->gc->cumulateToNextLevel();
-            $this->total->cumulateToNextLevel();
-            $this->mp->level--;
-        }
-    }
 
     /**
      * Execute a single header or footer action.
-     * When action is a methode these arguments will be passed:
+     * When action is a method these arguments will be passed:
      * $groupValue  The current group value for the called level
      * $row         Row belonging to the current group (not to $this->currentDimID)
      * $rowkey      The key of the $row
@@ -682,12 +658,12 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
      * @param mixed $rowKey The key of $row
      */
     private function handleDimension($row, $rowKey): void {
-        $changed = $this->noGroupChange($row, $rowKey);
-        $this->rowDetail($row, $rowKey);
+        $changed = $this->noGroupChange();
+        $this->rowDetail();
         $dataHandler = $this->dim->dataHandler;
-        // Load next dimension and get next dim data.
+        // Load next dimension
         $this->dim = next($this->dims);
-        // Reset group values of current dim only when previous dim had a group change.
+        // Reset group values of new dim only when previos dim had a group change.
         if ($changed) {
             $this->dim->groupValues = [];
         }
@@ -695,23 +671,19 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
         if ($nextDimData !== false) {
             $this->runPartial($nextDimData);
         }
-        
-        // All data dimensions are executed. Now we do the final stuff for a
-        // dimension and go back to previous dimension.
-
-//        $this->output .= "<br>Footers from dimension {$this->dim->id}. ****************************************<br>";
-//        $this->handleFooters(0);
-//        $this->dim->groupValues = [];
         $this->dim = prev($this->dims);
     }
 
     /**
-     * Execute action when groups are defined but no group change occurred
-     * @param type $row
-     * @param type $rowKey
+     * Execute action when groups are defined but no group change occurred.
+     * This situation occurs when current row has no distinct group values.
+     * Rows might have unique 'key' values but group fields don't mirror them
+     * (e.g. From a date field only year or month is declared as a group).
+     * Only the owner of the data knows if this is expected or not. If it's
+     * not expected action should raise a warning or exception. 
      * @return bool true when group has changed, false when not.
      */
-    private function noGroupChange($row, $rowKey): bool{
+    private function noGroupChange(): bool {
         if ($this->changedLevel !== null || empty($this->dim->dataHandler->numberOfGroups)) {
             return true;
         }
@@ -719,10 +691,10 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
         if ($action) {
             switch ($action[1]) {
                 case self::WARNING:
-                    trigger_error($action[2] . " RowKey = $rowKey", E_USER_NOTICE);
+                    trigger_error($action[2] . ' RowKey = ' . $this->dim->rowKey, E_USER_NOTICE);
                     break;
                 case self::ERROR:
-                    throw new \RuntimeException($action[2] . " RowKey = $rowKey");
+                    throw new \RuntimeException($action[2] . ' RowKey = ' .$this->dim->rowKey);
                 default:
                     $this->currentAction = $action;
                     $this->output .= ($action[1] === self::STRING) ? $action[2] :
@@ -730,15 +702,13 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
                     $this->currentAction = $this->detailAction;
             }
         }
-         return false;
+        return false;
     }
 
     /**
-     * Execute data row detail action. 
-     * @param type $row
-     * @param type $rowKey
+     * Execute data row detail action for data row in dimensions > 0. 
      */
-    private function rowDetail($row, $rowKey): void {
+    private function rowDetail(): void {
         $action = $this->dim->runtimeDetailAction;
         if ($action) {
             $this->currentAction = $action;
@@ -752,16 +722,15 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
      * Finalize the job.
      * Execute either noData action or handle footers. Then totalFooter
      * and close actions will be executed.
-     * @return string output. The collected return values of executed actions
+     * @return string | null output. The collected return values of executed actions
      */
     public function end(): ?string {
         if ($this->rc->items[0]->sum(0) === 0) {
             $this->executeAction('noData');
-        } else {
-//            $this->output .= '<br>Footers from end. ****************************************<br>';
-            $this->changedLevel = 0;
-            $this->handleFooters(1);
-            $this->mp->level = 0;
+        } elseif ($this->lowestHeader !== 0){
+            // only when groups are defined.
+            $this->changedLevel = 1;
+            $this->handleFooters();
         }
         $this->executeAction('totalFooter');
         $this->executeAction('close');
@@ -904,10 +873,10 @@ private $needFooter = false;       // Bool to avoid execution of footer actions 
      * current dimension.
      */
     public function getGroupValues(): array {
-        for ($i = 0; $i<= $this->dim->id; $i++){
-           // @todo merge values and assign group names 
+        for ($i = 0; $i <= $this->dim->id; $i++) {
+            // @todo merge values and assign group names 
         }
-        
+
         return $this->groups->values;
     }
 

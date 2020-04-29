@@ -91,5 +91,21 @@ class Dimension {
         }
         return $this->lastLevel;
     }
+    
+    /**
+     * Save given parameters to make them active. 
+     * Call method when footer actions are done and new 
+     * row is active 
+     * @param type $row
+     * @param type $rowKey
+     * @param array $groupValues
+     */
+    public function activateValues($row, $rowKey, array $groupValues) :void{
+        $this->row = $row;
+        $this->rowKey = $rowKey;
+//        if ($groupValues !== null){
+        $this->groupValues = $groupValues;
+//        }
+    }
 
 }

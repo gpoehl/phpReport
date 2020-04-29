@@ -9,12 +9,11 @@ declare(strict_types=1);
 use gpoehl\phpReport\Factory;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\Error\Warning;
 
 class CalculatorTestXL extends TestCase {
 
     public $mp;
-    protected $stack;
+    public $stack;
 
     public function setUp(): void {
         $mp = Factory::properties();

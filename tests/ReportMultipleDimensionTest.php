@@ -160,6 +160,9 @@ class ReportMultiDimensionTest extends TestCase {
     }
 
     public function testNoDataDoesNotTriggerGroupChange() {
+    }
+         
+    public function testSameDataDoesNotTriggerGroupChange() {
         $rep = $this->getBase(true)
                 ->rep
                 ->data('array', 'C')
@@ -181,20 +184,7 @@ class ReportMultiDimensionTest extends TestCase {
         $rowKey = 'k1';
         $rep->next($row, $rowKey);
         $out = explode('<<>>', substr($rep->output, 0, -4));
-        
-        
-        
-        
-//        echo "\n\n";
-//        var_Dump ($out);
-//         echo "\n\n";
-        
         $this->assertSame(9, count($out));
-        
-        
-        
-        
-        
         $this->assertSame('g1Header arg0=10 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=0', $out[0]);
         $this->assertSame('g2Header arg0=20 arg1=' . json_encode($row)

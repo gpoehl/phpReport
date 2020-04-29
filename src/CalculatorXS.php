@@ -24,12 +24,12 @@ class CalculatorXS extends AbstractCalculator {
      */
     public function __construct(MajorProperties $mp, int $maxLevel) {
         parent::__construct($mp, $maxLevel);
-        $this->total[$maxLevel] = 0;
+        $this->total = array_fill(0, $maxLevel + 1, 0);
     }
 
     /**
      * Returns always false. Counters for notNull and notZero values are not implemented. 
-     * @return boolean
+     * @return false
      */
     public function hasCounter(): bool {
         return false;
@@ -37,17 +37,15 @@ class CalculatorXS extends AbstractCalculator {
 
     /**
      * Returns always false. Methods to handle min and max values are not implemented. 
-     * @return boolean
+     * @return false
      */
     public function hasMinMax(): bool {
         return false;
     }
 
     /**
-     * Add value
-     * The value is added to the lowest level of this calculator ($maxLevel).
-     * @param numeric $value The value to be added
-     * @return void
+     * Add given $value to $maxLevel
+     * @param numeric|null $value The value to be added
      */
     public function add($value): void {
         $this->total[$this->maxLevel] += $value;
@@ -64,24 +62,18 @@ class CalculatorXS extends AbstractCalculator {
      * @return void
      */
     public function inc(): void {
-        $this->total[$this->maxLevel] ++;
+        $this->total[$this->maxLevel]++;
     }
 
+     /**
+     * Cumulate attribute values to higher level.
+     * Add values from the current level to the next higher level (which is 1 less
+     * then the current level. Values on current level will be reset to zero. 
+     */
     public function cumulateToNextLevel(): void {
         $level = $this->mp->level;
-        if ($level > $this->maxLevel) {
-            return;
-        }
-        $next = $level - 1;
-        if (isset($this->total[$next])) {
-            $this->total[$next] += $this->total[$level];
-        } else {
-            $this->total[$next] = $this->total[$level];
-        }
-        // Throw away current level when not maxLevel. So add() don't need isset(). 
-        if ($level !== $this->maxLevel) {
-            unset($this->total[$level]);
-        } else {
+        if ($level <= $this->maxLevel) {
+            $this->total[$level - 1] += $this->total[$level];
             $this->total[$level] = 0;
         }
     }
@@ -93,13 +85,7 @@ class CalculatorXS extends AbstractCalculator {
      * to the lowest level
      */
     public function sum($level = null) {
-        $sum = 0;
-        for ($i = ($this->mp->getLevel($level)); $i <= $this->maxLevel; $i++) {
-            if (isset($this->total[$i])) {
-                $sum += $this->total[$i];
-            }
-        }
-        return $sum;
+        return array_sum(array_slice($this->total, $this->mp->getLevel($level)));
     }
 
 }
