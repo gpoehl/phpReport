@@ -12,7 +12,9 @@ namespace gpoehl\phpReport;
  *
  * @author Günter
  */
-interface Executor {
-    
-public function execute();
+abstract class Executor {
+
+    public $runTimeAction;
+
+    public abstract function execute();
 }

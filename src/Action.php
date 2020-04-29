@@ -25,85 +25,74 @@ class Action {
 
     /** @var Execute action only when true */
     public bool $execute;
-    
+
     /** @var The action type describing the runTimeAction */
-    public int $runTimeActionTyp;
-   
+    public int $runTimeActionTyp = 0;
+
     /** @var The real action to be executed */
     public $runTimeAction;
-    
+
     /** @var The action type describing the given action */
-    public $givenActionTyp; 
-    
+    public int $givenActionTyp;
+
     /** @var The given action. Like a default action. The action to be executed
      * is set in setRunTimeAction method */
     public $givenAction;
     
-    /** The target where for calling normal methods. */
-    public $target;
-    
-    /** The target for calling prototye methods. */
-    public Prototype $prototype;
-    
-    private $executor;
+    /** @var The executor object. */
+    public Executor $executor;
 
-    public function __construct($target, Prototype $prototype, $actionKey, $actionParameter): ?array {
-        $this->target = $target;
-        $this->prototype = $prototype;
+    /**
+     * 
+     * @param string $actionKey
+     * @param array $actionParameter consists of the actionTyp and the action
+     */
+    public function __construct(string $actionKey, array $actionParameter) {
         $this->actionKey = $actionKey;
         [$this->givenActionTyp, $this->givenAction] = $actionParameter;
     }
 
-    public function setRunTimeAction(int $callOption) {
-
+    /**
+     * Set runtime action.
+     * Runtime action is used to execute an action. 
+     * Runtime action depends primarily on the call option and action type.
+     * @param object $target Object which holds the methods to be called. 
+     * @param Prototype $prototype The prototype object which executes prototype actions.
+     * @param int $callOption The option how and where event actions will be executed. 
+     */
+    public function setRunTimeAction(object $target, ?Prototype $prototype, int $callOption): void {
         // Don't even call prototype action when action equals false
-        if ($action === false) {
-            $this->exectue = false;
-            return;
+        if ($this->givenAction === false) {
+            $this->execute = false;
+        } else {
+            // Set defaults. RunTimeActionTyp is usually the same as the givenActionTyp.
+            $this->execute = true;
+            $this->runTimeActionTyp = $this->givenActionTyp;
+
+            // Warning and error actions will not be called in target or prototye object.
+            if ($this->givenActionTyp >= report::WARNING) {
+                $this->runTimeAction = $this->givenAction;
+            } elseif ($callOption === report::CALL_ALWAYS_PROTOTYPE) {
+                // Call always prototype. Action type must be set to CALLABLE. 
+                $this->runTimeActionTyp = report::CALLABLE;
+                $this->runTimeAction = [$prototype, $this->actionKey];
+            } elseif ($this->givenActionTyp !== report::METHOD) {
+                // String, closure or callable ([class, method] array)
+                $this->runTimeAction = $this->givenAction;
+            } elseif ($callOption === report::CALL_ALWAYS || method_exists($target, $this->givenAction)) {
+                // CALL_ALWAYS means that a method in the target class will be called
+                // no matter if the method really exists.
+                $this->runTimeAction = [$target, $this->givenAction];
+            } elseif ($callOption === report::CALL_PROTOTYPE) {
+                // Call protoype when method doesn't exists in target class and callOption equals Call_Prototype 
+                $this->runTimeAction = [$prototype, $this->actionKey];
+            } else {
+                // None of the above conditions are true. So no action is required.
+                $this->execute = false;
+            }
         }
-
-        $this->execute = true;
-        $this->runTimeActionTyp = $this->givenActionTyp;
-
-        // Warning and error typ will not be called in owner or prototye
-        if ($this->givenActionTyp >= self::WARNING) {
-            $this->runTimeAction = $this->givenAction;
-            return;
-        }
-
-        // Call prototype regardless of the type. Prototype method is key
-        // runTimeActionType get Callable
-        if ($callOption === self::CALL_ALWAYS_PROTOTYPE) {
-            $this->runTimeActionTyp = self::CALLABLE;
-            $this->runTimeAction = [$this->prototype, $this->actionKey];
-            return;
-        }
-
-        // String, closure or callable ([class, method] array)
-        if ($this->givenActionTyp !== self::METHOD) {
-            $this->runTimeAction = $this->givenAction;
-            return;
-        }
-
-        // Normal method to be called in $target.
-        // Execute only when method exists in $target or callOption equals Call_Always
-        if ($callOption === self::CALL_ALWAYS || method_exists($this->target, $action)) {
-            $this->runTimeAction = [$this->target, $this->givenAction];
-            return;
-        }
-
-        // Call protoype only when callOption equals Call_Prototype 
-        if ($callOption === self::CALL_PROTOTYPE) {
-            $this->runTimeAction = [$this->prototype, $this->actionKey];
-            return;
-        }
-
-        // no action is required
-        $this->execute = false;
-    }
-    
-    public function execute(){
-        return $this->executor->execute();
+        $this->executor = SelectExecutor::getExecuter($this->execute, $this->runTimeActionTyp);
+        $this->executor->runTimeAction = $this->runTimeAction;
     }
 
 }

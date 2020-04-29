@@ -13,10 +13,10 @@ namespace gpoehl\phpReport;
  *
  * @author Günter
  */
-class ClosureExecutor implements Executor {
+class WarningExecutor extends Executor {
 
     public function execute(...$params) {
-        return ($this->runTimeAction)(...$params);
+         trigger_error($this->runTimeAction . ' RowKey = ' . $params[1], E_USER_NOTICE);
     }
     
 }

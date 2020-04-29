@@ -13,10 +13,10 @@ namespace gpoehl\phpReport;
  *
  * @author Günter
  */
-class MethodExecutor implements Executor {
+class MethodExecutor extends Executor {
 
     public function execute(...$params) {
-        return $this->runTimeAction(...$params);
+        return ($this->runTimeAction)(...$params);
     }
     
 }

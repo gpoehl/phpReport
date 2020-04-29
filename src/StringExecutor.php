@@ -13,7 +13,7 @@ namespace gpoehl\phpReport;
  *
  * @author Günter
  */
-class StringExecutor implements Executor {
+class StringExecutor extends Executor {
 
     public function execute() {
         return $this->runTimeAction;

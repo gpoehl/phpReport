@@ -13,10 +13,10 @@ namespace gpoehl\phpReport;
  *
  * @author Günter
  */
-class NullExecutor extends Executor {
+class ErrorExecutor extends Executor {
 
-    public function execute() {
-        
+    public function execute(...$params) {
+         throw new \RuntimeException($this->runTimeAction . ' RowKey = ' .$params[1]);
     }
     
 }

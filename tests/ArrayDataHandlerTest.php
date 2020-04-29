@@ -122,7 +122,7 @@ class ArrayDataHandlerTest extends TestCase {
      * @dataProvider dataSources
      */
     public function testGetDimData($source, $expected, ...$params) {
-        $dim = new Dimension(1, 'array', $source, 'Testclass', null, ...$params);
+        $dim = new Dimension(1, 'array', $source, 'Testclass', ...$params);
         $this->stack = $dim->dataHandler;
         $mp = Factory::properties();
         $total = new Collector();

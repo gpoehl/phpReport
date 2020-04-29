@@ -48,7 +48,7 @@ class Configurator {
         // : sign declares string explicit to avoid method calls when callOption = CALL_ALWAYS
         'noData' => [Report::STRING, '<br><strong>No data found</strong><br>'], // Dimension = 0
         'noData_n' => [Report::METHOD, 'noDataDim%'],
-        'data_n' => [Report::METHOD, false],
+        'detail_n' => [Report::METHOD, false],
         'noGroupChange_n' => [Report::ERROR, "error:Current row in dimension % didn't trigger a group change."],
     ];
     
