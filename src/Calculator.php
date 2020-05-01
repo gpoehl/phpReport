@@ -13,23 +13,28 @@ declare(strict_types=1);
 namespace gpoehl\phpReport;
 
 /**
- * Cumulator to summarize an attribute and count how often a not null and 
- * not zero value is given to the add() method.
+ * Summarize values and count how often not null and not zero values are given
+ * to the add() method.
  */
 class Calculator extends AbstractCalculator {
 
-    protected $nn = [];      // Array of not null counter
-    protected $nz = [];      // Array of not zero counter
+    /** @var int[] not null counter. How many added values had a value not equal to zero. */
+    protected $nn = [];
 
+    /** @var int[] not zero counter. How many added values had a value not equal to zero. */
+    protected $nz = [];
+
+    /**
+     * Initialize all levels with 0 values
+     */
     public function __construct(MajorProperties $mp, int $maxLevel) {
         parent::__construct($mp, $maxLevel);
-        // Initialize arrays for cumulated values and counters only on $maxLevel
-        $this->initializeValue(0, $maxLevel);
+        $this->total = $this->nz = $this->nn = array_fill(0, $maxLevel + 1, 0);
     }
 
     /**
      * Returns always true. Counters for notNull and notZero values are implemented.  
-     * @return boolean
+     * @return true
      */
     public function hasCounter(): bool {
         return true;
@@ -37,7 +42,7 @@ class Calculator extends AbstractCalculator {
 
     /**
      * Returns always false. Methods to handle min and max values are not implemented. 
-     * @return boolean
+     * @return false
      */
     public function hasMinMax(): bool {
         return false;
@@ -45,14 +50,13 @@ class Calculator extends AbstractCalculator {
 
     /**
      * Add given $value to $maxLevel and increment counters.
-     * @param numeric $value The numeric data value which will be added
-     * @return void
+     * @param numeric|null $value The numeric data value which will be added
      */
     public function add($value): void {
         if ($value !== null) {
-            $this->nn[$this->maxLevel] ++;
+            $this->nn[$this->maxLevel]++;
             if ($value !== 0) {
-                $this->nz[$this->maxLevel] ++;              // increase non zero counter
+                $this->nz[$this->maxLevel]++;              // increase non zero counter
                 $this->total[$this->maxLevel] += $value;    // add value 
             }
         }
@@ -60,32 +64,21 @@ class Calculator extends AbstractCalculator {
 
     protected function initializeValue($value, int $level): void {
         $this->total[$level] = $value;
-        $this->nz[$level] = $this->nn[$level] = 0;
     }
 
     /**
-     * Cumulate attribute values to higher level
+     * Cumulate attribute values to higher level.
+     * Add values from the current level to the next higher level (which is 1 less
+     * then the current level. Values on current level will be reset to zero. 
      */
     public function cumulateToNextLevel(): void {
         $level = $this->mp->level;
-        if ($level > $this->maxLevel) {
-            return;
-        }
-        $next = $level - 1;
-        if (isset($this->total[$next])) {
+        if ($level <= $this->maxLevel) {
+            $next = $level - 1;
             $this->total[$next] += $this->total[$level];
             $this->nn[$next] += $this->nn[$level];
             $this->nz[$next] += $this->nz[$level];
-        } else {
-            $this->total[$next] = $this->total[$level];
-            $this->nn[$next] = $this->nn[$level];
-            $this->nz[$next] = $this->nz[$level];
-        }
-        // Throw away current level when not maxLevel. So add() don't need isset(). 
-        if ($level !== $this->maxLevel) {
-            unset($this->total[$level], $this->nn[$level], $this->nz[$level]);
-        } else {
-            $this->initializeValue(0, $this->maxLevel);
+            $this->total[$level] = $this->nn[$level] = $this->nz[$level] = 0;
         }
     }
 
@@ -96,39 +89,30 @@ class Calculator extends AbstractCalculator {
      * to the lowest level
      */
     public function sum($level = null) {
-        return $this->runningTotal($this->total, $level);
+        return array_sum(array_slice($this->total, $this->mp->getLevel($level)));
     }
 
     /**
-     * Calculate the running sum up to the requested level.
-     * @param int|null $level The requested level. Defaults to the current level
-     * @return numeric The running total of added values from the requested level down
-     * to the lowest level
+     * Get the number of added values beeing not null.
+     * @param int|null $level The requested level. Defaults to the current level.
+     * @return int The total number of added not null values for the requested level.
      */
-    public function nn($level = null) {
-        return $this->runningTotal($this->nn, $level);
+    public function nn($level = null): int {
+        // To calculate the total number all values from requested level down
+        // to lowest level must be included.
+        return array_sum(array_slice($this->nn, $this->mp->getLevel($level)));
     }
 
     /**
-     * Calculate the running sum up to the requested level.
-     * @param int|null $level The requested level. Defaults to the current level
-     * @return numeric The running total of added values from the requested level down
-     * to the lowest level
+     * Get the number of added values beeing not zero and not null.
+     * @param int|null $level The requested level. Defaults to the current level.
+     * @return int The total number of added not null and not zero values for 
+     * the requested level.
      */
-    public function nz($level = null) {
-        return $this->runningTotal($this->nz, $level);
+    public function nz($level = null): int {
+        // To calculate the total number all values from requested level down
+        // to lowest level must be included.
+        return array_sum(array_slice($this->nz, $this->mp->getLevel($level)));
     }
-
-    private function runningTotal(array $arr, $level = null) {
-        $sum = 0;
-        for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
-            if (isset($this->total[$i])) {
-                $sum += $arr[$i];
-            }
-        }
-        return $sum;
-    }
-    
-   
 
 }

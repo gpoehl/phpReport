@@ -201,7 +201,7 @@ class ReportTest extends TestCase {
                 ->group('a', 0)
                 ->setCallOption(Report::CALL_ALWAYS);
         $proto->report = $rep;
-        $rep->run([['group a Value', 'X']]);
+        $rep->run([['any value for group a', 'other value']]);
 
         $out = $rep->output;
         $this->assertStringContainsString('>init</th>', $out);

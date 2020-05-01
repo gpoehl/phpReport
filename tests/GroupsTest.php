@@ -39,15 +39,5 @@ class GroupsTest extends TestCase {
         $this->expectException(InvalidArgumentException::class);
         $groups->newGroup('groupA', 1);
     }
-
-    public function testSetValues() {
-        $groups = $this->stack;
-        $groups->setValues(1, [2, 4, 6]);
-        $this->assertSame([null, 2, 4, 6], $groups->values);
-        $groups->setValues(4, [7, 8, 9]);
-        $this->assertSame([null, 2, 4, 6, 7, 8, 9], $groups->values);
-        $groups->setValues(2, [3, 4]);
-        $this->assertSame([null, 2, 3, 4], $groups->values);
-    }
-
+   
 }

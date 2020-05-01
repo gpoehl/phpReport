@@ -29,15 +29,10 @@ class Collector extends AbstractCollector {
      * @inheritdoc
      */
     public function addItem($item, $key = null) {
-        if ($key != null) {
+        if ($key !== null) {
             $this->items[$key] = $item;
         } else {
             $this->items[] = $item;
         }
     }
-    
-    public function aaaShowFuncName(){
-        
-    }
-
 }

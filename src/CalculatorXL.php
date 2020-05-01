@@ -13,26 +13,30 @@ declare(strict_types=1);
 namespace gpoehl\phpReport;
 
 /**
- * Cumulator to summarize attribute
- * This cumulator offers maximum functionality. On top of Cumulator also min()
- * and max() values are identified.
+ * Calculator with maximum functionality.
+ * Next to the parent class also min() and max() values are identified.
  * Detection and maintaining min and max values comes with the cost of reduced
  * performance. When min or max value is not needed use other Cumulator class. 
  */
 class CalculatorXL extends Calculator {
 
-    private $min = [];      // Minimum value per level. Key is level
-    private $max = [];      // Maximum value per level. Key is level
+    /** @var mixed[] Minimum value per level. Key is level */
+    private $min = [];
 
+    /** @var mixed[] Maximum value per level. Key is level */
+    private $max = [];
+
+    /**
+     * Initialize min / max with null values
+     */
     public function __construct(MajorProperties $mp, int $maxLevel) {
         parent::__construct($mp, $maxLevel);
-        // Initialize arrays for cumulated values, counters and min / max only on $maxLevel
-        $this->initializeValue(0, $maxLevel);
+        $this->min = $this->max = array_fill(0, $maxLevel + 1, null);
     }
 
     /**
      * Returns always true. Counters for notNull and notZero values are implemented. 
-     * @return boolean
+     * @return true
      */
     public function hasCounter(): bool {
         return true;
@@ -40,21 +44,20 @@ class CalculatorXL extends Calculator {
 
     /**
      * Returns always true. Methods to handle min and max values are implemented. 
-     * @return boolean
+     * @return true
      */
     public function hasMinMax(): bool {
         return true;
     }
 
     /**
-     * Add value to $maxLevel.
-     * @return void
+     * Add value to $maxLevel and set min and max values.
+     * Min and max values are set when value is not null. 
      */
     public function add($value): void {
         parent::add($value);
         if ($this->max[$this->maxLevel] === null) {
-            $this->min[$this->maxLevel] = $value;
-            $this->max[$this->maxLevel] = $value;
+            $this->min[$this->maxLevel] = $this->max[$this->maxLevel] =$value;
         } elseif ($value > $this->max[$this->maxLevel]) {
             $this->max[$this->maxLevel] = $value;
             // When value is greater max value it can't be less min.
@@ -78,52 +81,52 @@ class CalculatorXL extends Calculator {
             return;
         }
         $next = $level - 1;
-        if (isset($this->total[$next])) {
-            $this->total[$next] += $this->total[$level];
-            $this->nn[$next] += $this->nn[$level];
-            $this->nz[$next] += $this->nz[$level];
-            If ($this->min[$level] < $this->min[$next]) {
-                $this->min[$next] = $this->min[$level];
-            }
-            if ($this->max[$level] > $this->max[$next]) {
-                $this->max[$next] = $this->max[$level];
-            }
-        } else {
-            $this->total[$next] = $this->total[$level];
-            $this->nn[$next] = $this->nn[$level];
-            $this->nz[$next] = $this->nz[$level];
+        $this->total[$next] += $this->total[$level];
+        $this->nn[$next] += $this->nn[$level];
+        $this->nz[$next] += $this->nz[$level];
+        $this->total[$level] = $this->nn[$level] = $this->nz[$level] = 0;
+
+        If ($this->min[$level] < $this->min[$next] || $this->min[$next] === null) {
             $this->min[$next] = $this->min[$level];
+        }
+        if ($this->max[$level] > $this->max[$next] || $this->max[$next] === null) {
             $this->max[$next] = $this->max[$level];
         }
-
-        if ($level !== $this->maxLevel) {
-            unset($this->total[$level], $this->nn[$level], $this->nz[$level],
-                    $this->min[$level], $this->min[$level]);
-        } else {
-            $this->initializeValue(0, $this->maxLevel);
-        }
+        $this->min[$level] = $this->max[$level] = null;
     }
 
     /**
-     * Calculate the running sum up to the requested level.
+     * Get the minimum non null value. Only when no rows are processed or all 
+     * values have been null the returned value will also be null.
+     * If you need to know that one or more values (but not all) had been null 
+     * compare the row counter with the not null counter. 
      * @param int|null $level The requested level. Defaults to the current level
-     * @return numeric The running total of added values from the requested level down
-     * to the lowest level
+     * @return null|mixed The lowest value within the given level
      */
     public function min($level = null) {
-        $min = null;
-        for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
-            if (isset($this->min[$i]) && ($this->min[$i] < $min || $min === null )) {
+        // Initalize min witdh value of lowest level and loop from requested
+        // level down to level abobe lowest level. This reduced the number of
+        // iterations by 1. 
+        $min = $this->min[$this->maxLevel];
+        for ($i = $this->mp->getLevel($level); $i < $this->maxLevel; $i++) {
+            if ($this->min[$i] < $min || $min === null) {
                 $min = $this->min[$i];
             }
         }
         return $min;
     }
 
+    /**
+     * Get the maximum value. When no rows are processed or all values have been 
+     * null the returned value will also be null.
+     * @param mixed $level The requested group level. Defaults to the current level.
+     * @return null|mixed The maximum value within the given level
+     */
     public function max($level = null) {
-        $max = null;
-        for ($i = $this->mp->getLevel($level); $i <= $this->maxLevel; $i++) {
-            if (isset($this->max[$i]) && ($this->max[$i] > $max )) {
+        // Same logic as for min().
+        $max = $this->max[$this->maxLevel];
+        for ($i = $this->mp->getLevel($level); $i < $this->maxLevel; $i++) {
+            if ($this->max[$i] > $max) {
                 $max = $this->max[$i];
             }
         }

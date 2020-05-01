@@ -17,21 +17,12 @@ namespace gpoehl\phpReport;
  */
 class Group {
 
-    public string $groupName;          // The name of group
+    public string $groupName;       // The name of group
     public int $level;              // The group level
     public int $dimID;              // The dim this group belongs to. 
 
-    /** @var header action having action type and action. % sign was replaced */
-    public array $headerAction;
-
-    /** @var header action having action type and action. % sign was replaced */
-    public array $footerAction;
-
-    /** @var prepared header action to be executed */
-    public ?array $runtimeHeaderAction;
-
-    /** @var prepared footer action to be executed */
-    public ?array $runtimeFooterAction;
+    public Action $headerAction;
+    public Action $footerAction;
 
     public function __construct(string $groupName, int $level, int $dimID) {
         $this->groupName = $groupName;

@@ -25,32 +25,22 @@ class Dimension {
     public $lastLevel;  // Level of last group within dimension
     public $target;     // Default class for user methods called in dataHandler
 
-    /** @var Array of actions. Key is action key, value is an array having action 
-     * type and action. The % sign in action is replaced by the dimID 
-     */
-    public ?array $actions;
-
-    /** @var prepared noData action to be executed */
-    public ?array $runtimeNoDataAction = [];
-
-    /** @var prepared noGroupChange action to be executed */
-    public ?array $runtimeNoGroupChangeAction = [];
-
-    /** @var prepared detail action to be executed */
-    public ?array $runtimeDetailAction = [];
+    public Action $noDataAction;
+    public Action $noGroupChangeAction;
+    public Action $detailAction;
     
     public $row;           // Current data row
     public $rowKey;        // Key of current data row
     public $groupValues = [];   // Array of group values to detect group change
+    public $groupNames = [];     // Array of group names. Not indexed 
     public $dataHandler;        // Object which handles methods related to the type of data row.
 
-    public function __construct(int $id, $dataHandler, $source = null, $target = null, ?array $actions = null, ...$params) {
+    public function __construct(int $id, $dataHandler, $source = null, $target = null, ...$params) {
         $this->id = $id;
         $this->nextID = ++$id;
         $this->isLastDim = ($source === null);
         $this->dataHandler = $this->getDataHandler($dataHandler, $source, $params);
         $this->target = $target;
-        $this->actions = $actions;
     }
 
     /**
@@ -89,6 +79,20 @@ class Dimension {
             $this->fromLevel++;
         }
         return $this->lastLevel;
+    }
+
+    /**
+     * Save given parameters to make them active. 
+     * Call method when footer actions are done and new 
+     * row is active 
+     * @param type $row
+     * @param type $rowKey
+     * @param array $groupValues
+     */
+    public function activateValues($row, $rowKey, array $groupValues): void {
+        $this->row = $row;
+        $this->rowKey = $rowKey;
+        $this->groupValues = $groupValues;
     }
 
 }
