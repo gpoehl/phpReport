@@ -16,18 +16,20 @@ namespace gpoehl\phpReport;
 use InvalidArgumentException;
 
 /**
- * Groups instantiates and hold group objects.
- * Access to group objects can be by name or level.
+ * Collector class for groups.
  */
 class Groups {
 
-    public $items = [];                 // Array Key is group level, value is group object.
-    public $groupLevel = [];            // Array Key is groupName, value is group level.
-    public $values = [0 => null];       // Active group values. Key is level. 
-    public $maxLevel = 0;               // Maximum level excluding detail level.
+    /** @var Group[] Group object indexed by group level. */
+    public array $items = [];
+
+    /** @var int[] Group level indexed by group name. */
+    public array $groupLevel = [];
+
+    /** @var  Maximum level excluding detail level. */
+    public int $maxLevel = 0;
 
     /**
-     * 
      * @param string $grandTotalName Name for grand total group (Level = 0)
      */
     public function __construct(string $grandTotalName) {
@@ -35,26 +37,17 @@ class Groups {
     }
 
     /**
-     * Add new group. 
-     * Instantiate a new group object and store the reference into array $itmes.
-     * @param string $groupName The name of the group
-     * @param int $dim The dimension the group belongs to
-     * @return Group The new group object
-     * @throws InvalidArgumentException when group has already been defined.
+     * Add a group to group items
+     * @param \gpoehl\phpReport\Group $group The group object
+     * @throws InvalidArgumentException
      */
-    public function newGroup(string $groupName, int $dim): Group {
-        if (isset($this->groupLevel[$groupName])) {
-            throw new InvalidArgumentException("Group $groupName has already been defined");
+    public function addGroup(Group $group): void {
+        if (isset($this->groupLevel[$group->name])) {
+            throw new InvalidArgumentException("Group $group->name has already been defined");
         }
-        $this->maxLevel ++;
-        $group = new Group(
-                $groupName
-                , $this->maxLevel
-                , $dim
-        );
+        $group->level = ++$this->maxLevel;
         $this->items[$this->maxLevel] = $group;
-        $this->groupLevel[$groupName] = $this->maxLevel;
-        return $group;
+        $this->groupLevel[$group->name] = $this->maxLevel;
     }
 
 }

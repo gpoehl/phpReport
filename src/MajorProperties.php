@@ -22,17 +22,17 @@ class MajorProperties {
     public $rc;                 // Collector object of row counters
     public $gc;                 // Collector object of group counters  
     public $total;              // Collector object of sum and sheet cumulators  
-    public $groupLevel = [];    // key = groupname, value = group level.
+    /** @var int[] Group level indexed by group name. */
+    public $groupLevel = [];    
     public $lastLevel = 0;      // The last group level 
 
     /**
-     * Get the nurmeric group level.
-     * Deepest group level is the level above detail level. 
-     * @param type $level When level is null the actual level wil be returned.
-     * When the actual level is the detail level the level above will be returned.
-     * If $level is a string then the numeric level of the group will be returnd.
-     * When $level is negative it will be substracted from the current lelel.
-     * @return int The numeric group level.
+     * Get the group level.
+     * Note: Detail level has no level. The lastLevel will be returned for detail level. 
+     * @param mixed $level When level is null the actual level wil be returned.
+     * If $level is a string having the group name then the group level will be returnd.
+     * When $level is negative it will be substracted from the current level.
+     * @return int The group level.
      */
     public function getLevel($level = null): int {
         if ($level === null) {

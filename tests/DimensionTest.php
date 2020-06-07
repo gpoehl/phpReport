@@ -11,6 +11,11 @@ use gpoehl\phpReport\ObjectDataHandler;
 use PHPUnit\Framework\TestCase;
 
 class DimensionTest extends TestCase {
+    
+    public function setUp() {
+        $total = gpoehl\phpReport\Factory::collector();
+        $this->dim = new Dimension(0,0, $this->target, $total);
+    }
 
     /**
      * @dataProvider dataHandler
@@ -39,7 +44,6 @@ class DimensionTest extends TestCase {
   public function testID_and_LastDim($id, $source, $exID, $nextID, $isLastDim) {
         $dim = new Dimension($id, 'array', $source);
         $this->assertSame($exID, $dim->id);
-        $this->assertSame($nextID, $dim->nextID);
          $this->assertSame($isLastDim, $dim->isLastDim);
     }
      public function sourceProvider() {

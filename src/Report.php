@@ -199,7 +199,7 @@ class Report {
      * - Null. The group name will be used as array key or property name.
      *  
      *  * The signature of an anonymous function or callable method should be:
-     * `function($row, $rowKey, $dimID, $param1, ..., $param9)`.
+     * `function($row, $rowKey, $param1, ..., $param9)`.
      * 
      * ```php
      * fn($user, $rowkey) => $user->firstName . ' ' . $user->lastName 
@@ -221,7 +221,7 @@ class Report {
      */
     public function group($name, $value = null, $headerAction = null, $footerAction = null, ...$params): self {
         $value ??= $name;
-        $group = $this->groups->newGroup($name, $this->dim->id);
+        $group = new Group($name, $this->dim->id, $value, $params);
         If ($this->buildMethodsByGroupName === 'ucfirst') {
             $replacement = ucfirst($name);
         } else {
@@ -229,8 +229,9 @@ class Report {
         }
         $group->headerAction = $this->makeAction('groupHeader', $headerAction, $replacement);
         $group->footerAction = $this->makeAction('groupFooter', $footerAction, $replacement);
-
-        $this->dim->addGroupSource($value, $params);
+        $this->groups->addGroup($group);
+        $this->dim->groups[] = $group;
+        $this->dim->lastLevel = $group->level;
         $this->gc->addItem(Factory::calculator($this->mp, $group->level - 1, self::XS), $group->level);
         return $this;
     }
@@ -311,7 +312,6 @@ class Report {
         return $this;
     }
 
-   
     /**
      * Verify that maxlevel of sheet is not above current maxLevel
      * @param int $maxLevel to be checked. Defaults to the current maxLevel.
@@ -354,7 +354,7 @@ class Report {
         $this->dim = reset($this->dims);
         $this->mp->gc->setMapper($this->groups->groupLevel);
         $this->mp->groupLevel = $this->groups->groupLevel;
-        $this->mp->lastLevel = $dim->lastLevel;
+        $this->mp->lastLevel = $this->groups->maxLevel;
         $this->executeAction('init');
         $this->executeAction('totalHeader');
         $this->detailAction = new Action('detail', $this->actions['detail']);
@@ -526,10 +526,11 @@ class Report {
         $this->dim->activateValues($row, $rowKey, $groupValues);
         // Call Header methods from changed group in dim to last group in dim;
         $this->lowestHeader = $this->dim->lastLevel;
-        for ($this->mp->level = $this->changedLevel; $this->mp->level <= $this->lowestHeader; $this->mp->level++) {
-            $this->gc->items[$this->mp->level]->inc();
-            $this->currentAction = $this->groups->items[$this->mp->level]->headerAction;
-            $this->output .= $this->currentAction->executor->execute($groupValues[$this->mp->level], $this->dim->row, $this->dim->rowKey, $this->dim->id);
+        foreach (array_slice($this->dim->groups, $this->dim->fromLevel - $this->changedLevel) as $group) {
+            $this->mp->level = $group->level;
+            $this->gc->items[$group->level]->inc();
+            $this->currentAction = $group->headerAction;
+            $this->output .= $this->currentAction->executor->execute($groupValues[$group->level], $this->dim->row, $this->dim->rowKey, $this->dim->id);
         }
         $this->currentAction = $this->detailAction;
     }
@@ -586,7 +587,7 @@ class Report {
      * @return bool true when group has changed, false when not.
      */
     private function noGroupChange(): bool {
-        if ($this->changedLevel !== null || (!$this->dim->hasGroups)) {
+        if ($this->changedLevel !== null || (!isset($this->dim->groups))) {
             return true;
         }
         $this->currentAction = $this->dim->noGroupChangeAction;
@@ -779,7 +780,7 @@ class Report {
      */
     public function getGroupName(int $groupLevel = null): string {
         $groupLevel ??= $this->mp->level;
-        return $this->groups->items[$groupLevel]->groupName;
+        return $this->groups->items[$groupLevel]->name;
     }
 
 }

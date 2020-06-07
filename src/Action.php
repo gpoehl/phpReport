@@ -14,9 +14,7 @@ declare(strict_types=1);
 namespace gpoehl\phpReport;
 
 /**
- * Description of Action
- *
- * @author Günter
+ * Action to be executed when Report triggers an event
  */
 class Action {
 

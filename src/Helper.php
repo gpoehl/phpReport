@@ -18,13 +18,6 @@ namespace gpoehl\phpReport;
  */
 class Helper {
 
-    // Source types
-    const ATTRIBUTE = 1;
-    const CLOSURE = 2;
-    const METHOD = 3;
-    const CLASSMETHOD = 4;
-    const SHEETATTRIBUTES = 5;
-
     // pattern to check for valid method names (taken from php documentation)
     // pattern_n extends pattern to accept also the % sign
     static $pattern = "/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/";
