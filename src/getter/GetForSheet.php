@@ -25,7 +25,7 @@ class GetForSheet extends BaseGetter {
      * @return array Associated array where the key represents the column in an sheet
      */
     public function getValue($row, $rowKey) :array {
-        return [$this->source[0]->getValue($row, $rowKey) => $this->source[0]->getValue($row, $rowKey)];
+        return [$this->source[0]->getValue($row, $rowKey) => $this->source[1]->getValue($row, $rowKey)];
     }
 
 }

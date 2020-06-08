@@ -26,9 +26,6 @@ class Groups {
     /** @var int[] Group level indexed by group name. */
     public array $groupLevel = [];
 
-    /** @var  Maximum level excluding detail level. */
-    public int $maxLevel = 0;
-
     /**
      * @param string $grandTotalName Name for grand total group (Level = 0)
      */
@@ -43,11 +40,17 @@ class Groups {
      */
     public function addGroup(Group $group): void {
         if (isset($this->groupLevel[$group->name])) {
-            throw new InvalidArgumentException("Group $group->name has already been defined");
+            throw new \InvalidArgumentException("Group $group->name has already been defined");
         }
-        $group->level = ++$this->maxLevel;
-        $this->items[$this->maxLevel] = $group;
-        $this->groupLevel[$group->name] = $this->maxLevel;
+        
+        if (empty($this->items) && $group->level !== 1) {  
+            throw new \InvalidArgumentException("First grouplevel must be 1. '$group->level' given"); 
+        } 
+        if (!empty($this->items) &&  $group->level <> end($this->items)->level + 1 ){
+            throw new \InvalidArgumentException("Grouplevel '$group->level' must be 1 greater than the previous level"); 
+        } 
+        $this->items[$group->level] = $group;
+        $this->groupLevel[$group->name] = $group->level;
     }
 
 }

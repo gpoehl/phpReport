@@ -28,9 +28,8 @@ class ReportMultiDimensionTest extends TestCase {
 
     public function runNoDataInDimension($row, $noData, $expected) {
         $out = $this->getBase()->rep
-                ->data('array', 'b', $noData)
                 ->group('a', 'firstGroup')
-                ->data('array')
+                ->join('b', $noData)
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([$row]);
         $this->assertSame('init<<>>totalHeader<<>>aHeader<<>>detail0<<>>' . $expected . 'aFooter<<>>totalFooter<<>>close<<>>', $out);
@@ -60,8 +59,7 @@ class ReportMultiDimensionTest extends TestCase {
     public function testRowDetailParameterOfDataMethod($row, $rowDetail, $expected) {
         $rep = $this->getBase()
                 ->rep
-                ->data('array', 'B', null, $rowDetail)
-                ->data('array')
+                ->join('B', null, $rowDetail)
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);
 
@@ -96,9 +94,8 @@ class ReportMultiDimensionTest extends TestCase {
     public function testNoGroupChangeParameterOfDataMethod($rows, $noGroupChange, $expected) {
         $rep = $this->getBase()
                 ->rep
-                ->data('array', 'C', null, null, $noGroupChange)
                 ->group('group1', 0)
-                ->data('array')
+                ->join('C', null, null, $noGroupChange)
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);
         // First row. Assertion in not really necessary.
@@ -132,9 +129,8 @@ class ReportMultiDimensionTest extends TestCase {
         $this->expectException(RuntimeException::class);
         $this->getBase()
                 ->rep
-                ->data('array', 'C', null, null, 'error:No Group Change')
                 ->group('group1', 0)
-                ->data('array')
+                ->join('C', null, null, 'error:No Group Change')
                 ->run([['A', 'B', 'C' => [[1, 3]]], ['A', 'X', 'C' => [[4, 5]]]]);
     }
 
@@ -142,8 +138,8 @@ class ReportMultiDimensionTest extends TestCase {
         $this->expectNotice();
         $this->getBase()
                 ->rep
-                ->data('array','C', null, null, 'warning:No Group Change')
                 ->group('group1', 0)
+                ->join('C', null, null, 'warning:No Group Change')
                 ->run([['A', 'B', 'C' => [[1, 3]]], ['A', 'X', 'C' => [[4, 5]]]]);
     }
 
@@ -152,8 +148,7 @@ class ReportMultiDimensionTest extends TestCase {
         $row = (object) ['A' => 10, 'B' => $dimrows];
         $rep = $this->getBase()
                 ->rep
-                ->data('object', 'B')
-                ->data('object')
+                ->join('B')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([$row]);
         $this->assertSame('init<<>>totalHeader<<>>detail0<<>>detail<<>>detail<<>>totalFooter<<>>close<<>>', $rep);
@@ -165,10 +160,9 @@ class ReportMultiDimensionTest extends TestCase {
     public function testSameDataDoesNotTriggerGroupChange() {
         $rep = $this->getBase(true)
                 ->rep
-                ->data('array', 'C')
                 ->group('g1', 'A')
                 ->group('g2', 'B')
-                ->data('array')
+                ->join('C')
                 ->group('g3', 'D')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);

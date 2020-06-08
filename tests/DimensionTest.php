@@ -5,53 +5,39 @@ declare(strict_types=1);
 /**
  * Unit test of Group class
  */
-use gpoehl\phpReport\ArrayDataHandler;
+
+use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\Dimension;
-use gpoehl\phpReport\ObjectDataHandler;
+use gpoehl\phpReport\Factory;
 use PHPUnit\Framework\TestCase;
 
 class DimensionTest extends TestCase {
-    
-    public function setUp() {
-        $total = gpoehl\phpReport\Factory::collector();
-        $this->dim = new Dimension(0,0, $this->target, $total);
+
+    public Collector $total;
+    public Dimension $dim;
+
+    public function setUp(): void {
+        $this->total = Factory::collector();
     }
 
-    /**
-     * @dataProvider dataHandler
-     */
-    public function testDataHandler($handler, $expected) {
-        $dim = new Dimension(1, $handler);
-        $this->assertInstanceOf($expected, $dim->dataHandler);
-    }
-
-    public function dataHandler() {
-        return [
-            ['array', ArrayDataHandler::class],
-            ['object', ObjectDataHandler::class],
-            ['ObjecT', ObjectDataHandler::class],
-            ['gpoehl\phpReport\ArrayDataHandler', ArrayDataHandler::class],
-        ];
-    }
-    public function testInvalidDataHandler() {
-        $this->expectExceptionMessage('DataHandler XXXX does not exist.');
-        $dim = new Dimension(1, 'XXXX');
-    }
-    
     /**
      * @dataProvider sourceProvider
      */
-  public function testID_and_LastDim($id, $source, $exID, $nextID, $isLastDim) {
-        $dim = new Dimension($id, 'array', $source);
-        $this->assertSame($exID, $dim->id);
-         $this->assertSame($isLastDim, $dim->isLastDim);
+    public function testID_and_LastDim($id, $lastLevel) {
+        $dim = new Dimension($id, $lastLevel, null, $this->total);
+        $this->assertSame($id, $dim->id);
+        $this->assertSame($lastLevel, $dim->lastLevel);
+        $this->assertSame(True, $dim->isLastDim);
     }
-     public function sourceProvider() {
+
+    public function sourceProvider() {
         return [
-            [1, null, 1, 2, true],
-            [2, 'mySource', 2, 3, false],
+            [0, 2],
+            [1, 4],
+            [3, 5],
         ];
     }
+
 //    public function testID_and_LastDim($id, $source, $exID, $NextID, $isLastDim) {
 //        $dim = new Dimension($id, 'array', 'mySource', 'Targetclass', ':noData', ':row detail', ':no group change', 'p1', 'p2');
 //        $this->assertInstanceOf(ArrayDataHandler::class, $dim->dataHandler);

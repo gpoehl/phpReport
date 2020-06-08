@@ -19,7 +19,7 @@ class CalculatorTest extends TestCase {
     public function setUp(): void {
         $mp = Factory::properties();
         $mp->level = 2;
-        $mp->lastLevel = 2;
+        $mp->maxLevel = 2;
         $this->mp = $mp;
         $this->stack = Factory::calculator($mp, 2, Report::REGULAR);
     }

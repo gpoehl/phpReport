@@ -24,7 +24,7 @@ class MajorProperties {
     public $total;              // Collector object of sum and sheet cumulators  
     /** @var int[] Group level indexed by group name. */
     public $groupLevel = [];    
-    public $lastLevel = 0;      // The last group level 
+    public $maxLevel = 0;      // The last group level 
 
     /**
      * Get the group level.
@@ -36,7 +36,7 @@ class MajorProperties {
      */
     public function getLevel($level = null): int {
         if ($level === null) {
-            return ($this->level < $this->lastLevel) ? $this->level : $this->lastLevel;
+            return ($this->level < $this->maxLevel) ? $this->level : $this->maxLevel;
         }
         // Substract level when negative
         if (is_numeric($level)) {

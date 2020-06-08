@@ -30,15 +30,29 @@ class Group {
      * Will be unset when dimension instatiates getter class
      */
     public $params;
-    
     public Action $headerAction;
     public Action $footerAction;
 
-    public function __construct(string $name, int $dimID, $valueSource, $params) {
+    public function __construct(string $name, int $level, int $dimID, $valueSource, $params = null) {
         $this->name = $name;
-        $this->dimID = $dimID;
+        $this->setLevel($level);
+        $this->setDimID($dimID);
         $this->valueSource = $valueSource;
         $this->params = $params;
+    }
+
+    private function setLevel(int $level) {
+        if ($level < 1) {
+            throw new \InvalidArgumentException("Grouplevel '$level' must be less one");
+        }
+        $this->level = $level;
+    }
+
+    private function setDimID(int $dimID) {
+        if ($dimID < 0) {
+            throw new \InvalidArgumentException("DimID '$dimID' must be less zero");
+        }
+        $this->dimID = $dimID;
     }
 
 }

@@ -209,7 +209,7 @@ TABLE1;
         $content .= $this->renderRowCounter();
         $content .= $this->renderGroupCounter();
         $content .= $this->renderChildGroupCounter();
-        $val = $val ?? 'Null';
+        $val ??= 'Null';
         return $this->renderAction($content, ", Dim = $dimID, Group value = $val");
     }
 

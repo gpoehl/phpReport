@@ -29,9 +29,9 @@ class Dimension {
     /** @var Level of first group assigned to this dimension. */
     public int $fromLevel;
 
-    /** @var Level of last group assigned to this dimension. Same as $fromLevel
-     * when no group is assigned. */
-    public $lastLevel;
+    /** @var Level of last group assigned to this dimension. Same as $lastLevel
+     * from previous dimension when no group is assigned. */
+    public int $lastLevel;
 
     /** @var Default class or object for getters using methods. */
     private $defaultTarget;
@@ -86,13 +86,12 @@ class Dimension {
     /**
      * Instantiate a new dimension object
      * @param int $id The dimension id
-     * @param int $fromLevel The lowest group level assigned to this dimension
      * @param type $defaultTarget The target class / object from report
      * @param \gpoehl\phpReport\Collector $total The 'total' collector from report class 
      */
-    public function __construct(int $id, int $fromLevel, $defaultTarget, Collector $total) {
+    public function __construct(int $id, int $lastLevel, $defaultTarget, Collector $total) {
         $this->id = $id;
-        $this->fromLevel = $this->lastLevel = $fromLevel;
+        $this->lastLevel = $lastLevel;
         $this->defaultTarget = $defaultTarget;
         $this->total = $total;
     }

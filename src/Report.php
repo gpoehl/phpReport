@@ -119,7 +119,6 @@ class Report {
         $this->target = $target;
         $this->params = $params;
         $conf = Factory::configurator($config);
-
         $this->groups = new Groups($conf->grandTotalName);
         $this->buildMethodsByGroupName = $conf->buildMethodsByGroupName;
         $this->actions = $conf->actions;
@@ -221,7 +220,7 @@ class Report {
      */
     public function group($name, $value = null, $headerAction = null, $footerAction = null, ...$params): self {
         $value ??= $name;
-        $group = new Group($name, $this->dim->id, $value, $params);
+        $group = new Group($name, ++$this->mp->maxLevel, $this->dim->id, $value, $params);
         If ($this->buildMethodsByGroupName === 'ucfirst') {
             $replacement = ucfirst($name);
         } else {
@@ -320,9 +319,9 @@ class Report {
      */
     private function checkMaxLevel(int $maxLevel = null): int {
         if ($maxLevel === null) {
-            $maxLevel = $this->groups->maxLevel;
-        } elseif ($maxLevel > $this->groups->maxLevel) {
-            throw new InvalidArgumentException("MaxLevel $maxLevel must be equal or less maxLevel of dim({$this->groups->maxLevel}).");
+            $maxLevel = $this->mp->maxLevel;
+        } elseif ($maxLevel > $this->mp->maxLevel) {
+            throw new InvalidArgumentException("MaxLevel $maxLevel must be equal or less maxLevel of dim({$this->mp->maxLevel}).");
         }
         return $maxLevel;
     }
@@ -354,7 +353,6 @@ class Report {
         $this->dim = reset($this->dims);
         $this->mp->gc->setMapper($this->groups->groupLevel);
         $this->mp->groupLevel = $this->groups->groupLevel;
-        $this->mp->lastLevel = $this->groups->maxLevel;
         $this->executeAction('init');
         $this->executeAction('totalHeader');
         $this->detailAction = new Action('detail', $this->actions['detail']);
@@ -525,8 +523,9 @@ class Report {
         ($this->dim->row === null) ?: $this->handleFooters();
         $this->dim->activateValues($row, $rowKey, $groupValues);
         // Call Header methods from changed group in dim to last group in dim;
+        // Array slice with negative offset!
         $this->lowestHeader = $this->dim->lastLevel;
-        foreach (array_slice($this->dim->groups, $this->dim->fromLevel - $this->changedLevel) as $group) {
+        foreach (array_slice($this->dim->groups, $this->changedLevel - $this->dim->lastLevel - 1) as $group) {
             $this->mp->level = $group->level;
             $this->gc->items[$group->level]->inc();
             $this->currentAction = $group->headerAction;
@@ -587,7 +586,7 @@ class Report {
      * @return bool true when group has changed, false when not.
      */
     private function noGroupChange(): bool {
-        if ($this->changedLevel !== null || (!isset($this->dim->groups))) {
+        if ($this->changedLevel !== null || empty($this->dim->groups)) {
             return true;
         }
         $this->currentAction = $this->dim->noGroupChangeAction;
@@ -761,7 +760,8 @@ class Report {
      */
     public function getGroupValue($group = null) {
         $groupLevel = $this->mp->getLevel($group);
-        return $this->dim->groupValues[$groupLevel - $this->dim->fromLevel];
+        $dimID = $this->groups->items[$groupLevel]->dimID;
+        return $this->dims[$dimID]->groupValues[$groupLevel];
     }
 
     /**

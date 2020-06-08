@@ -15,7 +15,7 @@ class MajorPropertiesTest extends TestCase {
     public function setUp(): void {
         $mp = new MajorProperties();
         $mp->level = 3;
-        $mp->lastLevel = $mp->level;
+        $mp->maxLevel = $mp->level;
         $mp->groupLevel = ['total' => 0, 'g1' => 1, 'g2' => 2, 'g3' => 3];
         $this->stub = $mp;
         $this->assertInstanceOf(MajorProperties::class, $this->stub);
@@ -42,7 +42,7 @@ class MajorPropertiesTest extends TestCase {
     }
 
     public function testGetLevelForNullAtDetail() {
-        $this->stub->level = $this->stub->lastLevel + 1;
+        $this->stub->level = $this->stub->maxLevel + 1;
         $this->assertSame(3, $this->stub->getLevel());
     }
 
