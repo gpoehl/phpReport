@@ -166,15 +166,14 @@ class Report {
      * to external methods. 
      */
     public function join($value = null, $noDataAction = null, $dataAction = null, $noGroupChangeAction = null, ... $params): self {
-        $dimID = count($this->dims);
         $this->dim->setJoinSource($value, $params);
 
-        $this->dim->noDataAction = $this->makeAction('noData_n', $noDataAction, $dimID);
-        $this->dim->noGroupChangeAction = $this->makeAction('noGroupChange_n', $noGroupChangeAction, $dimID);
-        $this->dim->detailAction = $this->makeAction('detail_n', $dataAction, $dimID);
+        $this->dim->noDataAction = $this->makeAction('noData_n', $noDataAction, $this->dim->id);
+        $this->dim->noGroupChangeAction = $this->makeAction('noGroupChange_n', $noGroupChangeAction, $this->dim->id);
+        $this->dim->detailAction = $this->makeAction('detail_n', $dataAction, $this->dim->id);
         $this->dim->isLastDim = false;
 
-        $this->dims[] = $this->dim = new Dimension($dimID, $this->dim->lastLevel, $this->target, $this->total);
+        $this->dims[] = $this->dim = new Dimension($this->dim->id + 1, $this->dim->lastLevel, $this->target, $this->total);
         return $this;
     }
 

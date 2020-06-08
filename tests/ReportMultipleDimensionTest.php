@@ -13,7 +13,7 @@ class ReportMultiDimensionTest extends TestCase {
     /**
      * @dataProvider noDataParamProvider
      */
-    public function testNoDataParameterOfDataMethodWhereDataIsNull($noData, $expected) {
+    public function testNoDataParameterOnNull($noData, $expected) {
         $row = ['firstGroup' => 'A', 'b' => null];
         $this->runNoDataInDimension($row, $noData, $expected);
     }
@@ -21,15 +21,15 @@ class ReportMultiDimensionTest extends TestCase {
     /**
      * @dataProvider noDataParamProvider
      */
-    public function testNoDataParameterOfDataMethodWhereDataIsAnEmptyArray($noData, $expected) {
+    public function testNoDataParameterOnEmptyArray($noData, $expected) {
         $row = ['firstGroup' => 'A', 'b' => []];
         $this->runNoDataInDimension($row, $noData, $expected);
     }
 
-    public function runNoDataInDimension($row, $noData, $expected) {
+    public function runNoDataInDimension($row, $noDataAction, $expected) {
         $out = $this->getBase()->rep
                 ->group('a', 'firstGroup')
-                ->join('b', $noData)
+                ->join('b', $noDataAction)
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([$row]);
         $this->assertSame('init<<>>totalHeader<<>>aHeader<<>>detail0<<>>' . $expected . 'aFooter<<>>totalFooter<<>>close<<>>', $out);
