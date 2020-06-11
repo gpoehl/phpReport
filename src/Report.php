@@ -15,12 +15,8 @@ namespace gpoehl\phpReport;
 
 /**
  * Main class of phpReport.
- * Accepts any data input and monitors values in defined group attributes
- * between two data rows. When given values are not equal actions for group
- * headers and group footers will be executed.
- * 
- * This class offers also differnt ways to calulate the (running) sum of any attribute.
- * Row counters and group counters are always active and can be used at any time.
+ * Handles group changes, computes values and joins multiple data sources.
+ * On detected events user actions will be executed. 
  */
 class Report {
 
@@ -84,9 +80,8 @@ class Report {
     /** @var Groups object which holds any groups regardless of the related dimension. */
     private Groups $groups;
 
-    /** @var object Object which implements methods for event actions.
-     * Usally passed as $this.
-     * @todo Check if it is possible to pass a class name and call static methods
+    /** @var object | className Object or name of a class which holds the
+     * action methods to be called. 
      */
     private $target;
 
@@ -106,16 +101,21 @@ class Report {
      */
     private int $lowestHeader = 0;
 
+    /** @var True when the end() method is called. Only to make sure that 
+     * isLast() method works well for the last footers.
+     */
+    private bool $isJobDone = false;
+
     /**
-     * Instantiate a new report object
      * Set reference to a target object and merge config parameters into 
      * parameters from config file.
-     * @param object $target Object which holds the methods to be called. Usually passed as $this.
+     * @param object|className $target Object or name of a class which holds the
+     * action methods to be called. 
      * @param array|null $config Dynamic configuration to replace defaults set in config.php file.
      * @param mixed ...$params Optional parameters to be passed around. They are
      * kept in the public $params array but not used by this library. 
      */
-    public function __construct(object $target, array $config = null, ...$params) {
+    public function __construct($target, array $config = null, ...$params) {
         $this->target = $target;
         $this->params = $params;
         $conf = Factory::configurator($config);
@@ -131,48 +131,33 @@ class Report {
     }
 
     /**
-     * Set data handler and optionally declare next data dimension.
-     * For each data dimension this method should be called. It must be called
-     * before your can declare groups or call the aggregate or sheet methods.
-     * 
-     * Next dimension can be next dimension in an multi dimensional array or
-     * data of an 1:n relationship where the related data is not part of the
-     * current dimension. 
-     * 
-     * @param mixed $dataHandler The data handler which gets data out of a data.
-     * You can use 'array' as a shortcut to ArrayDataHandler or 'object' to
-     * ArrayDataHandler.
-     * If the last dimension don't has groups, aggregate or sheet declarations
-     * a new dimension will be instantiated when you omit the data() method call. 
+     * Join data to the current row.
+     * You can join data by
+     * 1) Next dimension in an array
+     * 2) get property content from a row object
+     * 3) call method in a row object
+     * 4) execute any callable
+     *  
      * @param mixed $value Method, callable, closure or attribute name. 
-     * Methods, callables and closures must return an iterable data set, null 
+     * Methods, callables and closures must return an iterable data set or null 
      * when no data exists. 
-     * They can also pass data themselves to the run() or next() methods. In this
-     * case they must return false.
-     * To detect if $data is a method or callable it must be an array. If that arrary
-     * has only one parameter a method with the name in parameter will be 
-     * called in the owner class.
-     * Attribute name is the name of an attribute when current row is an object
-     * or the array key when current row is an array.
-     * 
-     * @param mixed $noDataAction Action to be executed when $data don't have any data.
-     * Null to use defualt noData_n action from configuration.
+     * You can also call runPartial() or next() whith joined data. In this case
+     * you need to return False.
+     * @param mixed $noDataAction Action to be executed when no joined data are found.
+     * Null to use default action.
      * @param mixed $dataAction Action to be executed for each data row of the current dimension.
-     * Null to use default data_n action from configuration.
-     * @param mixed noGroupChange Action to be executed when data row didn't
+     * Null to use default action.
+     * @param mixed noGroupChange Action to be executed when current data row didn't
      * trigger a group change.
-     * Null to use default noGroupChange_n action from configuration.
+     * Null to use default action.
      * @param mixed ...$parameters Optional list of additional parameters passed 
      * to external methods. 
      */
     public function join($value = null, $noDataAction = null, $dataAction = null, $noGroupChangeAction = null, ... $params): self {
         $this->dim->setJoinSource($value, $params);
-
         $this->dim->noDataAction = $this->makeAction('noData_n', $noDataAction, $this->dim->id);
         $this->dim->noGroupChangeAction = $this->makeAction('noGroupChange_n', $noGroupChangeAction, $this->dim->id);
         $this->dim->detailAction = $this->makeAction('detail_n', $dataAction, $this->dim->id);
-        $this->dim->isLastDim = false;
-
         $this->dims[] = $this->dim = new Dimension($this->dim->id + 1, $this->dim->lastLevel, $this->target, $this->total);
         return $this;
     }
@@ -197,23 +182,15 @@ class Report {
      * - Null. The group name will be used as array key or property name.
      *  
      *  * The signature of an anonymous function or callable method should be:
-     * `function($row, $rowKey, $param1, ..., $param9)`.
+     * `function($row, $rowKey, $... param1)`.
      * 
      * ```php
      * fn($user, $rowkey) => $user->firstName . ' ' . $user->lastName 
      * ```
-     * 
-     * The signature of an anonymous function or callable method is specified by
-     * the datahander class of this dimension.
-     * Same is true for the content of callables with an array. 
-     * Both depends mainly if the data row is an data object or an array. It's 
-     * obvious that an data object don't need the current row as a parameter while
-     * the latter repquries it. 
-     * 
      * @param mixed $headerAction Overwrite individual group header action. 
-     * False when default header action should not be executed.
+     * Null to use default action.
      * @param mixed $footerAction Overwrite individual group footer action. 
-     * False when default footer action should not be executed.
+     * Null to use default action.
      * @param mixed ...$params Optional list of parameters passed `unpacked`
      * to anonymous functions and callables getting the group value.
      */
@@ -235,20 +212,18 @@ class Report {
     }
 
     /**
-     * Aggregate values.
-     * Instantiate an calulator object to aggregate declared value and provide
-     * aggregate functions.
+     * Compute values.
+     * Instantiate an calulator object to provide aggregate functions.
      * Aggregation functions are available at each group level at any time.
      * @param string $name Unique name to reference a calculator object. The
      * reference will be hold in $this->total.
-     * @param mixed $value Source of the value to be aggregated. It's the attribute name 
+     * @param mixed $value Source of the value to be computed. It's the attribute name 
      * when data row is an object or the key name when data row is an array.
      * It's also possiblbe to use a closure which returns the value. 
      * When the $value parameter is null it defaults to the content of $name parameter.  
-     * Use False when the value should not be aggregation automaticly. In this case
+     * Use False when the value should not be computed automaticly. In this case
      * only the referece to the calculator object will be established. Use the
-     * add() method of the $total collector or from the calculator to caluclate
-     * values.  
+     * calculators add() method to compute values.  
      * @param int|null $typ The calculator type. 
      * Typ is used to choose between a calculator class. Options are XS, REGULAR
      * and XL. Defaults to XS.
@@ -268,24 +243,20 @@ class Report {
     }
 
     /**
-     * Aggreate values in a sheet.
+     * Compute values in a sheet.
      * Sheet is a collection of calculators for a horizontal representation of a value.
      * Call this method once for each sheet. 
      * @param string $name Unique name to reference the sheet object. The
      * reference will be hold in $this->total.
      * 
-     * @param mixed $value Source of the key and value to be aggregated. Must be
-     * served in an array with only one entry were key is the array key and value
-     * the value. 
-     * 
-     * Key and attribute name are attribute names when data row is an object or
-     * or when row is an array the element keys.
-     * It's also possiblbe to use a closure which returns an array [key => value].
-     * 
-     * False to just instantiate and reference the sheet. To execute the calculation
-     * call the add() method of the sheet object. This is very useful when 
-     * getting the key or value to be aggregated is complex and / or you need
-     * these data on the detail level. 
+     * @param mixed $key Source of the key value. The source can return an array
+     * having data to be cumputed indexed by key.
+     * Use False when the value should not be computed automaticly. In this case
+     * only the referece to the sheet object will be established. Use the
+     * sheet add() method to compute values.  
+     *   
+     * @param mixed $value Source of the value to be aggregated. Use null when
+     * the $key source returns key and data in an array [key => value]
      * 
      * @param int|null $typ The calculator type. 
      * Typ is used to choose between a calculator class. Options are XS, REGULAR
@@ -342,8 +313,7 @@ class Report {
 
     /**
      * On first call of run() this method is called.
-     * Set fromLevel and lastLevel on dims, instantiate row counter and
-     * eventually call init and totalHeader methods.
+     * Set runTimeActions and call init and totalHeader methods.
      */
     private function finalInitializion(): void {
         foreach ($this->dims as $dim) {
@@ -362,8 +332,8 @@ class Report {
     }
 
     /**
-     * Get prototype data for the current method called in $target.
-     * @return string A html formatted table with some information related to
+     * Get prototype data for the current action.
+     * @return string A html table with some information related to
      * the last executed action.
      */
     public function prototype(): string {
@@ -372,11 +342,10 @@ class Report {
     }
 
     /**
-     * Set call option.
-     * Setting call option defines which action will be taken. Usally call option
-     * will be set at program start but can also set or altered during program execution.
-     * The call option influences which call action will be executed and if 
-     * methods are called in the owner or the prototye object.
+     * Set call option to use rules under which conditions an action will be 
+     * executed and if the target will be re-directed to the prototype class.
+     * Usally call option will be set at program start but can also set or 
+     * altered during program execution.
      * @param int $callOption One of the CALL_x constants.
      * @throws InvalidArgumentException
      */
@@ -404,7 +373,6 @@ class Report {
             $this->setRuntimeAction($group->headerAction);
             $this->setRuntimeAction($group->footerAction);
         }
-
         // Exclude last dimension. Has no data from data() method. 
         foreach ($this->dims as $dim) {
             if (!$dim->isLastDim) {
@@ -434,16 +402,23 @@ class Report {
     }
 
     /**
+     * Start the real program execution after calling configuration methods.
+     * 
+     * Pass your data set when you don't want the whole data set
+     * 
+     * 
+     * 
+     * 
+     * 
      * Process all data or just a subset (chunk) of all data rows.
-     * When multidimensional data is used this function is called recursive.
-     * @param iterable|null $data The data set to be processed
+     * @param iterable|null $data You can pass your The data set to be processed
      * Can be the whole set or just a subset (chunk) of the set. Not passing 
      * all data at once might reduce the amount of required memory. 
      * 
      * @param bool $finalize When true the end() method will be called after $data 
-     *                       of the fist dimension ($dim = 0) has been processed.
-     *                       When false this method might be called again with
-     *                       other chunks of data.
+     *                       of the first dimension ($dim = 0) has been processed.
+     *                       When false you should pass other chunks of data by 
+     *                       calling the runPartial() method.     *                       other chunks of data.
      *                       To finalize the job $finalize need be true or end()
      *                       method must be called. 
      * @return string|object Result of end() as string when finalize is true or
@@ -461,7 +436,7 @@ class Report {
 
     /**
      * Iterate over a given data set.
-     * Use to iterate over data sets from data dimension > 0.
+     * Use to iterate over data sets from data dimension > 0 (recursive calls).
      * Note: Make sure to call the run() method at least once and the end() method when 
      * you're ready. 
      * @param iterable|null $data
@@ -538,7 +513,9 @@ class Report {
      * After executing a footer all counter and totals must be cumulated to next level.
      */
     private function handleFooters(): void {
+        $wrk = 'xxx';
         for ($this->mp->level = $this->lowestHeader; $this->mp->level >= $this->changedLevel; $this->mp->level--) {
+            $wrk = null;
             $group = $this->groups->items[$this->mp->level];
             $this->dim = $this->dims[$group->dimID];
             $this->currentAction = $group->footerAction;
@@ -547,6 +524,9 @@ class Report {
             $this->rc->cumulateToNextLevel();
             $this->gc->cumulateToNextLevel();
             $this->total->cumulateToNextLevel();
+        }
+        if ($wrk !== null) {
+            $this->output .= "<h1>Call to footer was useless" . $this->dim->rowKey . '</h1>';
         }
     }
 
@@ -606,6 +586,7 @@ class Report {
         } elseif ($this->lowestHeader !== 0) {
             // only when groups are defined.
             $this->changedLevel = 1;
+            $this->isJobDone = true;
             $this->handleFooters();
         }
         $this->executeAction('totalFooter');
@@ -681,8 +662,7 @@ class Report {
     }
 
     /**
-     * Check if the current groupFooter action is executed the
-     * last time within the given group level.
+     * Check if the footer of the current group is last one within the given group.
      * In group headers or detail level this can't be answered (It would 
      * require to read the next row(s) ahead).
      * @param string|itn|null $level The group level to be checked. Defaults to the
@@ -699,7 +679,7 @@ class Report {
         if ($level >= $this->mp->level) {
             throw new \InvalidArgumentException('isLast() can check only for higher group levels');
         }
-        return ($level > $this->changedLevel);
+        return ($this->isJobDone || $level >= $this->changedLevel);
     }
 
     /**
@@ -735,18 +715,27 @@ class Report {
     }
 
     /**
-     * Get all active group values. 
+     * Get active group values. 
      * Note that in footer methods the row which triggered the group 
      * change is not yet active.
-     * @return array Array having all values related to groups from first dimension to 
-     * current dimension.
+     * @param int $dimID The dimension id for / till the group values will be returned.
+     * Defaults to the current dimension id.
+     * @param bool $fromFirstLevel When true all group values from the first 
+     * dimension to the requested dimension are returned. When false only the
+     * group values of the requested dimension are returned.
+     * @return array Array with requested group values indexed by group level.
      */
-    public function getGroupValues(): array {
-        for ($i = 0; $i <= $this->dim->id; $i++) {
-            // @todo merge values and assign group names 
+    public function getGroupValues(?int $dimID = null, bool $fromFirstLevel = true): array {
+        $dimID ??= $this->dim->id;
+        if (!$fromFirstLevel) {
+            return $this->dims[$dimID]->groupValues;
+        }
+        $wrk = $this->dims[0]->groupValues;
+        for ($i = 1; $i <= $this->dimId; $i++) {
+            $wrk += $this->dims[0]->groupValues;
         }
 
-        return $this->groups->values;
+        return $wrk;
     }
 
     /**
@@ -772,8 +761,8 @@ class Report {
     }
 
     /**
-     * Get the group name for a given group ID. 
-     * @param int $groupLevel The level (ID) for which the group name will be returned.
+     * Get the group name for a given group level. 
+     * @param int $groupLevel The group level for which the group name will be returned.
      * Defaults to the current level.
      * @return string The group name of the requested level.
      */

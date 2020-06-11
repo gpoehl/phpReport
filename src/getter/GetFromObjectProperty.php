@@ -21,7 +21,7 @@ class GetFromObjectProperty extends BaseGetter{
     /**
      * @see BaseGetter::getValue
      */
-    public function getValue($row, $rowKey) {
+    public function getValue($row, $rowKey =null) {
         return $row->{$this->source};
     }
 }

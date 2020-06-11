@@ -14,23 +14,24 @@ declare(strict_types=1);
 namespace gpoehl\phpReport\getter;
 
 /**
- * GetterFactory instantiates object which returns a value from data input
+ * GetterFactory instantiates getter objects which returns a value from data row
  */
 class GetterFactory {
 
-    /** @var Object | Class Used as default target for method calls when data
-     * is not an object or closure.     */
+    /** @var Object | Classname Default target for method calls when data isn't an
+     * object or closure. */
     public $defaultTarget;
-    /** @var True when data is an object */
+    
+    /** @var True when data row is an object. */
     public bool $isObject;
 
     public function __construct(bool $isObject, $defaultTarget = null) {
         $this->isObject = $isObject;
-        $this->defaultTarget = $this->defaultTarget;
+        $this->defaultTarget = $defaultTarget;
     }
 
    /**
-    * Instantiate an getter object to retrieve a value from data row
+    * Instantiate an getter object to retrieve a value from data row.
     * @param mixed $source The name of an attribute / field in the data row which
     * holds the desired value or method / closure which gets the value. 
     * @param array $params Optional parameter to be passed to closures and methods
@@ -47,12 +48,13 @@ class GetterFactory {
         switch (count($source)) {
             case 1:
                 // Default target for objects is the object itself. Else it's the
-                // target from the Report class.
-                return ($this->isObject) ? new GetFromObjectMethod($source, $params) : new GetByCallable([$this->defaultTarget, $source], $params);
+                // For arrays or strings the $defaultTarget.
+               $source = current($source);
+               return ($this->isObject) ? new GetFromObjectMethod($source, $params) : new GetFromCallable([$this->defaultTarget, $source], $params);
             case 2:
                 return new GetFromCallable($source, $params);
             default:
-                throw new InvalidArgumentException("Source parameter array must have only one or two elements.");
+                throw new \InvalidArgumentException("Source parameter array must have only one or two elements.");
         }
     }
     

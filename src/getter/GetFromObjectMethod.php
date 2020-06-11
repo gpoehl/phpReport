@@ -21,7 +21,7 @@ class GetFromObjectMethod extends BaseGetter{
     /**
      * @see BaseGetter::getValue
      */
-    public function getValue($row, $rowKey) {
-        return $row->{$this->source}($this->params);
+    public function getValue($row, $rowKey = null) {
+        return $row->{$this->source}(... $this->params);
     }
 }

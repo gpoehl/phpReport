@@ -208,35 +208,8 @@ class ReportTest extends TestCase {
         $data = ['attr0' => 'groupAvalue', 'attr1' => 5, 'attr2' => 6, 'attr3' => 7];
         return ([
             [0, 1, 2, 3, array_values($data)],
-            ['attr0', 'attr1', 'attr2', 'attr3', $data],
-            [
-                function($row) {
-                    return $row['attr0'];
-                },
-                function($row) {
-                    return $row['attr1'];
-                },
-                function($row) {
-                    return [$row['attr2'] => $row['attr3']];
-                },
-                        null,
-                $data],
             [0, 1, 2, 3, (object) array_values($data)],
-            ['attr0', 'attr1', 'attr2', 'attr3', (object) ($data)],
-            [
-                function($row) {
-                    return $row->attr0;
-                },
-                function($row) {
-                    return $row->attr1;
-                },
-                function($row) {
-                    return [$row->attr2 => $row->attr3];
-                },
-                        null,
-                (object) $data],
-                ]
-                );
+            ]);
     }
 
     /**

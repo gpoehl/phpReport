@@ -67,13 +67,13 @@ class Dimension {
     private bool $gettersSet = false;
 
     /** @var BaseGetter[] Object to get group value indexed by group level. */
-    public array $groupGetters = [];
+    private array $groupGetters = [];
 
     /** @var BaseGetter[] Object to get values for compute items and sheets indexed by name. */
-    public array $calcGetters = [];
+    private array $calcGetters = [];
     
     /** @var Object to get joined values. */
-     public getter\BaseGetter $joinGetter;
+    private getter\BaseGetter $joinGetter;
     
     // Source values will be unset after instantiating of getter objects. 
     /** @var array[] Parameter for compute items indexed by name. */ 
@@ -86,7 +86,8 @@ class Dimension {
     /**
      * Instantiate a new dimension object
      * @param int $id The dimension id
-     * @param type $defaultTarget The target class / object from report
+     * @param object|className $target Object or name of a class which holds the
+     * action methods to be called. 
      * @param \gpoehl\phpReport\Collector $total The 'total' collector from report class 
      */
     public function __construct(int $id, int $lastLevel, $defaultTarget, Collector $total) {
@@ -103,7 +104,7 @@ class Dimension {
      * @param array|empty $params Additional variadic parameters passed when  
      * $source is a callable.
      */
-    public function addCalcSource(string $name, $value, $params) {
+    public function addCalcSource(string $name, $value, array $params =[]) {
         $this->calcSources [$name] = [$value, $params];
     }
 
@@ -115,7 +116,7 @@ class Dimension {
      * @param array|empty $params Additional variadic parameters passed when  
      * $source is a callable.
      */
-    public function addSheetSource(string $name, $key, $value, $params) {
+    public function addSheetSource(string $name, $key, $value, array $params= []) {
         $this->sheetSources [$name] = [$key, $value, $params];
     }
 
@@ -125,7 +126,8 @@ class Dimension {
      * @param array|empty $params Additional variadic parameters passed when  
      * $source is a callable.
      */
-    public function setJoinSource($value, $params) {
+    public function setJoinSource($value, array $params =[]) {
+        $this->isLastDim = false;
         $this->joinSource = [$value, $params];
     }
 
@@ -135,7 +137,7 @@ class Dimension {
      * @param type $rowKey
      * @return array
      */
-    public function getGroupValues($row, $rowKey): array {
+    public function getGroupValues($row, $rowKey = null): array {
         ($this->gettersSet) ?: $this->setGetters($row);
         $values = [];
         foreach ($this->groupGetters as $level => $getter) {
@@ -167,7 +169,7 @@ class Dimension {
      * @param type $rowKey
      * @param array $groupValues
      */
-    public function activateValues($row, $rowKey, array $groupValues): void {
+    public function activateValues($row, $rowKey = null, array $groupValues = []): void {
         $this->row = $row;
         $this->rowKey = $rowKey;
         $this->groupValues = $groupValues;

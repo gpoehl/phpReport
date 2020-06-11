@@ -14,12 +14,11 @@ declare(strict_types=1);
 namespace gpoehl\phpReport\getter;
 
 /**
- * BaseGetter is the abstract base class for all getter classes
+ * BaseGetter is the base class for all getter classes
  */
 abstract class BaseGetter {
 
     /**
-     *
      * @var mixed The source (attribute name, array key or method / closure) where
      * to find the desired value in a data row. 
      * For sheets $source is an array having a source for the sheet key and value.
@@ -41,5 +40,5 @@ abstract class BaseGetter {
      * the value to be returned.
      * @return mixed The desired data value (by $source) from $row.
      */
-    public abstract function getValue($row, $rowKey);
+    public abstract function getValue($row, $rowKey =null);
 }

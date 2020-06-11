@@ -43,12 +43,14 @@ class Groups {
             throw new \InvalidArgumentException("Group $group->name has already been defined");
         }
         
+        // Check group level just checks that report class did it well. 
         if (empty($this->items) && $group->level !== 1) {  
             throw new \InvalidArgumentException("First grouplevel must be 1. '$group->level' given"); 
         } 
         if (!empty($this->items) &&  $group->level <> end($this->items)->level + 1 ){
             throw new \InvalidArgumentException("Grouplevel '$group->level' must be 1 greater than the previous level"); 
         } 
+        
         $this->items[$group->level] = $group;
         $this->groupLevel[$group->name] = $group->level;
     }

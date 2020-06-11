@@ -24,7 +24,7 @@ class GetFromArray extends BaseGetter{
      * @return Array item declared in $source. To allow join() on array's the
      * warning when the item doesn't exitst will be ignored.
      */
-    public function getValue($row, $rowKey) {
+    public function getValue($row, $rowKey = null) {
        return @$row[$this->source];
     }
 }
