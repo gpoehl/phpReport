@@ -51,7 +51,6 @@ Example
 .. code-block:: php
 
     $rep = (new Report ($this))
-    ->data('object')
     ->group ('region')
     ->group ('year', fn($row) => substr($row->saleDate, 0, 4))
     ->group ('month', fn($row) => substr($row->saleDate, 5, 2))

@@ -18,7 +18,7 @@ Methods for data handling
 
 :php:meth:`run` Start execution with data
 
-:php:meth:`runPartial` Iterate over a set of data
+:php:meth:`nextSet` Iterate over a set of data
 
 :php:meth:`next` Take a single data row
 

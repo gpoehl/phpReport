@@ -61,10 +61,9 @@ this example.
         public function __construct($data){
             // initialize report
             $this->rep = (new Report($this)) 
-            ->data('object')
             ->group('customer')         
             ->group('invoice', 'invoiceID')
-            ->aggregate('sales', fn($row) => $row->amount * $row->price);
+            ->compute('sales', fn($row) => $row->amount * $row->price);
             // Start execution. $data is an iterable having some data rows
             $this->rep->run($data);
         }

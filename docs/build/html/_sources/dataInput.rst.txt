@@ -68,7 +68,7 @@ moment you need them. This can save a lot of memory consumpiton.
     :param mixed $dataHandler: The data handler to be used for the current data dimension.
     :param mixed $source: The source for the next data dimension. When source is
      a callable just return the whole the data set or return false and call the 
-     runPartial() method or the next() method for each data row.  
+     nextSet() or the next() method for each data row.  
     :param mixed $noData: The action to be executed when $source doesn't return any data.
     :param mixed $rowDetail: The action to be executed for each row returned by $source.
     :param mixed $noGroupChange: The action to be executed when two consecutive rows don't trigger

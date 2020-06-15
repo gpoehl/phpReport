@@ -141,7 +141,7 @@ class Report {
      * @param mixed $value Method, callable, closure or attribute name. 
      * Methods, callables and closures must return an iterable data set or null 
      * when no data exists. 
-     * You can also call runPartial() or next() whith joined data. In this case
+     * You can also call nextSet() or next() whith joined data. In this case
      * you need to return False.
      * @param mixed $noDataAction Action to be executed when no joined data are found.
      * Null to use default action.
@@ -418,7 +418,7 @@ class Report {
      * @param bool $finalize When true the end() method will be called after $data 
      *                       of the first dimension ($dim = 0) has been processed.
      *                       When false you should pass other chunks of data by 
-     *                       calling the runPartial() method.     *                       other chunks of data.
+     *                       calling the nextSet() method. 
      *                       To finalize the job $finalize need be true or end()
      *                       method must be called. 
      * @return string|object Result of end() as string when finalize is true or
@@ -428,7 +428,7 @@ class Report {
         if (isset($this->actions['init'])) {
             $this->finalInitializion();
         }
-        $this->runPartial($data);
+        $this->nextSet($data);
         if ($this->dim->id === 0) {
             return ($finalize) ? $this->end() : $this;
         }
@@ -441,7 +441,7 @@ class Report {
      * you're ready. 
      * @param iterable|null $data
      */
-    public function runPartial(?iterable $data): void {
+    public function nextSet(?iterable $data): void {
         if (!empty($data)) {
             foreach ($data as $rowKey => $row) {
                 $this->next($row, $rowKey);
@@ -551,7 +551,7 @@ class Report {
         // Reset group values of new dim only when previos dim had a group change.
         (!$changed) ?: $this->dim->groupValues = [];
         $nextDimData = $prevDim->getJoinedData();
-        ($nextDimData === false) ?: $this->runPartial($nextDimData);
+        ($nextDimData === false) ?: $this->nextSet($nextDimData);
         $this->dim = prev($this->dims);
     }
 

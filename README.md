@@ -1,36 +1,66 @@
 # phpReport
 
 phpReport is a modern PHP library designed to be a solid foundation for all
-applications working with data sets. 
+applications working with data sets ranging from simple reports to complex tasks
+like writing invoices.
 
-Ranging from simple reports to complex tasks like writing invoices
- - there are no limits to use this library. 
+The open architecture integrates seamless within your environment.
 
-The open architecture integrates seamless within your environment. 
-Your're welcome to use all your data models and components representing your 
-business know how as well as any PHP framework or ORM (Object Relation Mapper)
-like Popel, Doctrine, Eloquent or Cycle.
 
-Basicly phpReport awaits data and compares values between two consecutive rows.
-When they're not equal user defined actions (e.g. group header or footer method)
-are executed. This leads to well structured applications which interacts closely with this library.
- 
+Data input
+----------
+Data input is completely decoupled from your application. Use your own data 
+access methods, data models and components as well as data access features from
+any PHP framework or ORM (Object Relation Mapper).
+
+phpReport accepts data rows being an array, on object or even a string. These
+data rows can be passed to phpReport all at once, in batches of any size to  
+control memory usage when working with large amount of data or row by row.
+
+Choose the access strategy which seems most suitable for your current application
+and change this strategy on demand without touching the application.
+
+Because phpReport accepts any kind of data you're open to read data from any 
+source (like scv files, excel sheets, )
+
+
+Joining data
+------------
+Joining data in phpReport is used for different pupurses. 
+
+First you can join any data row with any other source. Data sources don't even have
+to be the same kind. So you can for example easily combine a row from
+a database with rows from an excel sheet.
+
+Another way to join data comes into place when your data row is a data model.
+This model usually has methods to get related data (e.g. getOrders in a customer 
+model). To automaticly iterate over these orders define this relationship with
+the join() method.
+
+To iterate over an multi-dimensional array the join() method is used to declare
+which array element holds the next dimension.   
+
+The application itself don't realize that joined data are provided. Groups behave
+like in a normal data set and values will also be computed over all data groups.
+
+
+Working concept
+---------------
+
+Basic feature of all report programs is the handling of group changes. 
+
+In phpReport a group change will trigger certain events. Each event ist mapped to
+an action like call a method, add a string the output variable, rise a warning, 
+throw an error or just do nothing.
+
+Mapping between events and actions is declared in the configuration file but can
+be overridden at any time for any real event.    
+
+
 To let you choose the best access strategy for reading data you might feed them to phpReport
 all at once, in batches or row by row.
 
 
-
-
-As you can also use any data access tool there are no limitations of data sources.
-
-source you need 
-You can even combine (like a join) data from different sources or work with multi dimensional arrays. 
-
-
-If none of the existing data handler classes fit's your needs you can write your
-own dedicated handler or use other tool like phpSpreadsheet to read Excel sheets,
-con
-and pass data to one of t as aData rows are pTo work with data rows Data rows are 
 
 
  
@@ -121,10 +151,9 @@ and two values to be aggregated.
         public function __construct($data){
             // initialize report
             $this->rep = (new Report($this)) 
-            ->data('object')
             ->group('customer')         
             ->group('invoice', 'invoiceID')
-            ->aggregate('sales', fn($row) => $row->amount * $row->price);
+            ->compute('sales', fn($row) => $row->amount * $row->price);
             // Start execution. $data is an iterable having some data rows
             $this->rep->run($data);
         }

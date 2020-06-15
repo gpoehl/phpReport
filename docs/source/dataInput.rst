@@ -17,12 +17,8 @@ and also to use data from different sources within the same job.
 Out of the box data rows can be arrays or objects. To work with other sources
 just convert them while reading or create your onw data handler.
 
-To tell what data handler must be used call the data method. Only the first
-parameter is needed. All other parametes belongs to multi dimensional data.
+All other parametes belongs to multi dimensional data.
  
-.. php:method:: data($dataHandler): Report
-
-    :param mixed $dataHandler: The data handler to be used for the current data dimension.
 
 |project_name| accepts data in three different ways.
 
@@ -57,7 +53,7 @@ moment you need them. This can save a lot of memory consumpiton.
  
 
 
-.. php:method:: data($dataHandler, $source, $noData, $rowDetail, $noGroupChange, ...$params): Report
+.. php:method:: data($source, $noData, $rowDetail, $noGroupChange, ...$params): Report
 
     Called when group values between two rows are not equal. Each group has
     its own groupHeader. 
@@ -65,13 +61,11 @@ moment you need them. This can save a lot of memory consumpiton.
     Group headers are called from the changed group level down to the lowest
     declared group (within an data dimension).
 
-    :param mixed $dataHandler: The data handler to be used for the current data dimension.
     :param mixed $source: The source for the next data dimension. When source is
      a callable just return the whole the data set or return false and call the 
-     runPartial() method or the next() method for each data row.  
+     nextSet() method or the next() method for each data row.  
     :param mixed $noData: The action to be executed when $source doesn't return any data.
     :param mixed $rowDetail: The action to be executed for each row returned by $source.
     :param mixed $noGroupChange: The action to be executed when two consecutive rows don't trigger
      a group change.
     :param mixed $params: Variadic parameters to be passed to $source.
-
