@@ -193,7 +193,7 @@ class Dimension {
             $this->calcGetters[$name] = $factory->getSheetGetter($source[0], $source[1], $source[2]);
         }
         if (!$this->isLastDim) {
-            $this->joinGetter = $factory->getGetter($this->joinSource[0], $this->joinSource[0]);
+            $this->joinGetter = $factory->getGetter($this->joinSource[0], $this->joinSource[1]);
         }
         unset($this->calcSources, $this->sheetSources, $this->joinSource);
     }

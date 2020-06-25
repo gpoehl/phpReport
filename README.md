@@ -1,11 +1,46 @@
 # phpReport
 
-phpReport is a modern PHP library designed to be a solid foundation for all
-applications working with data sets ranging from simple reports to complex tasks
-like writing invoices.
+phpReport is a modern PHP library solving almost all commonly tasks for applications
+working with data groups. 
+It's designed to help with simple reports and developes full power for difficult 
+challenges like writing invoices.
 
-The open architecture integrates seamless within your environment.
+The open architecture allows a seamless integration within every environment.
 
+Due to the combination of configuration, declaration and interaction between 
+phpReport and your application any of your specific operating processes can be 
+handled without forcing the processes to adapt to the software.
+
+Documentation can be viewed at https://phpreport.readthedocs.io/en/latest/
+
+Configuration
+-------------
+The purpose of configuration is to map named events to actions. Most likely an action
+is a method to be called in the application object but can be anything else. 
+The config.php file is the place to override system wide default action types and
+action method names to meet your naming conventions.
+
+Declaration
+-----------
+With just four declaration methods (istead of using configuration by an array) you'll 
+setup the sceleton of your application.
+
+The **group()** method declares a new data group and instantiates a group counter.
+phpReport will then compare group values between data rows, execute actions
+mapped to the group header and footer events and increments the group counter.   
+
+The **compute()** method lets phpReport know that you want use aggregate functions like
+sum(), min(), max() or that you'll ask for not null and not zero counters. 
+
+The **sheet()** method lets you compute multiple values in a spreadsheet like format. 
+Sheets can have a fixed number of columns indexed by pre-declared column names or
+a variable number of columns based on data values.
+
+With the **join()** method multiple data sources will be combined. Call the other 
+declaration methods after the join() method when they belong to the joined data.
+
+All aggregate functions and counters are available on each declared group level
+over all data sources. 
 
 Data input
 ----------
@@ -14,102 +49,195 @@ access methods, data models and components as well as data access features from
 any PHP framework or ORM (Object Relation Mapper).
 
 phpReport accepts data rows being an array, on object or even a string. These
-data rows can be passed to phpReport all at once, in batches of any size to  
-control memory usage when working with large amount of data or row by row.
+data rows can be passed to phpReport all at once, row by row or in batches of 
+any size. This gives greatest flexibility and more control over memory usage when
+working with large amount of data.
 
 Choose the access strategy which seems most suitable for your current application
 and change this strategy on demand without touching the application.
 
-Because phpReport accepts any kind of data you're open to read data from any 
-source (like scv files, excel sheets, )
+Between reading and feeding data to phpReport you can modify or filter
+the input. So it's easy to work with any data format (like csv files, excel 
+sheets and json strings).
 
 
 Joining data
-------------
-Joining data in phpReport is used for different pupurses. 
+============
+Joining data in phpReport can be used for different pupurses. 
 
-First you can join any data row with any other source. Data sources don't even have
+First you can join any data row with any other source. Data sources don't have
 to be the same kind. So you can for example easily combine a row from
-a database with rows from an excel sheet.
+a database with rows from an excel sheet. Use the same data input methods for
+joined data as for the primary data. 
 
 Another way to join data comes into place when your data row is a data model.
-This model usually has methods to get related data (e.g. getOrders in a customer 
-model). To automaticly iterate over these orders define this relationship with
-the join() method.
+This model usually has methods or properties providing related data. Declare the 
+relationship by calling the join() method and phpReport will iterate over these related data.
 
 To iterate over an multi-dimensional array the join() method is used to declare
-which array element holds the next dimension.   
+which array element holds the next dimension. 
 
-The application itself don't realize that joined data are provided. Groups behave
-like in a normal data set and values will also be computed over all data groups.
+To the application joining data is largely invisible. Grouping and computing 
+values behave like data would have been served as a flat record.
 
+Data output
+-----------
+Usually phpReport doesn't generate any output for you. Actions are the place to define
+what has to happen. So you can write data to a database table, a file (eg. excel file), 
+an HTML string, generate a pdf document or send emails. Of course you can do it all together.  
+There's only one rule: Whatever you return from an action will be appended to the
+public variable $output.
 
-Working concept
----------------
+Usage and prototyping
+---------------------
+Prototyping is a way to simulate, replace or extend user actions with prototype actions during
+developement.
 
-Basic feature of all report programs is the handling of group changes. 
+Each prototype action generates a html table containing some interesting stuff about
+the current data row, current data group and computed values.
 
-In phpReport a group change will trigger certain events. Each event ist mapped to
-an action like call a method, add a string the output variable, rise a warning, 
-throw an error or just do nothing.
+The following example for a medium complex application shows the usage of some
+basic features. 
 
-Mapping between events and actions is declared in the configuration file but can
-be overridden at any time for any real event.    
+```php
+use gpoehl\phpreport\Report;
 
+class FirstExample{
 
-To let you choose the best access strategy for reading data you might feed them to phpReport
-all at once, in batches or row by row.
+    public Report $rep;
 
+    /** @var Customer[] Array of customer objects. /* 
+    public function __construct(array $customers){
+        $this->rep  = (new Report($this))
+        ->group ('region')
+        ->group('customer', 'customerID')
+        ->join (['getOrdersByDate'] ,null, null, null, date("Y"))
+        ->group ('month', fn($order)=> substr($order->orderDate, 5, 2)) 
+        ->group('orderID')
+        ->compute ('discount', false)
+        ->join (['getOrderDetails'])
+        ->compute ('amount')
+        ->setCallOption(Report::CALL_PROTOTYPE);
+        $this->rep->run($data);
+        echo $this->rep->output;
+    }
 
+}
+```
 
+The example class above first instantiates a new phpReport object and holds the
+reference in a variable. The passed parameter is the object which implements 
+action methods. 
 
+Next two groups named region and customer are declared. The related data will be
+taken out of the 'region' and the 'customerID' properties of the customer objects.
+
+To join customer with orders the join method let's declare where to get them from. 
+In this example we're going to call the getOrdersByDate method and pass an extra
+parameter to select only orders of the current year. 
  
+Note that 'getOrdersByDate' is wrapped in an array to differentiate property and
+method names.  
 
-The structural design of aggregating values serves methods like sum, count
-(including not null and not zero values), min and max. 
-To aggregate values in sheets just combine values with a column key. 
+Usually the called method will return realted rows and phpReport will iterate over
+those rows. 
 
-All results are available at any time, for each group level and in any combination
-of sheet columns or aggregated fields.
+The group('month') call shows how to use a closure to get a value out of a data row.
+We also group by orders by orderID. 
 
- 
+We also want to compute the discount based on orders per month for a customer. 
+Assume getting the discount value is very complex and we need or want to do the
+calculation ourself. To do so we can call the compute method with parameter for 
+the value source equals false. In this case only an calculator object will be 
+instantiated and linked with the id 'discount' to the total collector. 
+That's all we need to make sure that our discount will be cumulated by month, 
+customer, region an to grand total. 
 
+The second join instructs to call the getOrderDetail method in the order class
+for each order.
 
+The value of the 'amount' property will be computed using a calculator object
+linked with the id 'amount' to the total collector.
 
+The setCallOption call activates the prototype function. 
 
+To start execution the run() method is called. Here we pass all customer objects
+at once to the report object.
 
-Documentation can be viewed at https://phpreport.readthedocs.io/en/latest/
+Eventually we are echoing the collected return values from the action methods.   
 
-Whenever values of declared groups aren't equal 
-assigned actions will be executed. Actions are usually methods to be 
-called in the application class(e.g. groupHeader and groupFooter methods). Actions
-are the right place to build your output or to do whatever needs to done. 
+Complex compution of values
+===========================
 
-Other values can be declared to provide aggregate functions like sum, min, max. They
-may optionally also aggregated in a sheet. All aggregate funcions as well as a 
-lot of different build in counters are available at any time for each group level. 
+As mentioned above we want / need to caluculate the monthly discount ourselv. The 
+monthFooter method is called after all orders within a month are processed.
 
-One of the main advantages of phpReport is the seemless integration into your current
-environment which also includes all frameworks. Without any configuration you can
-use all your classes, objects and data models. 
+The first line shows how to get's the sum of the computed value 'amount' per month.
+The second line does a calculation which in reality will be much more complex.
+The calculator add method adds the discount value. The cumulated value is 
+available at all group levels.   
 
-Even data retrieval is completely under your control. phpReport accepts any
-kind of data and is able to combine data from different sources. Combination means 
-that you can join any data sources or work with multi-dimensional arrays. Group changes
-and aggregate functions works over all data combinations (we call it dimensions).
+By implementing an action method the related prototype method will (dependent on 
+the callOption parameter) no longer be called. You can call the prototype 
+method yourself. No parameter is requred as phpReport knows what's to do.
 
-Feeding data to phpReport can be separated from the actual application. This means, for example, 
-that a controller or a data access class can switch from lazy to eager loading 
-or from getting all data at once to reading them in batches to minimize memory. 
-The application will not notice this change.  
+```php
+    public function monthFooter($month, $order){
+        $amount = $this->rep->total->amount->sum();
+        $discount = $amount * (($amount < 1000) ? 0.02 : 0.03);      // That's the complicated formula. :))
+        $this->rep->total->discount->add($discount);
+        $this->rep->prototype();
+    }
+```
+
+Data output
+===========
+
+The program above is fully working. All you've to do is preparing the desired output.
+Implement only those action methods you really need. phpReport is smart enough to
+call only existing methods unless you really ask for.
+
+This is also the time to uncomment the two prototype calls made above.  
+
+```php
+
+    public function customerHeader($customerID, $customer){
+        return 
+            $customer->adress' .
+            '<br>Dear ' . $customer->name;
+        } 
+
+    public function customerFooter($customerID, $customer){
+        return 
+           "You placed {$this->rep->gc->orders->sum()} orders".
+            . " with an total amount of {$this->rep->total->amount->sum()}." ;
+            "Therefore you receive a total discount of {$this->rep->total->discount->sum()}." ;
+    } 
+
+    // Default method called when no data is found for first data dimension (orders)
+     public function noDataDim1($dimID){
+            return 
+                "You haven't placed any order lately. We hope to see you soon again.";
+    } 
+
+    public function totalFooter(){
+        return 
+            "<h1>Summary page</h1>
+            "Total sales: " . $this->rep->total->sales->sum() .
+            "Total number of customers: " . $this->rep->gc->customer->sum() .
+            "Total number of orders: " . $this->rep->gc->order->sum() .
+            "Total number of rows: " . $this->rep->rc->sum();
+    } 
+```
+
 
 Requirements
-============
+------------
 
 The only requirement for **phpReport** is PHP 7.4.0 or later. 
 
 Installation
-============
+------------
 
 Official installation method is via composer and its packagist package [gpoehl/phpReport](https://packagist.org/packages/gpoehl/phpReport).
 
@@ -118,103 +246,15 @@ $ composer require gpoehl/phpReport
 ```
 
 
-The same is true for the desired output of your task. You can write data to a database table, a file (eg. excel file), an HTML string, generate a pdf document or send emails. Of course you can do it all together.  
-
-
 Support us
-==========
+----------
 
-Consider supporting development of phpReport with a donation of any value. The
-sponsor button can be found in the menu bar. 
-
-Usage
-=====
-
-The following example shows a basic program structure with two declared groups
-and two values to be aggregated.
-
-```php
-<?php
-    use gpoehl\phpreport\Report;
-
-    require_once(__DIR__ . '/../vendor/autoload.php');
-   
-    class MyFirstReport {
-
-        // The report object. Use $rep->output to render the output. 
-        public $rep;
-        
-        /**
-        * It might also be a good idea to instantiate the Report in your
-        * controller.
-        */
-        public function __construct($data){
-            // initialize report
-            $this->rep = (new Report($this)) 
-            ->group('customer')         
-            ->group('invoice', 'invoiceID')
-            ->compute('sales', fn($row) => $row->amount * $row->price);
-            // Start execution. $data is an iterable having some data rows
-            $this->rep->run($data);
-        }
-
-        public function init(){
-            return "<h1>My very first report</h1>";
-        } 
-
-        public function customerHeader($customer, $row){
-            return "<h2>Customer $customer</h2>" . $customer->address;
-        } 
-
-        public function invoiceHeader($invoice, $row){
-            return "<h3>Invoice ID = $invoice</h3>";
-        } 
-
-        // Will be called for each data row
-        public function detail($row, $rowKey){
-            return "<br>$row->item: $row->description";
-        } 
-
-        // $row in footer methods is the previous row, not the one which triggered the group change.
-        public function invoiceFooter($invoice, $row){
-            return "Total sales for invoice $invoice = " . $this->rep->total->sales->sum();
-        } 
-
-        public function customerFooter($customer, $row){
-            return "Total sales for customer $customer = " . $this->rep->total->sales->sum();
-        }
-
-        public function totalFooter(){
-            return 
-                "Total sales = $this->rep->total->sales->sum()" .
-                "Total number of customers: $this->rep->gc->customer->sum()" .
-                "Total number of invoices:  $this->rep->gc->invoice->sum()" .
-                "Total number of rows:  $this->rep->rc->sum()" ;
-        } 
-   }
-```
-
-Prototyping
-===========
-Before developing any action method have a look at the setCallOption() method. Prototype
-generates a default report showing a lot of interesting stuff. 
-
-
-```php
-    $this->rep = (new Report($this))
-    ->setCallOption(Report::CALL_PROTOTYPE);
-```
-
-
-Setup & Configuration
-=====================
-
-phpReport is designed to be very flexible. Check the config.php file and make
-desired changes. Adapt action method names to follow your own organisation rules. 
+If this libary is valuable for your consider supporting development 
+of phpReport with a donation.
 
 
 Unit Testing
-============
+------------
 
 Unit testing for phpReport is done using [PHPUnit](https://phpunit.de/).
 

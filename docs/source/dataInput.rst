@@ -1,23 +1,21 @@
 Data input
 ==========
 
-|project_name| doesn't read data itself. What seems to be a lack of functionality
-on the first glance is in reality a huge benefit.
+Data input is completely decoupled from your application. Use your own data 
+access methods, data models and components as well as data access features from
+any PHP framework or ORM (Object Relation Mapper).
 
-You can use the same tools for data retrieval you are alreay familar with.
-You can even use any ORM tools or your own data models without any modification.
+phpReport accepts data rows being an array, on object or even a string. These
+data rows can be passed to phpReport all at once, row by row or in batches of 
+any size. This gives greatest flexibility and more control over memory usage when
+working with large amount of data.
 
-So when running applications with |project_name| you have
-full control over authorisation, authentification, caching and much more. 
+Choose the access strategy which seems most suitable for your current application
+and change this strategy on demand without touching the application.
 
-Using your own methods for data retrieval allows you to access data from any
-source (any database and any file type like csc, xml, json, excel sheets, etc.) 
-and also to use data from different sources within the same job.
-
-Out of the box data rows can be arrays or objects. To work with other sources
-just convert them while reading or create your onw data handler.
-
-All other parametes belongs to multi dimensional data.
+Between reading and feeding data to phpReport you can modify or filter
+the input. So it's easy to work with any data format (like csv files, excel 
+sheets and json strings).
  
 
 |project_name| accepts data in three different ways.
@@ -27,7 +25,8 @@ All other parametes belongs to multi dimensional data.
         for each entry.
         
     * Passing chunks of data within an iterable by calling the run()
-        method for each chunk while setting the parameter *finalize to false*.
+        method for each chunk while setting the parameter *finalize to false* or
+        by calling the nextSet method.
         |project_name| iterates over the data set and calls the next() method 
         for each entry. To finalize the job either call the end() method after
         the last chunk or set the finalize parameter for the last chunk to true. 
@@ -37,35 +36,34 @@ All other parametes belongs to multi dimensional data.
         data into an array. To finalize the job just call the end() method after
         processing the last row.
 
-Multi-Dimensional Data
-----------------------
+Joining Data
+------------
 
-Handling of multi-dimensional data makes |project_name| extreme powerful.
-It let's you iterate over nested arrays with the same functionality as for the
-primary data set. So you can define groups and aggregate values for any data
-dimension.
+Joining data in phpReport can be used for different pupurses. 
 
-Data dimension can exist in form of nested arrays, object methods delivering
-related data or even completely independent.
+First you can join any data row with any other source. Data sources don't have
+to be the same kind. So you can for example easily combine a row from
+a database with rows from an excel sheet. Use the same data input methods for
+joined data as for the primary data. 
 
-Instead of joining data during data retrieval you can get related data at the
-moment you need them. This can save a lot of memory consumpiton.
+Another way to join data comes into place when your data row is a data model.
+This model usually has methods or properties providing related data. Declare the 
+relationship by calling the join() method and phpReport will iterate over these related data.
+
+To iterate over an multi-dimensional array the join() method is used to declare
+which array element holds the next dimension. 
+
+To the application joining data is largely invisible. Grouping and computing 
+values behave like data would have been served as a flat record.
  
 
-
-.. php:method:: data($source, $noData, $rowDetail, $noGroupChange, ...$params): Report
-
-    Called when group values between two rows are not equal. Each group has
-    its own groupHeader. 
-
-    Group headers are called from the changed group level down to the lowest
-    declared group (within an data dimension).
-
-    :param mixed $source: The source for the next data dimension. When source is
+.. php:method:: join($value, $noDataAction, $dataAction, $noGroupChangeAction, ...$params): Report
+ 
+    :param mixed $value: The source for the joined data. When source is
      a callable just return the whole the data set or return false and call the 
      nextSet() method or the next() method for each data row.  
-    :param mixed $noData: The action to be executed when $source doesn't return any data.
-    :param mixed $rowDetail: The action to be executed for each row returned by $source.
-    :param mixed $noGroupChange: The action to be executed when two consecutive rows don't trigger
+    :param mixed $noDataAction: The action to be executed when $source doesn't return any data.
+    :param mixed $dataAction: The action to be executed for each row returned by $source.
+    :param mixed $noGroupChangeAction: The action to be executed when two consecutive rows don't trigger
      a group change.
     :param mixed $params: Variadic parameters to be passed to $source.

@@ -22,6 +22,7 @@ class GetFromCallable extends BaseGetter{
      * @see BaseGetter::getValue
      */
     public function getValue($row, $rowKey = null) {
+//        var_dump($this->params);
         return ($this->source)($row, $rowKey, ...$this->params);
     }
 }

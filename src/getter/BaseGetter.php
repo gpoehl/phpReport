@@ -26,7 +26,7 @@ abstract class BaseGetter {
     protected $source;
 
     /** @var array|empty Variadic list of optional parameters passed to closures and methods. */
-    protected $params;
+    protected $params ;
 
     public function __construct($source, $params) {
         $this->source = $source;

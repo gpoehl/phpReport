@@ -107,7 +107,8 @@ class Report {
     private bool $isJobDone = false;
 
     /**
-     * Set reference to a target object and merge config parameters into 
+     * Instantiate a new report and set reference to the default object or class
+     * which implements default action methods. Config parameters will merged with 
      * parameters from config file.
      * @param object|className $target Object or name of a class which holds the
      * action methods to be called. 
@@ -115,7 +116,7 @@ class Report {
      * @param mixed ...$params Optional parameters to be passed around. They are
      * kept in the public $params array but not used by this library. 
      */
-    public function __construct($target, array $config = null, ...$params) {
+    public function __construct($target = null, array $config = null, ...$params) {
         $this->target = $target;
         $this->params = $params;
         $conf = Factory::configurator($config);
@@ -164,7 +165,7 @@ class Report {
 
     /**
      * Declare a new data group.
-     * Call method once for each data group after calling the data() method.
+     * Call method once for each data group.
      * Values will be compared between two consecutive data rows. When 
      * they aren't equal defined footer and header actions will be executed.
      *    
@@ -217,9 +218,7 @@ class Report {
      * Aggregation functions are available at each group level at any time.
      * @param string $name Unique name to reference a calculator object. The
      * reference will be hold in $this->total.
-     * @param mixed $value Source of the value to be computed. It's the attribute name 
-     * when data row is an object or the key name when data row is an array.
-     * It's also possiblbe to use a closure which returns the value. 
+     * @param mixed $value Source of the value to be computed.
      * When the $value parameter is null it defaults to the content of $name parameter.  
      * Use False when the value should not be computed automaticly. In this case
      * only the referece to the calculator object will be established. Use the
@@ -513,7 +512,6 @@ class Report {
      * After executing a footer all counter and totals must be cumulated to next level.
      */
     private function handleFooters(): void {
-        $wrk = 'xxx';
         for ($this->mp->level = $this->lowestHeader; $this->mp->level >= $this->changedLevel; $this->mp->level--) {
             $wrk = null;
             $group = $this->groups->items[$this->mp->level];
@@ -524,9 +522,6 @@ class Report {
             $this->rc->cumulateToNextLevel();
             $this->gc->cumulateToNextLevel();
             $this->total->cumulateToNextLevel();
-        }
-        if ($wrk !== null) {
-            $this->output .= "<h1>Call to footer was useless" . $this->dim->rowKey . '</h1>';
         }
     }
 
@@ -569,7 +564,7 @@ class Report {
             return true;
         }
         $this->currentAction = $this->dim->noGroupChangeAction;
-        $this->output .= $this->currentAction->executor->execute($this->dim->row, $this->dim->rowKey, $this->dim->id);
+        $this->output .= $this->currentAction->executor->execute($this->dim->row, $this->dim->rowKey);
         $this->currentAction = $this->detailAction;
         return false;
     }
