@@ -20,16 +20,16 @@ namespace gpoehl\phpReport;
  */
 class Report {
 
-    const VERSION = '2.1.0';
+    const VERSION = '2.1.1';
     // Rules to execute actions
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
     const CALL_PROTOTYPE = 2;         // Call methods in prototype class when not implemented in owner class.
     const CALL_ALWAYS_PROTOTYPE = 3;  // Call methods in prototype class for any action.
-    // Cumulator class selection
-    const XS = 1;                       // CumulatorXS class (default)
-    const REGULAR = 2;                  // Cumulator class (has not null and not zero counters)
-    const XL = 3;                       // CumulatorXL class (has also min and max values) 
+    // Calculator class selection
+    const XS = 1;                       // CalculatorXS class (default)
+    const REGULAR = 2;                  // Calculator class (has not null and not zero counters)
+    const XL = 3;                       // CalculatorXL class (has also min and max values) 
     // Action types are used internally to speed up action execution. 
     const STRING = 1;
     const CLOSURE = 2;
