@@ -14,33 +14,33 @@ Data independent events
 These methods are called even when no data are provided.  
 
 init()
-======
+______
     First event. Use to initialize application properties independent
     from the __construct method.  
 
 close()
-=======        
+_______        
     Last event. Use to clean up the dishes independent from __destruct method.
 
 totalHeader()
-=============
+_____________
 
     Called once to build the total header page of the report.
 
 totalFooter()
-=============
+_____________
     Called once to build the total footer page of the report.
 
 Data driven events
 ------------------    
 
 noData()
-========
+________
     This event only occurs when the given data set is empty. 
     In this case the following events will never be raised.
 
 groupHeader($groupValue, $row, $rowKey, $dimID)
-===============================================
+_______________________________________________
 
     Raised when group values between two rows are not equal. Each group has
     its own groupHeader. 
@@ -56,7 +56,7 @@ groupHeader($groupValue, $row, $rowKey, $dimID)
     :param int $dimID: The current data dimension. Initial data dimension equals 0.
    
 groupFooter($groupValue, $row, $rowKey, $dimID)
-===============================================
+_______________________________________________
 
     groupFooters are executed like groupHeaders when group values between to rows
     are not equal. 
@@ -69,7 +69,7 @@ groupFooter($groupValue, $row, $rowKey, $dimID)
     the group change.
 
 detail($row, $rowKey)
-=====================
+_____________________
 
     Executed for each row of the last data dimension. When the row triggered 
     a group change then the related group footers and group headers will be called before.
@@ -84,13 +84,13 @@ Methods for multi dimensional data
 Following events belongs only to data sources having joined data.  
 
 noData_n($dimID)
-================
+________________
 
     Called when the declared source for the next data dimension doesn't return any data.
     :param int $dimID: The ID of data dimension not having related data.
 
 detail_n($row, $rowKey)
-=======================
+_______________________
 
     Except for the last dimension this event is raised for each data row (See detail method).   
 
@@ -101,7 +101,7 @@ detail_n($row, $rowKey)
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
 
 noGroupChange_n($row, $rowKey)
-==============================
+______________________________
 
     Raised when for a data dimension group(s) are declared but current row has the same group
     values than previous row.

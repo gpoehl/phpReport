@@ -60,14 +60,20 @@ The report class has some extra convenience methods to provide you with useful i
 
             :returns: The requested group level
 
-    .. php:method:: getGroupValues(): array
+    .. php:method:: getGroupValues(?int $dimID = null, bool $fromFirstLevel = true): array
 
             Get all active group values.
             Note that in footer methods the row which triggered the group 
             change is not yet active.
 
-            :returns: Array having all values related to groups from first dimension to 
-             current dimension.
+            :param int|null $dimID: The dimension id for / till the group values will be returned.
+             Defaults to the current dimension id.
+
+            :param bool $fromFirstLevel: When true all group values from the first 
+             dimension to the requested dimension are returned. When false only the
+             group values of the requested dimension are returned.
+
+            :returns: Array with requested group values indexed by group level.
 
     .. php:method:: getGroupValue($group = null)
 
