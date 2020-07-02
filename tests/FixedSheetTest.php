@@ -5,7 +5,6 @@ declare(strict_types=1);
 /**
  * Unit test of FixedSheet class
  */
-
 use gpoehl\phpReport\CalculatorXS;
 use gpoehl\phpReport\Factory;
 use gpoehl\phpReport\Report;
@@ -33,11 +32,6 @@ class FixedSheetTest extends TestCase {
     public function testAddThrowsException() {
         $this->expectException(Exception::class);
         $this->b->add(['NewItem1' => 1]);
-    }
-
-    public function testAskForMissingKey() {
-        $this->assertSame(0, $this->b->rsum('NotExistingItem'));
-        $this->assertFalse(isset($this->b->NotExistingItem), "rsum does not add not exitsting items");
     }
 
 }

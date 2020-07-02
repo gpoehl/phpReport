@@ -12,9 +12,6 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
-use InvalidArgumentException;
-use Exception;
-
 /**
  * Configurator handles configuration options
  * It loads the config file and merges configuration parameters
@@ -38,35 +35,23 @@ class Configurator {
      * current dimension id.
      */
     public $actions = [
-        'init' => [Report::METHOD, 'init'],
-        'totalHeader' => [Report::METHOD, '%Header'],
-        'groupHeader' => [Report::METHOD, '%Header'],
-        'detail' => [Report::METHOD, 'detail'],
-        'groupFooter' => [Report::METHOD, '%Footer'],
-        'totalFooter' => [Report::METHOD, '%Footer'],
-        'close' => [Report::METHOD, 'close'],
+        'init' => [Action::METHOD, 'init'],
+        'totalHeader' => [Action::METHOD, '%Header'],
+        'groupHeader' => [Action::METHOD, '%Header'],
+        'detail' => [Action::METHOD, 'detail'],
+        'groupFooter' => [Action::METHOD, '%Footer'],
+        'totalFooter' => [Action::METHOD, '%Footer'],
+        'close' => [Action::METHOD, 'close'],
         // : sign declares string explicit to avoid method calls when callOption = CALL_ALWAYS
-        'noData' => [Report::STRING, '<br><strong>No data found</strong><br>'], // Dimension = 0
-        'noData_n' => [Report::METHOD, 'noDataDim%'],
-        'detail_n' => [Report::METHOD, false],
-        'noGroupChange_n' => [Report::ERROR, "error:Current row in dimension % didn't trigger a group change."],
+        'noData' => [Action::STRING, '<br><strong>No data found</strong><br>'], // Dimension = 0
+        'noData_n' => [Action::METHOD, 'noDataDim%'],
+        'detail_n' => [Action::METHOD, false],
+        'noGroupChange_n' => [Action::ERROR, "error:Current row in dimension % didn't trigger a group change."],
     ];
     
     /** @var true | false | 'ucfirst' Rule to build method groupheader and -footer names. */ 
     public $buildMethodsByGroupName = true;
 
-    /**
-     * For dimensions having data for the next dimension only.
-     * Action to be executed when group is defined but row doesn't trigger a group
-     * change. This should happen only when data is not well normalized or might
-     * happen when group attributes are not set properly.
-     * To avoid this situation you might use the distinct option
-     * while running an SQL select statement or join data via a left join. 
-     * You might also define a dummy group attribute.
-     * To trigger a warning precede a text message with 'warning:'. To throw a
-     * runTimeException precede a text message with 'error:'.
-     */
-    
     /** @var The name of the grand total group (Level = 0). */ 
     public string $grandTotalName = 'total';
    
@@ -89,7 +74,7 @@ class Configurator {
      */
     private function loadConfigurationFile(): void {
         if (!is_readable(__DIR__ . self::$filename)) {
-            throw new Exception("Unable to load configuration file " . self::$filename . ".");
+            throw new \Exception("Unable to load configuration file " . self::$filename . ".");
         }
         $configFile = require __DIR__ . self::$filename;
         $this->setConfiguration($configFile);
@@ -117,7 +102,7 @@ class Configurator {
                     $this->setActions($value);
                     break;
                 default:
-                    throw new InvalidArgumentException("Unknown configuration parameter $param.");
+                    throw new \InvalidArgumentException("Unknown configuration parameter $param.");
             }
         }
     }
@@ -134,7 +119,7 @@ class Configurator {
         if ($value !== true && $value !== false) {
             $value = trim(strtolower($value));
             if ($value !== 'ucfirst') {
-                throw new InvalidArgumentException("BuildMethodsByGroupName must be true, false or 'ucfirst'");
+                throw new \InvalidArgumentException("BuildMethodsByGroupName must be true, false or 'ucfirst'");
             }
         }
         $this->buildMethodsByGroupName = $value;
@@ -151,7 +136,7 @@ class Configurator {
             return;
         }
         if (!Helper::isValidName($name)) {
-            throw new InvalidArgumentException("grandTotalName must be a valid attribute name ('$name' given). ");
+            throw new \InvalidArgumentException("grandTotalName must be a valid attribute name ('$name' given). ");
         }
         $this->grandTotalName = $name;
     }
@@ -166,7 +151,7 @@ class Configurator {
         foreach ($actions as $key => $baseAction) {
             // Make sure method key is valid
             if (!isset($this->actions[$key])) {
-                throw new InvalidArgumentException("Action key '$key' is invalid");
+                throw new \InvalidArgumentException("Action key '$key' is invalid");
             }
             $this->actions[$key] = Helper::buildMethodAction(
                             $baseAction,

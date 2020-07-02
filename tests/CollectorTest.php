@@ -97,7 +97,7 @@ class CollectorTest extends TestCase {
     }
 
     public function testAdd() {
-        $this->stack->add([1 => 4,  6, 8, 5=>[3 => 1, 6 => 2, 9 => 3]]);
+        $this->stack->add([1 => 4, 6, 8, 5 => [3 => 1, 6 => 2, 9 => 3]]);
         $this->assertSame(4, $this->stack->{1}->sum(0), "Sum of item c1");
         $this->assertSame(6, $this->stack->{2}->sum(0), "Sum of item c2");
         $this->assertSame(8, $this->stack->{3}->sum(0), "Sum of item c3");
@@ -126,22 +126,7 @@ class CollectorTest extends TestCase {
         $this->stack->max();
     }
 
-    public function testRsum() {
-        $this->c1->inc();
-        $this->c1->inc();
-        $this->c3->add(1);
-        $this->assertSame(2, $this->stack->rsum(1, null, 2), "c1 on level 2");
-        $this->assertSame(0, $this->stack->rsum(1, null, 3), "c1 on level 3");
-        $this->assertSame(0, $this->stack->rsum(2, null, 0), "not existing c2 on level 0");
-        $this->assertSame(1, $this->stack->rsum(3, null, 2), "c3 on level 2");
-        $this->assertSame([1 => 2, 0, 1], $this->stack->rsum(1, 3, 0, true), "c1 till c3 on level 0 as array");
-        $this->assertSame([1 => 0, 0, 1], $this->stack->rsum(1, 3, 3, true), "c1 till c3 on level 3 as array");
-        $this->assertSame([1 => 0, 0, 1, 0, 0], $this->stack->sum(3, true), "Sum at level3 as array. sum() uses forEach loop. C2 exists.");
-        $this->assertSame([1 => 2, 0], $this->stack->rsum(1, 2, 2, true), "c1 till c2 on level 2 as array");
-        $this->assertSame([1 => 2, 0], $this->stack->rsum(1, 2, null, true), "c1 till c2 on level 2 as array");
-        $this->assertSame([1 => 2], $this->stack->rsum(1, null, 2, true), "only c1 on level 2 as array");
-    }
-
+  
     public function testIterativ() {
         $multi = Factory::collector();
         $this->stack->addItem($multi, 'multi');
@@ -155,9 +140,48 @@ class CollectorTest extends TestCase {
         $this->c1->inc();
         $this->c3->add(1);
         $this->assertSame(12, $multi->sum());
-        $this->assertSame(15, $this->stack->sum(), "Sum incl sub colloctor");
-        $this->assertSame([5, 7], $multi->rsum(0, 1, null, true), "rsum from collector multi key 1 to 2 as array");
-        $this->assertSame([5, 7], $this->stack->multi->rsum(0, 1, null, true), "rsum from collector multi via stack collector key 1 to 2 as array");
+        $this->assertSame(15, $this->stack->sum(), "Sum incl sub collector");
+        $this->assertSame([5, 7], $multi->range([0, 1])->sum(null, true), "range from collector multi key 1 to 2 as array");
+        $this->assertSame([5, 7], $multi->between([0, 1])->sum(null, true), "between from collector multi key between 0 and 1 as array");
+        $this->assertSame([3=>1, 0, 0, 'multi' => 12], $this->stack->between([3,5], 'multi')->sum(null, true), "between from stack collector key between 3 and 6 plus 'multi' as array");
+    }
+
+    /**
+     * @dataProvider rangeParamsProvider
+     */
+    public function testRange($expected, ... $params) {
+        $range = $this->stack->range(... $params);
+        $this->assertSame(array_keys($range->items), $expected);
+    }
+
+    public function rangeParamsProvider() {
+        return [
+            'Range' => [[2, 3, 4], [2, 4]],
+            'Single items' => [[2, 4], 2, 4],
+            'Ranges and singles ' => [[1, 2, 3, 4], [1, 3], [3, 4], 2],
+            'Start at Zero' => [[1, 2], [null, 2]],
+            'No length' => [[3, 4, 5], [3, null]],
+            'Single items missing' => [[2], 2, 7],
+        ];
+    }
+
+    /**
+     * @dataProvider betweenParamsProvider
+     */
+    public function testBetween($expected, ... $params) {
+        $range = $this->stack->range(... $params);
+        $this->assertSame(array_keys($range->items), $expected);
+    }
+
+    public function betweenParamsProvider() {
+        return [
+            'Range' => [[2, 3, 4], [2, 4]],
+            'Single items' => [[2, 4], 2, 4],
+            'Ranges and singles ' => [[1, 2, 3, 4], [1, 3], [3, 4], 2],
+            'No fromKey' => [[1, 2], [null, 2]],
+            'No toKey' => [[3, 4, 5], [3, null]],
+            'Single items missing' => [[2], 2, 7],
+        ];
     }
 
 }

@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use ArrayAccess;
+use InvalidArgumentException;
+
 /**
  * Base class of Collector and sheet classes.
  * Class is declared as abstract to avoid instantiation. It has no abstract
  * methods.
  */
-abstract class AbstractCollector implements \ArrayAccess {
+abstract class AbstractCollector implements ArrayAccess {
 
     public $items = [];     // Array holding assigned items
     private $mapper = [];   // See setMapper method
@@ -26,6 +29,8 @@ abstract class AbstractCollector implements \ArrayAccess {
     /**
      * Mapper allows mapping of string keys to int keys to access items by
      * string key.
+     * This method is also used to allow access to group counter items by name or level.
+     * Note: Range and between methods don't use the mapper. 
      * @param array $mapper Key must be a string, value the int key of $items
      */
     public function setMapper(array $mapper) {
@@ -101,16 +106,18 @@ abstract class AbstractCollector implements \ArrayAccess {
     }
 
     /**
-     * Select ranges or single items from items.
+     * Reduce items by ranges.
+     * A range can be an array with start and end item or a single item key.
      * @param array|int|string $ranges Any number of ranges can be passed. When 
      * a range is not an array than the single item will be selected. Not existing
-     * single items will be ignored.
-     * For arrays the first element is the start item to be selected and the second element
-     * the last item to be selected. When the second item is null all items starting
-     * from the first item will be selected.
+     * single items are ignored.
+     * For arrays the first element is the start item and the second element
+     * the last item to be selected.
+     * When the first item is null items from the beginning are selected. 
+     * When the second item is null all items following the first item are selected.
      * The start item and the last item must exist. 
      * @return AbstractCollector Collector collecting only selected itemes
-     * * @throws InvalidArgumentException When start or end item doesn't exist.
+     * @throws InvalidArgumentException When start or end item doesn't exist.
      */
     public function range(... $ranges): AbstractCollector {
         $result = [];
@@ -118,31 +125,101 @@ abstract class AbstractCollector implements \ArrayAccess {
         $itemKeys = array_keys($this->items);
         foreach ($ranges as $range) {
             if (is_array($range)) {
-                $fromKey = array_search($range[0], $itemKeys, true);
-                if ($fromKey === false) {
-                    throw new InvalidArgumentException("From key $fromKey doesn't exist.");
+                if ($range[0] === null) {
+                    $offset = 0;
+                } else {
+                    $offset = array_search($range[0], $itemKeys, true);
+                    if ($offset === false) {
+                        throw new InvalidArgumentException("From key $range[0] doesn't exist.");
+                    }
                 }
                 if (isset($range[1])) {
                     $toKey = array_search($range[1], $itemKeys, true);
                     if ($toKey === false) {
                         throw new InvalidArgumentException("To key $toKey doesn't exist.");
                     }
-                    $length = $toKey - $fromKey + 1;
+                    $length = $toKey - $offset + 1;
                 } else {
                     $length = null;
                 }
-                $result = $result + array_slice($this->items, $fromKey, $length, true);
+                $result = $result + array_slice($this->items, $offset, $length, true);
             } else {
                 $singleSelects [] = $range;
             }
         }
+        return $this->getReducedClone($result, $singleSelects);
+    }
+
+    /**
+     * Get collector with items where key values matches any of given ranges.
+     * A range can be an array having lowest and highest key values or single
+     * key values.
+     * Condition will return items where key values are within the range of value1 and value2 (inclusive).
+     * A range is usually an array with start and end item or a single item key.
+     * @param array|int|string $ranges Any number of ranges can be passed. When 
+     * a range is not an array than the single item will be selected. Not existing
+     * single items are ignored.
+     * For arrays the first element is the start item and the second element
+     * the last item to be selected.
+     * When the first item is null items from the beginning are selected. 
+     * When the second item is null all items following the first item are selected.
+     * The start item and the last item must exist. 
+     * @return AbstractCollector Collector collecting only selected itemes
+     * @throws InvalidArgumentException When start or end item doesn't exist.
+     */
+    public function between(... $ranges): AbstractCollector {
+        $result = [];
+        $singleSelects = [];
+        $itemKeys = array_keys($this->items);
+        foreach ($ranges as $range) {
+            if (is_array($range)) {
+                $result += $this->getBetweenItems($range);
+            } else {
+                $singleSelects [] = $range;
+            }
+        }
+        return $this->getReducedClone($result, $singleSelects);
+    }
+
+    private function getBetweenItems(array $range): array {
+        [$fromKey, $toKey] = $range;
+        $result = [];
+        foreach ($this->items as $key => $value) {
+            if ($key >= $fromKey && $key <= $toKey) {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
+    
+      public function walk(callable $callable): AbstractCollector {
+        $result = [];
+        foreach ($this->items as $key => $value) {
+            if ($callable($key, $value)) {
+                $result[$key] = $value;
+            }
+        }
+        return $this->getReducedClone($result, []);
+    }
+
+    private function getReducedClone(array $result, array $singleSelects): AbstractCollector {
+        // Add single selected items to result. Missing items are ignored.
         if (!empty($singleSelects)) {
-            $result += array_intersect_key($this->items, array_flip($singleSelects));
+            $result += \array_intersect_key($this->items, \array_flip($singleSelects));
         }
         $ret = clone($this);
         $ret->items = $result;
         return $ret;
     }
+    
+    public function cmd(callable $callable): array{
+        $result = $command($this->items);
+        return $this->getReducedClone((is_array($result)? $result: $this->items), []);
+    }
+
+    /* -------------------------------------------------------------------------
+     * Aggregate functions
+     * ---------------------------------------------------------------------- */
 
     public function sum($level = null, bool $asArray = false) {
         $result = $this->total('sum', $level);
@@ -180,46 +257,6 @@ abstract class AbstractCollector implements \ArrayAccess {
             $sum[$key] = $item->$typ($level);
         }
         return $sum;
-    }
-
-    public function rsum($fromKey, $toKey = null, $level = null, bool $asArray = false) {
-        $result = $this->rtotal('sum', $fromKey, $toKey, $level);
-        return ($asArray) ? $result : array_sum($result);
-    }
-
-    public function rnz($fromKey, $toKey = null, $level = null, bool $asArray = false) {
-        $result = $this->rtotal('nz', $fromKey, $toKey, $level);
-        return ($asArray) ? $result : array_sum($result);
-    }
-
-    public function rnn($fromKey, $toKey = null, $level = null, bool $asArray = false) {
-        $result = $this->rtotal('nn', $fromKey, $toKey, $level);
-        return ($asArray) ? $result : array_sum($result);
-    }
-
-    public function rmin($fromKey, $toKey = null, $level = null, bool $asArray = false) {
-        $result = $this->rtotal('min', $fromKey, $toKey, $level);
-        return ($asArray) ? $result : min($result);
-    }
-
-    public function rmax($fromKey, $toKey = null, $level = null, bool $asArray = false) {
-        $result = $this->rtotal('max', $fromKey, $toKey, $level);
-        return ($asArray) ? $result : max($result);
-    }
-
-    protected function rtotal(string $typ, $fromKey, $toKey = null, $level = null): array {
-        $result = [];
-        $toKey = ($toKey) ?? $fromKey;
-        if (isset($this->items)) {
-            for ($i = $fromKey; $i <= $toKey; $i++) {
-                if (isset($this->items[$i])) {
-                    $result[$i] = $this->items[$i]->$typ($level);
-                } else {
-                    $result[$i] = null;
-                }
-            }
-        }
-        return $result;
     }
 
 }

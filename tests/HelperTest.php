@@ -5,32 +5,32 @@ declare(strict_types=1);
 /**
  * Unit test of Helper class
  */
+
+use gpoehl\phpReport\Action;
 use gpoehl\phpReport\Helper;
-use gpoehl\phpReport\Report;
-use PHPUnit\Framework\Error\Error;
 use PHPUnit\Framework\TestCase;
 
 class HelperTest extends TestCase {
 
     public function testBuildMethodAction() {
-        $this->assertSame([Report::STRING, 'x x'], Helper::buildMethodAction('x x', 'init', false));
-        $this->assertSame([Report::METHOD, 'xx'], Helper::buildMethodAction('xx', 'init', false));
-        $this->assertSame(Report::CLOSURE, Helper::buildMethodAction(function() {
+        $this->assertSame([Action::STRING, 'x x'], Helper::buildMethodAction('x x', 'init', false));
+        $this->assertSame([Action::METHOD, 'xx'], Helper::buildMethodAction('xx', 'init', false));
+        $this->assertSame(Action::CLOSURE, Helper::buildMethodAction(function() {
                     
                 }, 'init', false)[0]);
-        $this->assertSame([Report::CALLABLE, ['a', 'b']], Helper::buildMethodAction(['a', 'b'], 'init', false));
-        $this->assertSame([Report::CALLABLE, ['a\b', 'b']], Helper::buildMethodAction(['a\b', 'b'], 'init', false));
-        $this->assertSame([Report::METHOD, 'a'], Helper::buildMethodAction(['a'], 'init', false));
-        $this->assertSame([Report::STRING, 'a'], Helper::buildMethodAction(':a', 'init', false));
+        $this->assertSame([Action::CALLABLE, ['a', 'b']], Helper::buildMethodAction(['a', 'b'], 'init', false));
+        $this->assertSame([Action::CALLABLE, ['a\b', 'b']], Helper::buildMethodAction(['a\b', 'b'], 'init', false));
+        $this->assertSame([Action::METHOD, 'a'], Helper::buildMethodAction(['a'], 'init', false));
+        $this->assertSame([Action::STRING, 'a'], Helper::buildMethodAction(':a', 'init', false));
     }
 
     public function testBuildInvalidMethodAction() {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         Helper::buildMethodAction(['a\b'], 'init', false);
     }
 
     public function testBuildInvalidMethodActionForCallable() {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         Helper::buildMethodAction(['a', 'b\c'], 'init', false);
     }
 
@@ -58,10 +58,10 @@ class HelperTest extends TestCase {
 
     public function callReplacePercentProvider() {
         return [
-            [[Report::METHOD, '%a'], 'rep_a'],
-            [[Report::CALLABLE, '%a'], 'rep_a'],
-            [[Report::STRING, '%a'], 'rep_a'],
-            [[Report::CLOSURE, '%a'], '%a']
+            [[Action::METHOD, '%a'], 'rep_a'],
+            [[Action::CALLABLE, '%a'], 'rep_a'],
+            [[Action::STRING, '%a'], 'rep_a'],
+            [[Action::CLOSURE, '%a'], '%a']
         ];
     }
 

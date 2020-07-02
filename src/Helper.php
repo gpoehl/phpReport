@@ -34,22 +34,22 @@ class Helper {
      */
     public static function buildMethodAction($baseAction, string $key, bool $allowPercentSign = false): array {
         if ($baseAction === false) {
-            return [Report::METHOD, $baseAction];
+            return [Action::METHOD, $baseAction];
         }
         if ($baseAction instanceOf \Closure) {
-            return [Report::CLOSURE, $baseAction];
+            return [Action::CLOSURE, $baseAction];
         }
         if (is_array($baseAction)) {
             switch (count($baseAction)) {
                 case 1:
                     $method = end($baseAction);
                     if (self::isValidName($method, true)) {
-                        return [Report::METHOD, $method];
+                        return [Action::METHOD, $method];
                     }
                     throw new \InvalidArgumentException("Invalid method name '$method' for $key action.");
                 case 2:
                     if (self::isValidName($baseAction[1], true)) {
-                        return [Report::CALLABLE, $baseAction];
+                        return [Action::CALLABLE, $baseAction];
                     }
                     throw new \InvalidArgumentException("Second parameter in callable '{$baseAction[1]}' is invalid for '$key'.");
                 default:
@@ -72,16 +72,16 @@ class Helper {
     private static function buildMethodActionFromString(string $baseAction, string $key, bool $allowPercentSign): array {
         if ($key === 'noGroupChange_n') {
             if (strtolower(substr($baseAction, 0, 8)) === 'warning:') {
-                return [Report::WARNING, substr($baseAction, 8)];
+                return [Action::WARNING, substr($baseAction, 8)];
             }
             if (strtolower(substr($baseAction, 0, 6)) === 'error:') {
-                return [Report::ERROR, substr($baseAction, 6)];
+                return [Action::ERROR, substr($baseAction, 6)];
             }
         }
         if (substr($baseAction, 0, 1) === ':') {
-            return [Report::STRING, substr($baseAction, 1)];
+            return [Action::STRING, substr($baseAction, 1)];
         }
-        return (self::isValidName($baseAction, $allowPercentSign)) ? [Report::METHOD, $baseAction] : [Report::STRING, $baseAction];
+        return (self::isValidName($baseAction, $allowPercentSign)) ? [Action::METHOD, $baseAction] : [Action::STRING, $baseAction];
     }
 
     /**
@@ -106,7 +106,7 @@ class Helper {
      * @return array The modified method action
      */
     public static function replacePercent($replacemet, array $methodAction) {
-        if (is_string($methodAction[1]) && $methodAction[0] <> Report::CLOSURE) {
+        if (is_string($methodAction[1]) && $methodAction[0] <> Action::CLOSURE) {
             $methodAction[1] = str_replace('%', $replacemet, $methodAction[1]);
         }
         return $methodAction;

@@ -201,7 +201,7 @@ class ReportTest extends TestCase {
         $out = $rep->run([$row]);
         $this->assertStringContainsString('groupAvalue', $out);
         $this->assertSame(5, $rep->total['B']->sum());
-        $this->assertSame(7, $rep->total['C']->rsum(6));
+        $this->assertSame(7, $rep->total['C']->range([6])->sum());
     }
 
     public function GroupValue_sum_and_rsum_Provider() {

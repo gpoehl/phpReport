@@ -18,6 +18,14 @@ namespace gpoehl\phpReport;
  */
 class Action {
 
+    // Action types 
+    const STRING = 1;
+    const CLOSURE = 2;
+    const CALLABLE = 3;
+    const METHOD = 4;
+    const WARNING = 5;
+    const ERROR = 6;
+
     /** The action key */
     public string $actionKey;
 
@@ -25,10 +33,10 @@ class Action {
     public bool $execute;
 
     /** @var The action type describing the runTimeAction */
-    public int $runTimeActionTyp = 0;
+    private int $runTimeActionTyp;
 
     /** @var The real action to be executed */
-    public $runTimeAction;
+    private $runTimeAction;
 
     /** @var The action type describing the given action */
     public int $givenActionTyp;
@@ -36,10 +44,8 @@ class Action {
     /** @var The given action. Like a default action. The action to be executed
      * is set in setRunTimeAction method */
     public $givenAction;
-    
-    /** @var The executor object. */
-    public Executor $executor;
 
+   
     /**
      * 
      * @param string $actionKey
@@ -65,23 +71,25 @@ class Action {
         } else {
             // Set defaults. RunTimeActionTyp is usually the same as the givenActionTyp.
             $this->execute = true;
-            $this->runTimeActionTyp = $this->givenActionTyp;
+            // Given action tpyes  CLOSURE and METHOD are both CALLABLE RunTimeActionTyp.
+            $this->runTimeActionTyp = ($this->givenActionTyp === self::CLOSURE || $this->givenActionTyp === self::METHOD) ?
+                    self::CALLABLE : $this->givenActionTyp;
 
             // Warning and error actions will not be called in target or prototye object.
-            if ($this->givenActionTyp >= report::WARNING) {
+            if ($this->givenActionTyp >= self::WARNING) {
                 $this->runTimeAction = $this->givenAction;
-            } elseif ($callOption === report::CALL_ALWAYS_PROTOTYPE) {
-                // Call always prototype. Action type must be set to CALLABLE. 
-                $this->runTimeActionTyp = report::CALLABLE;
+            } elseif ($callOption === Report::CALL_ALWAYS_PROTOTYPE) {
+                // Call always prototype. Run time action type must be set to CALLABLE. 
+                $this->runTimeActionTyp = self::CALLABLE;
                 $this->runTimeAction = [$prototype, $this->actionKey];
-            } elseif ($this->givenActionTyp !== report::METHOD) {
+            } elseif ($this->givenActionTyp !== self::METHOD) {
                 // String, closure or callable ([class, method] array)
                 $this->runTimeAction = $this->givenAction;
-            } elseif ($callOption === report::CALL_ALWAYS || method_exists($target, $this->givenAction)) {
+            } elseif ($callOption === Report::CALL_ALWAYS || method_exists($target, $this->givenAction)) {
                 // CALL_ALWAYS means that a method in the target class will be called
                 // no matter if the method really exists.
                 $this->runTimeAction = [$target, $this->givenAction];
-            } elseif ($callOption === report::CALL_PROTOTYPE) {
+            } elseif ($callOption === Report::CALL_PROTOTYPE) {
                 // Call protoype when method doesn't exists in target class and callOption equals Call_Prototype 
                 $this->runTimeAction = [$prototype, $this->actionKey];
             } else {
@@ -89,8 +97,23 @@ class Action {
                 $this->execute = false;
             }
         }
-        $this->executor = SelectExecutor::getExecuter($this->execute, $this->runTimeActionTyp);
-        $this->executor->runTimeAction = $this->runTimeAction;
+    }
+
+    public function execute(...$params) {
+        if ($this->execute) {
+            switch ($this->runTimeActionTyp) {
+                case self::STRING:
+                    return ($this->runTimeAction);
+                case self::CALLABLE:
+                    return ($this->runTimeAction)(...$params);
+                case self::WARNING:
+                    trigger_error($this->runTimeAction . ' RowKey = ' . $params[1], E_USER_NOTICE);
+                case self::ERROR:
+                    throw new \RuntimeException($this->runTimeAction . ' RowKey = ' . $params[1]);
+                default:
+                    throw new \InvalidArgumentException("Action type {$this->runTimeActionTyp} is invalid");
+            }
+        }
     }
 
 }

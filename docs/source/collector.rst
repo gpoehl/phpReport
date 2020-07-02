@@ -55,3 +55,7 @@ $this->rep->*collectorName*->items[*itemName*].
  
 .. include:: rowCounter.rst
 .. include:: groupCounter.rst
+
+Range of values
+---------------
+To apply aggregate funcions only to a subset of collected items use the range method. 

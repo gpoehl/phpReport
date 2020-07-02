@@ -46,8 +46,8 @@ class ReportMultiDimensionTest extends TestCase {
             'No action will executed' => [false, ''],
             'Output is the given string' => [' no data in dim<<>>', ' no data in dim<<>>'],
             'Call the given method' => ['myMethod', 'myMethod<<>>'],
-            'Execute the given closure' => [function ($dim) {
-                    return 'no data in dim ' . $dim . '<<>>';
+            'Execute the given closure' => [function ($row, $rowKey, int $dimID) {
+                    return 'no data in dim ' . $dimID . '<<>>';
                 }, 'no data in dim 0<<>>'],
             'Call method in other class' => [[$this->getOtherClass(), 'anyMethod'], 'Other_anyMethod<<>>'],
         ];
@@ -188,15 +188,15 @@ class ReportMultiDimensionTest extends TestCase {
         $this->assertSame('g3Header arg0=11 arg1=' . json_encode($dimrows[0])
                 . ' arg2=0 arg3=1', $out[3]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[0])
-                . ' arg1=0', $out[4]);
+                . ' arg1=0 arg2=1', $out[4]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[1])
-                . ' arg1=1', $out[5]);
+                . ' arg1=1 arg2=1' , $out[5]);
         $this->assertSame('g3Footer arg0=11 arg1=' . json_encode($dimrows[1])
                 . ' arg2=1 arg3=1', $out[6]);
         $this->assertSame('g3Header arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=1', $out[7]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[2])
-                . ' arg1=2', $out[8]);
+                . ' arg1=2 arg2=1', $out[8]);
 
         // no group change at dim 0 but same data in dim 1.
         $rep->output = '';
@@ -214,15 +214,15 @@ class ReportMultiDimensionTest extends TestCase {
         $this->assertSame('g3Header arg0=11 arg1=' . json_encode($dimrows[0])
                 . ' arg2=0 arg3=1', $out[3]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[0])
-                . ' arg1=0', $out[4]);
+                . ' arg1=0 arg2=1', $out[4]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[1])
-                . ' arg1=1', $out[5]);
+                . ' arg1=1 arg2=1', $out[5]);
         $this->assertSame('g3Footer arg0=11 arg1=' . json_encode($dimrows[1])
                 . ' arg2=1 arg3=1', $out[6]);
         $this->assertSame('g3Header arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=1', $out[7]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[2])
-                . ' arg1=2', $out[8]);
+                . ' arg1=2 arg2=1', $out[8]);
 
         $rep->output = '';
         $rep->end();

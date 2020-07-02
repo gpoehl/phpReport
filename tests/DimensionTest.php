@@ -74,6 +74,4 @@ class DimensionTest extends TestCase {
             [(object) $row]
         ];
     }
-
-//    
 }
