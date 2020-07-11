@@ -23,198 +23,271 @@ use InvalidArgumentException;
  */
 abstract class AbstractCollector implements ArrayAccess {
 
-    public $items = [];     // Array holding assigned items
-    private $mapper = [];   // See setMapper method
+    /** @var Array of calculator or collector objects. */
+    public array $items = [];
+
+    /** @var Array of alternate keys to access items. */
+    protected array $altKeys = [];
 
     /**
-     * Mapper allows mapping of string keys to int keys to access items by
-     * string key.
-     * This method is also used to allow access to group counter items by name or level.
-     * Note: Range and between methods don't use the mapper. 
-     * @param array $mapper Key must be a string, value the int key of $items
+     * Set alternate keys to access items.
+     * @param int|string[] $keys Item keys indexed by altenate keys.
      */
-    public function setMapper(array $mapper) {
-        $this->mapper = $mapper;
+    public function setAltKeys(array $keys): void {
+        foreach ($keys as $key => $itemKey) {
+            $this->setAltKey($key, $itemKey);
+        }
     }
 
     /**
-     * Allow direct access to item via $collector->itemKey 
+     * Set alternate access key for an item.
+     * @param int|string $key Unique altenate key to access an item.
+     * @param int|string $itemKey The key of the item in $items.
+     */
+    public function setAltKey($key, $itemKey): void {
+        if (isset($this->items[$key]) || isset($this->altKeys[$key])) {
+            throw new InvalidArgumentException("Key '$key' already exists.");
+        }
+        $this->altKeys[$key] = $itemKey;
+    }
+
+    /**
+     * Magic get method to allow access item via arrow notation.
+     * Example: $collector->itemKey 
      * @param mixed $key the item key 
-     * @return mixed Returns the requested item
+     * @return AbstractCollector|AbstractCalculator Returns the requested item
      */
-    public function __get($key) {
-        if (is_string($key) && isset($this->mapper[$key])) {
-            $key = $this->mapper[$key];
-        }
-        if (isset($this->items[$key])) {
-            return ($this->items[$key]);
-        }
-        trigger_error("Item $key does not exit", E_USER_NOTICE);
+    public function __get($key): object {
+        return $this->getItem($key);
     }
 
-    // implementation of arrayAccess interface
-    public function offsetSet($offset, $value) {
+    /* -------------------------------------------------------------------------
+     * Implementation of the arrayAccess interface
+     * ---------------------------------------------------------------------- */
+
+    /*
+     * Add new item to items array via array notation 
+     * @param int|string $offset The item key
+     * @param AbstractCollector|AbstractCalculator $value The item
+     */
+    public function offsetSet($offset, $value):void {
         $this->addItem($value, $offset);
     }
 
     public function offsetExists($offset) {
-        return isset($this->items[$offset]);
+        return isset($this->items[$offset]) || isset($this->items[$this->altKeys[$offset]]);
     }
 
-    public function offsetUnset($offset) {
+    public function offsetUnset($offset):void {
         trigger_error("Unset of collector item $offset is not supported.", E_USER_NOTICE);
     }
 
-    public function offsetGet($offset) {
-        if (is_string($offset) && isset($this->mapper[$offset])) {
-            $offset = $this->mapper[$offset];
-        }
-        if (isset($this->items[$offset])) {
-            return ($this->items[$offset]);
-        }
-        trigger_error("Item $offset does not exit", E_USER_NOTICE);
+    /*
+     * Get item via array notation 
+     * @param int|string $offset The item or alternate key
+     * @see getItem()
+     */
+    public function offsetGet($offset): object {
+        return $this->getItem($offset);
     }
 
-    // End of arrayAccessImplementation
+    /* -------------------------------------------------------------------------
+     * End of the arrayAccess interface implementation
+     * ---------------------------------------------------------------------- */
 
-    public function getItems() {
+    /**
+     * Get all itmes 
+     * @return AbstractCollector|AbstractCalculator[] 
+     */
+    public function getItems(): array {
         return $this->items;
     }
 
+    /**
+     * Returns the item at specified key.
+     * @param int|string $key The item key or an alternate key.
+     * @return AbstractCollector|AbstractCalculator Returns the required item
+     */
     public function getItem($key) {
-        if (isset($this->items[$key])) {
-            return ($this->items[$key]);
+        $foundKey = $this->findItemKey($key);
+        if ($foundKey !== false) {
+            return $this->items[$foundKey];
         }
-        trigger_error("Item $key does not exit", E_USER_NOTICE);
+        trigger_error("Item '$key' does not exist.", E_USER_NOTICE);
     }
 
     /**
      * Adds values to related calculators or to other collectors. 
-     * @param iterable $values Key and value pairs. Key represents the collector
-     * item. Value might be numeric value or array having key => value pair(s). 
+     * @param array $values Key represents the collector item or alternate key. 
+     * Value is the value to be added or another array for recursive item strucures.
+     * When item doesn't exist php raises a notice. 
      */
-    public function add(iterable $values) {
-        foreach ($values as $item => $value) {
-            $this->items[$item]->add($value);
+    public function add(array $values): void {
+        foreach ($values as $key => $value) {
+            if (isset($this->items[$key])) {
+                $this->items[$key]->add($value);
+            } else {
+                $this->items[$this->altKeys[$key]]->add($value);
+            }
         }
     }
 
-    public function cumulateToNextLevel() {
+    /**
+     * Cumulate computed values to next higher group level.
+     * Values of the current group level will be initialized with default values.
+     */
+    public function cumulateToNextLevel(): void {
         foreach ($this->items as $item) {
             $item->cumulateToNextLevel();
         }
     }
 
     /**
-     * Reduce items by ranges.
-     * A range can be an array with start and end item or a single item key.
-     * @param array|int|string $ranges Any number of ranges can be passed. When 
-     * a range is not an array than the single item will be selected. Not existing
-     * single items are ignored.
-     * For arrays the first element is the start item and the second element
-     * the last item to be selected.
-     * When the first item is null items from the beginning are selected. 
-     * When the second item is null all items following the first item are selected.
-     * The start item and the last item must exist. 
-     * @return AbstractCollector Collector collecting only selected itemes
+     * Extract ranges of items.
+     *
+     * Returns ranges of items located between start and end keys.
+     * 
+     * When a range is an array value1 is the start and value2 the end key.
+     * When one of the keys don't exist the value of the altKey will be used instead.
+     * When the items still doesn't exist an error will be thrown.
+     * 
+     * If start key equals Null the range begins at the first item.
+     * When the end key equals Null the range ends at the last item.
+     *   
+     * When a range is not an array then the item with the corresponding key or
+     * altKey is returned if it exist. If this doesn't exist php raise a notice.
+     * 
+     * Item keys are preserved. Sort order within ranges are preserved. Ranges
+     * are returned in given order. When items belong to multiple ranges only
+     * the first occurence will returned.
+     * 
+     * @param array|int|string[] $ranges Ranges or item keys for items to be filtered.
+     * @return AbstractCollector Clone of current collector with selected items.
      * @throws InvalidArgumentException When start or end item doesn't exist.
      */
     public function range(... $ranges): AbstractCollector {
-        $result = [];
-        $singleSelects = [];
-        $itemKeys = array_keys($this->items);
+        $collector = clone $this;
+        $collector->items = [];
+        $keyOffsets = array_flip(array_keys($this->items));
         foreach ($ranges as $range) {
             if (is_array($range)) {
-                if ($range[0] === null) {
-                    $offset = 0;
-                } else {
-                    $offset = array_search($range[0], $itemKeys, true);
-                    if ($offset === false) {
-                        throw new InvalidArgumentException("From key $range[0] doesn't exist.");
-                    }
-                }
-                if (isset($range[1])) {
-                    $toKey = array_search($range[1], $itemKeys, true);
-                    if ($toKey === false) {
-                        throw new InvalidArgumentException("To key $toKey doesn't exist.");
-                    }
-                    $length = $toKey - $offset + 1;
-                } else {
-                    $length = null;
-                }
-                $result = $result + array_slice($this->items, $offset, $length, true);
+                $offset = (isset($range[0])) ? $this->getOffset($range[0], $keyOffsets) : 0;
+                $length = (isset($range[1])) ? $this->getOffset($range[1], $keyOffsets) - $offset + 1 : null;
+                $collector->items += array_slice($this->items, $offset, $length, true);
             } else {
-                $singleSelects [] = $range;
+                $key = $this->findItemKey($range);
+                if ($key) {
+                    $collector->items[$key] = $this->itmes[$key];
+                }
             }
         }
-        return $this->getReducedClone($result, $singleSelects);
+        return $collector;
     }
 
     /**
-     * Get collector with items where key values matches any of given ranges.
-     * A range can be an array having lowest and highest key values or single
-     * key values.
-     * Condition will return items where key values are within the range of value1 and value2 (inclusive).
-     * A range is usually an array with start and end item or a single item key.
-     * @param array|int|string $ranges Any number of ranges can be passed. When 
-     * a range is not an array than the single item will be selected. Not existing
-     * single items are ignored.
-     * For arrays the first element is the start item and the second element
-     * the last item to be selected.
-     * When the first item is null items from the beginning are selected. 
-     * When the second item is null all items following the first item are selected.
-     * The start item and the last item must exist. 
-     * @return AbstractCollector Collector collecting only selected itemes
-     * @throws InvalidArgumentException When start or end item doesn't exist.
+     * Get the offest of an item by a given key.
+     * @param int|string $key The item or alternate key
+     * @param array $keyOffsets Array of integer offsets indexed by item keys.
+     * @return int The offset of an item
+     * @throws InvalidArgumentException
+     */
+    private function getOffset($key, array $keyOffsets) :int {
+        if (isset($keyOffsets[$key])) {
+            return $keyOffsets[$key];
+        }
+        if (isset($this->altKeys[$key], $this->itmes[$this->altKeys[$key]])) {
+            return $keyOffsets[$this->altKeys[$key]];
+        }
+        throw new InvalidArgumentException("Key '$key' doesn't exist.");
+    }
+
+    /**
+     * Find an item by key or alternate key.
+     * When item is found by the given key this key will be returned. When the item
+     * is found via the value of the alternate key will returned.
+     * @param int|string $key The item or alternate key 
+     * @return int|string|false The item key when an item exists. Else False.
+     */
+    private function findItemKey($key) {
+        If (isset($this->items[$key])) {
+            return $key;
+        }
+        return (isset($this->altKeys[$key], $this->items[$this->altKeys[$key]])) ? $this->altKeys[$key] : false;
+    }
+
+    /**
+     * Filters items where key is between values.
+     * 
+     * Iterates over each collector item. If a range is an array and the item key
+     * is between value1 and value2 of this range (inclusive) the item is returned.
+     * 
+     * If the range isn't an the item with the corresponding key is returned. 
+     * 
+     * If a range matches the key of a named range then the named range value will
+     * be used to filter the items.
+     * 
+     * Item keys and sort order are preserved.
+     *
+     * @param array|int|string[] $ranges Ranges or item keys for items to be filtered.
+     * @return AbstractCollector Clone of current collector with filtered items.
      */
     public function between(... $ranges): AbstractCollector {
-        $result = [];
-        $singleSelects = [];
-        $itemKeys = array_keys($this->items);
-        foreach ($ranges as $range) {
-            if (is_array($range)) {
-                $result += $this->getBetweenItems($range);
-            } else {
-                $singleSelects [] = $range;
+        $collector = clone $this;
+        $collector->items = [];
+        foreach ($this->items as $key => $item) {
+            foreach ($ranges as $range) {
+                if (is_array($range)) {
+                    if ((!isset($range[0]) || $key >= $range[0]) && (!isset($range[1]) || $key <= $range[1])) {
+                        $collector->items[$key] = $item;
+                        break;
+                    }
+                } else {
+                    $key = $this->findItemKey($range);
+                    if ($key) {
+                        $collector->items[$key] = $item;
+                        break;
+                    }
+                }
             }
         }
-        return $this->getReducedClone($result, $singleSelects);
+        return $collector;
     }
 
-    private function getBetweenItems(array $range): array {
-        [$fromKey, $toKey] = $range;
-        $result = [];
-        foreach ($this->items as $key => $value) {
-            if ($key >= $fromKey && $key <= $toKey) {
-                $result[$key] = $value;
-            }
-        }
-        return $result;
-    }
-    
-      public function walk(callable $callable): AbstractCollector {
-        $result = [];
+    /**
+     * Filters items using a callback function.
+     * Iterates over each item in the array passing key and value to the callback
+     * function. If the callback function returns TRUE, the current item is returned
+     * into the cloned collector. Item keys are preserved.
+     * @param callable $callable The callback function to use. 
+     * @return AbstractCollector Clone of current collector with filtered items
+     */
+    public function filter(callable $callable): AbstractCollector {
+        $collector = clone $this;
+        $collector->items = [];
         foreach ($this->items as $key => $value) {
             if ($callable($key, $value)) {
-                $result[$key] = $value;
+                $collector->items[$key] = $value;
             }
         }
-        return $this->getReducedClone($result, []);
+        return $collector;
     }
 
-    private function getReducedClone(array $result, array $singleSelects): AbstractCollector {
-        // Add single selected items to result. Missing items are ignored.
-        if (!empty($singleSelects)) {
-            $result += \array_intersect_key($this->items, \array_flip($singleSelects));
+    /**
+     * Alter item collection by executing a php array command.
+     * @param callable $command Any php array command which accepts an 
+     * array as the first parameter. 
+     * @param mixed[] $params Additional parameters passed to the php command.
+     * @return AbstractCollector Clone of current collector with applied command
+     * on the items array. 
+     */
+    public function cmd(callable $command, ...$params): AbstractCollector {
+        $collector = clone $this;
+        $result = $command($collector->items, ...$params);
+        // When the command alters the array items will not replaced.
+        if (is_array($result)) {
+            $collector->items = $result;
         }
-        $ret = clone($this);
-        $ret->items = $result;
-        return $ret;
-    }
-    
-    public function cmd(callable $callable): array{
-        $result = $command($this->items);
-        return $this->getReducedClone((is_array($result)? $result: $this->items), []);
+        return $collector;
     }
 
     /* -------------------------------------------------------------------------

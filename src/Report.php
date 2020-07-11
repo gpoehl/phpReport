@@ -117,6 +117,7 @@ class Report {
         $this->mp->gc = $this->gc = Factory::collector();
         $this->mp->total = $this->total = Factory::collector();
         $this->dims[] = $this->dim = new Dimension(0, 0, $target, $this->total);
+        $this->rc->addItem(Factory::calculator($this->mp, $this->dim->lastLevel, self::XS));
         return $this;
     }
 
@@ -147,6 +148,7 @@ class Report {
         $this->dim->noGroupChangeAction = $this->makeAction('noGroupChange_n', $noGroupChangeAction, $this->dim->id);
         $this->dim->detailAction = $this->makeAction('detail_n', $dataAction, $this->dim->id);
         $this->dims[] = $this->dim = new Dimension($this->dim->id + 1, $this->dim->lastLevel, $this->target, $this->total);
+        $this->rc->addItem(Factory::calculator($this->mp, $this->dim->lastLevel, self::XS));
         return $this;
     }
 
@@ -179,6 +181,7 @@ class Report {
         $this->dim->groups[] = $group;
         $this->dim->lastLevel = $group->level;
         $this->gc->addItem(Factory::calculator($this->mp, $group->level - 1, self::XS), $group->level);
+        $this->gc->setNamedRange($name, $group->level);
         return $this;
     }
 
@@ -283,11 +286,8 @@ class Report {
      * Set runTimeActions and call init and totalHeader methods.
      */
     private function finalInitializion(): void {
-        foreach ($this->dims as $dim) {
-            $this->rc->addItem(Factory::calculator($this->mp, $dim->lastLevel, self::XS, $dim->id));
-        }
-        $this->dim = reset($this->dims);
-        $this->mp->gc->setMapper($this->groups->groupLevel);
+        reset($this->dims);
+        $this->dim= current ($this->dims);
         $this->mp->groupLevel = $this->groups->groupLevel;
         $this->executeAction('init');
         $this->executeAction('totalHeader');

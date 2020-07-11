@@ -31,7 +31,7 @@ class Factory {
      * @return Calculator|CalculatorXS|CalculatorXL
      * @throws InvalidArgumentException
      */
-    public static function calculator(MajorProperties $mp, int $maxLevel, int $typ = self::REGULAR): AbstractCalculator {
+    public static function calculator(MajorProperties $mp, int $maxLevel, int $typ = Report::REGULAR): AbstractCalculator {
         switch ($typ) {
             case Report::REGULAR:
                 return new Calculator($mp, $maxLevel);

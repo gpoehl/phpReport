@@ -60,23 +60,24 @@ class FixedSheet extends AbstractCollector {
     }
 
     /**
-     * Clone given cumulator from $fromKey to $toKey to have a fixed size sheet.
+     * Add items by range fromKey to toKey by cloning the calculator. 
      * @param @see __construct
      */
-    private function addItems($cumulator, $fromKey, $toKey) {
-        $this->items[$fromKey] = $cumulator;
+    private function addItems(AbstractCalculator $calculator, $fromKey, $toKey) {
+        $this->items[$fromKey] = $calculator;
         for ($i = $fromKey++; $i <= $toKey; $i++) {
-            $this->items[$i] = clone $cumulator;
+            $this->items[$i] = clone $calculator;
         }
     }
 
     /**
-     * Clone given calculator from $fromKey to $toKey building a fixed size sheet.
+     * Add items by given keys. 
+     * Clone given calculator for each key.
      * @param @see __construct
      */
-    private function addArrayItems($cumulator, $fromKey) {
-        foreach ($fromKey as $key) {
-            $this->items[$key] = clone $cumulator;
+    private function addArrayItems(AbstractCalculator $calculator, $keys) {
+        foreach ($keys as $key) {
+            $this->items[$key] = clone $calculator;
         }
     }
 
@@ -88,7 +89,7 @@ class FixedSheet extends AbstractCollector {
      * @param iterable $values The iterator key represents the sheet item
      * while the value will to be added. 
      */
-     public function add(iterable $values) {
+     public function add(iterable $values) :void {
          foreach ($values as $key => $value) {
             if (!isset($this->items[$key])) {
                 throw new OutOfBoundsException("Key $key is not part of fixed sheet");

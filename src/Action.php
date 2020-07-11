@@ -32,12 +32,6 @@ class Action {
     /** @var Execute action only when true */
     public bool $execute;
 
-    /** @var The action type describing the runTimeAction */
-    private int $runTimeActionTyp;
-
-    /** @var The real action to be executed */
-    private $runTimeAction;
-
     /** @var The action type describing the given action */
     public int $givenActionTyp;
 
@@ -45,7 +39,12 @@ class Action {
      * is set in setRunTimeAction method */
     public $givenAction;
 
-   
+    /** @var The action type really used to exectute the action. */
+    private int $runTimeActionTyp;
+
+    /** @var The real action to be executed */
+    private $runTimeAction;
+
     /**
      * 
      * @param string $actionKey
@@ -102,10 +101,10 @@ class Action {
     public function execute(...$params) {
         if ($this->execute) {
             switch ($this->runTimeActionTyp) {
-                case self::STRING:
-                    return ($this->runTimeAction);
                 case self::CALLABLE:
                     return ($this->runTimeAction)(...$params);
+                case self::STRING:
+                    return ($this->runTimeAction);
                 case self::WARNING:
                     trigger_error($this->runTimeAction . ' RowKey = ' . $params[1], E_USER_NOTICE);
                 case self::ERROR:
