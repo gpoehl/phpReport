@@ -31,7 +31,7 @@ abstract class AbstractCollector implements ArrayAccess {
 
     /**
      * Set alternate keys to access items.
-     * @param int|string[] $keys Item keys indexed by altenate keys.
+     * @param int|string[] $keys Item keys indexed by alternate keys.
      */
     public function setAltKeys(array $keys): void {
         foreach ($keys as $key => $itemKey) {
@@ -40,8 +40,8 @@ abstract class AbstractCollector implements ArrayAccess {
     }
 
     /**
-     * Set alternate access key for an item.
-     * @param int|string $key Unique altenate key to access an item.
+     * Set alternate key for an item.
+     * @param int|string $key Unique altenate key.
      * @param int|string $itemKey The key of the item in $items.
      */
     public function setAltKey($key, $itemKey): void {
@@ -52,9 +52,9 @@ abstract class AbstractCollector implements ArrayAccess {
     }
 
     /**
-     * Magic get method to allow access item via arrow notation.
+     * Magic get method to access item via arrow notation.
      * Example: $collector->itemKey 
-     * @param mixed $key the item key 
+     * @param int|string $key the item key 
      * @return AbstractCollector|AbstractCalculator Returns the requested item
      */
     public function __get($key): object {
@@ -70,7 +70,8 @@ abstract class AbstractCollector implements ArrayAccess {
      * @param int|string $offset The item key
      * @param AbstractCollector|AbstractCalculator $value The item
      */
-    public function offsetSet($offset, $value):void {
+
+    public function offsetSet($offset, $value): void {
         $this->addItem($value, $offset);
     }
 
@@ -78,7 +79,7 @@ abstract class AbstractCollector implements ArrayAccess {
         return isset($this->items[$offset]) || isset($this->items[$this->altKeys[$offset]]);
     }
 
-    public function offsetUnset($offset):void {
+    public function offsetUnset($offset): void {
         trigger_error("Unset of collector item $offset is not supported.", E_USER_NOTICE);
     }
 
@@ -87,6 +88,7 @@ abstract class AbstractCollector implements ArrayAccess {
      * @param int|string $offset The item or alternate key
      * @see getItem()
      */
+
     public function offsetGet($offset): object {
         return $this->getItem($offset);
     }
@@ -108,7 +110,7 @@ abstract class AbstractCollector implements ArrayAccess {
      * @param int|string $key The item key or an alternate key.
      * @return AbstractCollector|AbstractCalculator Returns the required item
      */
-    public function getItem($key) {
+    public function getItem($key): object {
         $foundKey = $this->findItemKey($key);
         if ($foundKey !== false) {
             return $this->items[$foundKey];
@@ -174,11 +176,12 @@ abstract class AbstractCollector implements ArrayAccess {
                 $offset = (isset($range[0])) ? $this->getOffset($range[0], $keyOffsets) : 0;
                 $length = (isset($range[1])) ? $this->getOffset($range[1], $keyOffsets) - $offset + 1 : null;
                 $collector->items += array_slice($this->items, $offset, $length, true);
+            } elseif (isset($this->items[$range])) {
+                $collector->items[$range] = $this->items[$range];
+            } elseif (isset($this->altKeys[$range], $this->items[$this->altKeys[$range]])) {
+                $collector->items[$this->altKeys[$range]] = $this->items[$this->altKeys[$range]];
             } else {
-                $key = $this->findItemKey($range);
-                if ($key) {
-                    $collector->items[$key] = $this->itmes[$key];
-                }
+                trigger_error("Item '$range' doesn't exist.", E_USER_NOTICE);
             }
         }
         return $collector;
@@ -191,11 +194,11 @@ abstract class AbstractCollector implements ArrayAccess {
      * @return int The offset of an item
      * @throws InvalidArgumentException
      */
-    private function getOffset($key, array $keyOffsets) :int {
+    private function getOffset($key, array $keyOffsets): int {
         if (isset($keyOffsets[$key])) {
             return $keyOffsets[$key];
         }
-        if (isset($this->altKeys[$key], $this->itmes[$this->altKeys[$key]])) {
+        if (isset($this->altKeys[$key], $this->items[$this->altKeys[$key]])) {
             return $keyOffsets[$this->altKeys[$key]];
         }
         throw new InvalidArgumentException("Key '$key' doesn't exist.");
@@ -237,16 +240,14 @@ abstract class AbstractCollector implements ArrayAccess {
         foreach ($this->items as $key => $item) {
             foreach ($ranges as $range) {
                 if (is_array($range)) {
-                    if ((!isset($range[0]) || $key >= $range[0]) && (!isset($range[1]) || $key <= $range[1])) {
+                    if ((!isset($range[0]) || $key >= $range[0]) && ((!isset($range[1])) || $key <= $range[1])) {
                         $collector->items[$key] = $item;
                         break;
                     }
-                } else {
-                    $key = $this->findItemKey($range);
-                    if ($key) {
-                        $collector->items[$key] = $item;
-                        break;
-                    }
+                } elseIf ($range === $key || (isset($this->altKeys[$range]) && $this->altKeys[$range] === $key)) {
+                    $collector->items[$key] = $item;
+                    unset($ranges[$range]);
+                    break;
                 }
             }
         }
@@ -264,9 +265,9 @@ abstract class AbstractCollector implements ArrayAccess {
     public function filter(callable $callable): AbstractCollector {
         $collector = clone $this;
         $collector->items = [];
-        foreach ($this->items as $key => $value) {
-            if ($callable($key, $value)) {
-                $collector->items[$key] = $value;
+        foreach ($this->items as $key => $item) {
+            if ($callable($key, $item)) {
+                $collector->items[$key] = $item;
             }
         }
         return $collector;

@@ -25,22 +25,16 @@ class Collector extends AbstractCollector {
      * Add item $calculator with key 'abc' to items array. 
      */
     public function __set($key, $value) {
-        echo "\nSetze 'value' mit key '$key'.";
-       
         $this->addItem($value, $key);
     }
 
     /**
-     * Adds an item to this collector
+     * Add an item to this collector
      * @param AbstactCollector|AbstractCalulator The item to be added
      * @param int|string|null The item key
      */
-    public function addItem($item, $key = null) :void {
-        echo "\nAdd my item mit key '$key'.";
-//         var_dump($key);
-//        var_dump($item);
-        if ($key === null) {
-//            var_dump($item);
+    public function addItem($item, $key = null): void {
+        if (empty($key)) {
             $this->items[] = $item;
         } else {
             if (isset($this->items[$key]) || isset($this->altKeys[$key])) {

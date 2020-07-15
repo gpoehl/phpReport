@@ -39,7 +39,7 @@ class FixedSheet extends AbstractCollector {
     }
 
     // Implementation of arrayAccess interface. Don't allow creating new items
-    public function offsetSet($offset, $value) {
+    public function offsetSet($offset, $value) :void {
         throw new Exception("To create new item $offset the add method must be called");
     }
 
