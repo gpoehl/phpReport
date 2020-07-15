@@ -181,7 +181,7 @@ class Report {
         $this->dim->groups[] = $group;
         $this->dim->lastLevel = $group->level;
         $this->gc->addItem(Factory::calculator($this->mp, $group->level - 1, self::XS), $group->level);
-        $this->gc->setNamedRange($name, $group->level);
+        $this->gc->setAltKey($name, $group->level);
         return $this;
     }
 
