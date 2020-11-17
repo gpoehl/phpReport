@@ -23,14 +23,6 @@ class CalculatorTestXL extends TestCase {
         $this->stack = Factory::calculator($mp, 2, Report::XL);
     }
 
-    public function testHasCounter() {
-        $this->assertTrue($this->stack->hasCounter());
-    }
-
-    public function testHasMinMax() {
-        $this->assertTrue($this->stack->hasMinMax());
-    }
-
     public function testAddValues() {
         $arr = $arr = [
             [2, 2],
@@ -44,11 +36,6 @@ class CalculatorTestXL extends TestCase {
             // higer level has same value
             $this->assertSame($sum, $this->stack->sum($this->mp->level - 1));
         }
-    }
-
-    public function testAddStringFailure() {
-        $this->expectWarning();
-        $this->stack->add('non numeric value');
     }
 
     public function testCumulate() {

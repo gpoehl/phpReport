@@ -18,13 +18,13 @@ namespace gpoehl\phpReport;
  * Detection and maintaining min and max values comes with the cost of reduced
  * performance. When min or max value is not needed use other Cumulator class. 
  */
-class CalculatorXL extends Calculator {
+class CalculatorXL extends Calculator implements MinMaxIF{
 
     /** @var mixed[] Minimum value per level. Key is level */
-    private $min = [];
+    protected $min = [];
 
     /** @var mixed[] Maximum value per level. Key is level */
-    private $max = [];
+    protected $max = [];
 
     /**
      * Initialize min / max with null values
@@ -32,22 +32,6 @@ class CalculatorXL extends Calculator {
     public function __construct(MajorProperties $mp, int $maxLevel) {
         parent::__construct($mp, $maxLevel);
         $this->min = $this->max = array_fill(0, $maxLevel + 1, null);
-    }
-
-    /**
-     * Returns always true. Counters for notNull and notZero values are implemented. 
-     * @return true
-     */
-    public function hasCounter(): bool {
-        return true;
-    }
-
-    /**
-     * Returns always true. Methods to handle min and max values are implemented. 
-     * @return true
-     */
-    public function hasMinMax(): bool {
-        return true;
     }
 
     /**
@@ -96,16 +80,17 @@ class CalculatorXL extends Calculator {
     }
 
     /**
-     * Get the minimum non null value. Only when no rows are processed or all 
-     * values have been null the returned value will also be null.
+     * Get the minimum non null value.
+     * Only when no rows are processed or all values have been null the returned
+     * value will also be null.
      * If you need to know that one or more values (but not all) had been null 
      * compare the row counter with the not null counter. 
      * @param int|null $level The requested level. Defaults to the current level
      * @return null|mixed The lowest value within the given level
      */
-    public function min($level = null) {
-        // Initalize min witdh value of lowest level and loop from requested
-        // level down to level abobe lowest level. This reduced the number of
+    public function min(int $level = null) {
+        // Initalize min with value of lowest level and loop from requested
+        // level down to level above lowest level. This reduced the number of
         // iterations by 1. 
         $min = $this->min[$this->maxLevel];
         for ($i = $this->mp->getLevel($level); $i < $this->maxLevel; $i++) {
@@ -117,12 +102,13 @@ class CalculatorXL extends Calculator {
     }
 
     /**
-     * Get the maximum value. When no rows are processed or all values have been 
-     * null the returned value will also be null.
-     * @param mixed $level The requested group level. Defaults to the current level.
+     * Get the maximum value. 
+     * When no rows are processed or all values have been null the returned value
+     * will also be null.
+     * @param int|null $level The requested group level. Defaults to the current level.
      * @return null|mixed The maximum value within the given level
      */
-    public function max($level = null) {
+    public function max(int $level = null) {
         // Same logic as for min().
         $max = $this->max[$this->maxLevel];
         for ($i = $this->mp->getLevel($level); $i < $this->maxLevel; $i++) {

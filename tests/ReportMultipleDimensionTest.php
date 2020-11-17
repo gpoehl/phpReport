@@ -154,9 +154,6 @@ class ReportMultiDimensionTest extends TestCase {
         $this->assertSame('init<<>>totalHeader<<>>detail0<<>>detail<<>>detail<<>>totalFooter<<>>close<<>>', $rep);
     }
 
-    public function testNoDataDoesNotTriggerGroupChange() {
-    }
-         
     public function testSameDataDoesNotTriggerGroupChange() {
         $rep = $this->getBase(true)
                 ->rep

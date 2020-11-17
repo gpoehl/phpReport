@@ -34,7 +34,7 @@ class Prototype {
         <tr><td colspan="3"></td><td>%7$s<td></tr>
         </table>
 TABLE1;
-    // Single information table. Multiple dontent tables are concatenated and
+    // Single information table. Multiple content tables are concatenated and
     // pinted in table row of $table.
     private $contentTable = <<<'TABLE2'
           <table border="0"><tr><td style="vertical-align: top; width: 150px"><strong>%1$s </strong></td><td>%2$s</td></tr></table>     
@@ -294,13 +294,13 @@ TABLE1;
         foreach ($this->rep->total->items as $name => $attr) {
             $out .= '<tr><td>' . $name . '</td>';
             $out .= '<td>' . $attr->sum() . '</td>';
-            if ($attr->hasCounter()) {
+            if (is_a($attr, 'NnAndNzCounterIF')) {
                 $out .= '<td>' . $attr->nn() . '</td>';
                 $out .= '<td>' . $attr->nz() . '</td>';
             } else {
                 $out .= '<td>-</td><td>-</td>';
             }
-            if ($attr->hasMinMax()) {
+            if (is_a($attr, 'MinMaxIF')) {
                 $out .= '<td>' . $attr->min() . '</td>';
                 $out .= '<td>' . $attr->max() . '</td></tr>';
             } else {
@@ -397,8 +397,6 @@ TABLE1;
         } else {
             $out = "Group $level has ";
             $numberOfGroups = $maxLevel;
-
-//            $wrk = $this->rep->gc->rsum($level + 1, $numberOfGroups, $level, true);
             $wrk = $this->rep->gc->range([$level + 1])->sum($level, true);
             foreach ($wrk as $key => $sum) {
                 $out .= "$sum times group $key, ";

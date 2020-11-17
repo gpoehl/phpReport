@@ -20,7 +20,7 @@ namespace gpoehl\phpReport;
  */
 class Report {
 
-    const VERSION = '3.0.0';
+    const VERSION = '2.2.0';
     // Rules to execute actions
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
@@ -277,7 +277,7 @@ class Report {
      */
     private function makeAction(string $actionKey, $actionParam, $replacement): Action {
         $wrk = ($actionParam !== null) ? Helper::buildMethodAction($actionParam, $actionKey) :
-                Helper::replacePercent($replacement, $this->actions[$actionKey]);
+                Helper::replacePercent((string)$replacement, $this->actions[$actionKey]);
         return new Action($actionKey, $wrk);
     }
 
@@ -337,7 +337,6 @@ class Report {
     private function setRunTimeActions(): void {
         $params = [$this->target, $this->prototype, $this->callOption];
         $this->detailAction->setRunTimeAction(...$params);
-//        $this->setRuntimeAction();
         foreach ($this->groups->items as $group) {
             $group->headerAction->setRunTimeAction(...$params);
             $group->footerAction->setRunTimeAction(...$params);

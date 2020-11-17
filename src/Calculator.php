@@ -12,11 +12,12 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+
 /**
  * Summarize values and count how often not null and not zero values are given
  * to the add() method.
  */
-class Calculator extends AbstractCalculator {
+class Calculator extends AbstractCalculator implements NnAndNzCounterIF{
 
     /** @var int[] not null counter. How many added values had a value not equal to zero. */
     protected $nn = [];
@@ -30,22 +31,6 @@ class Calculator extends AbstractCalculator {
     public function __construct(MajorProperties $mp, int $maxLevel) {
         parent::__construct($mp, $maxLevel);
         $this->total = $this->nz = $this->nn = array_fill(0, $maxLevel + 1, 0);
-    }
-
-    /**
-     * Returns always true. Counters for notNull and notZero values are implemented.  
-     * @return true
-     */
-    public function hasCounter(): bool {
-        return true;
-    }
-
-    /**
-     * Returns always false. Methods to handle min and max values are not implemented. 
-     * @return false
-     */
-    public function hasMinMax(): bool {
-        return false;
     }
 
     /**
@@ -88,7 +73,7 @@ class Calculator extends AbstractCalculator {
      * @return numeric The running total of added values from the requested level down
      * to the lowest level
      */
-    public function sum($level = null) {
+    public function sum(int $level = null) {
         return array_sum(array_slice($this->total, $this->mp->getLevel($level)));
     }
 
@@ -97,7 +82,7 @@ class Calculator extends AbstractCalculator {
      * @param int|null $level The requested level. Defaults to the current level.
      * @return int The total number of added not null values for the requested level.
      */
-    public function nn($level = null): int {
+    public function nn(int $level = null): int {
         // To calculate the total number all values from requested level down
         // to lowest level must be included.
         return array_sum(array_slice($this->nn, $this->mp->getLevel($level)));
@@ -109,7 +94,7 @@ class Calculator extends AbstractCalculator {
      * @return int The total number of added not null and not zero values for 
      * the requested level.
      */
-    public function nz($level = null): int {
+    public function nz(int $level = null): int {
         // To calculate the total number all values from requested level down
         // to lowest level must be included.
         return array_sum(array_slice($this->nz, $this->mp->getLevel($level)));

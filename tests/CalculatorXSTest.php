@@ -24,14 +24,6 @@ class CalculatorXSTest extends TestCase {
         $this->stack = Factory::calculator($mp, 2, Report::XS);
     }
 
-    public function testHasCounter() {
-        $this->assertFalse($this->stack->hasCounter());
-    }
-
-    public function testHasMinMax() {
-        $this->assertFalse($this->stack->hasMinMax());
-    }
-
     public function testAddValues() {
         $arr = $arr = [
             [2, 2],
@@ -51,11 +43,6 @@ class CalculatorXSTest extends TestCase {
         $this->stack->inc();
         $this->stack->inc();
         $this->assertSame(2, $this->stack->sum());
-    }
-
-    public function testAddStringFailure() {
-        $this->expectWarning();
-        $this->stack->add('non numeric value');
     }
 
     public function testCumulate() {

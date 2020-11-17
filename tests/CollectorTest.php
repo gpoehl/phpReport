@@ -39,25 +39,12 @@ class CollectorTest extends TestCase {
         $this->assertSame($expected, \array_key_first($this->stack->items));
     }
 
-    /**
-     * @dataProvider addItemKeyProvider 
-     * @dataProvider addMagicItemKeyProvider
-     */
-    public function testAddItemByMagicMethod($expected, $key) {
-        $this->stack->$key = $this->calculator;
-        $this->assertSame($expected, \array_key_first($this->stack->items));
-    }
-
     public function addItemKeyProvider() {
         return [
-            [0, null],
-            [0, 0],
-            [-1, -1],
             [1, 1],
             ['a', 'a'],
-            ['a to z', 'a to z'],
-            [1, true],
-            [0, false],
+            ['a b', 'a b'],
+            [0, null],
         ];
     }
 
@@ -105,6 +92,12 @@ class CollectorTest extends TestCase {
         $this->assertSame($this->stack->$itemKey, $this->stack->$altKey);
     }
 
+    /**
+     * Assign multiple calculator objects to the collecter object.
+     * Used to test between and range methods.
+     * Items with key 0 - 2, 4, and x will be assigned. 
+     * AltKeys are from a to e.
+    */
     public function setMultipleItemsAndAltKeys() {
         $item1 = Factory::calculator($this->mp, 0, Report::XS);
         $item2 = Factory::calculator($this->mp, 0, Report::XS);
@@ -168,68 +161,31 @@ class CollectorTest extends TestCase {
         ];
     }
 
-//    public function testFormularsOnColletorsHavingDifferentTypOfCumulators() {
-//        $this->c1->inc();
-//        $this->c1->inc();
-//        $this->c3->add(2);
-//        $this->c3->add(0);
-//        $this->c3->add(null);
-//        $this->c4->add(5);
-//        $this->c4->add(3);
-//        $this->assertSame(12, $this->stack->sum(0), "Sum of all items at level 0");
-//        $this->assertSame([1 => 2, 0, 2, 8, 0], $this->stack->sum(0, true), "Sum of all items at level 0 as array");
-//        $this->assertSame(12, $this->stack->sum(2), "Sum of all items at level 2");
-//        $this->assertSame([1 => 2, 0, 2, 8, 0], $this->stack->sum(2, true), "Level 2 as array");
-//        $this->assertSame(10, $this->stack->sum(4), "C1 is does not exitst on level 4");
-//        $this->assertSame([1 => 0, 0, 2, 8, 0], $this->stack->sum(4, true), "C1 is part of result. All items in stack are in result array");
-//    }
-//    public function testAdd() {
-//        $this->stack->add([1 => 4, 6, 8, 5 => [3 => 1, 6 => 2, 9 => 3]]);
-//        $this->assertSame(4, $this->stack->{1}->sum(0), "Sum of item c1");
-//        $this->assertSame(6, $this->stack->{2}->sum(0), "Sum of item c2");
-//        $this->assertSame(8, $this->stack->{3}->sum(0), "Sum of item c3");
-//        $this->assertSame(0, $this->stack->{4}->sum(0), "Sum of item c4");
-//        $this->assertSame(6, $this->stack->{5}->sum(0), "Sum of sheet");
-//        $this->assertSame(24, $this->stack->sum(), "Sum of c1 to c4 and sheet");
-//    }
-//    public function testNnFailure() {
-//        $this->expectException(Error::class);
-//        $this->stack->nn();
-//    }
-//
-//    public function testNzFailure() {
-//        $this->expectException(Error::class);
-//        $this->stack->nz();
-//    }
-//
-//    public function testMinFailure() {
-//        $this->expectException(Error::class);
-//        $this->stack->min();
-//    }
-//
-//    public function testMaxFailure() {
-//        $this->expectException(Error::class);
-//        $this->stack->max();
-//    }
-//    public function testIterativ() {
-//        $multi = Factory::collector();
-//        $this->stack->addItem($multi, 'multi');
-//        $s1 = Factory::calculator($this->mp, 2, Report::XS);
-//        $s2 = Factory::calculator($this->mp, 2, Report::XS);
-//        $multi->addItem($s1);
-//        $multi->addItem($s2);
-//        $s1->add(5);
-//        $s2->add(7);
-//        $this->c1->inc();
-//        $this->c1->inc();
-//        $this->c3->add(1);
-//        $this->assertSame(12, $multi->sum());
-//        $this->assertSame(15, $this->stack->sum(), "Sum incl sub collector");
-//        $this->assertSame([5, 7], $multi->range([0, 1])->sum(null, true), "range from collector multi key 1 to 2 as array");
-//        $this->assertSame([5, 7], $multi->between([0, 1])->sum(null, true), "between from collector multi key between 0 and 1 as array");
-//        $this->assertSame([3 => 1, 0, 0, 'multi' => 12], $this->stack->between([3, 5], 'multi')->sum(null, true), "between from stack collector key between 3 and 6 plus 'multi' as array");
-//    }
-//
+    public function testCollectorInCollector() {
+        $item1 = Factory::calculator($this->mp, 0, Report::XS);
+        $item2 = Factory::calculator($this->mp, 0, Report::XS);
+        $this->stack->addItem($item1);
+        $this->stack->addItem($item2);
+        $item1->add(3);
+        $item2->add(4);
+        $multi = Factory::collector();
+        $this->stack->addItem($multi, 'multi');
+        $s1 = Factory::calculator($this->mp, 0, Report::XS);
+        $s2 = Factory::calculator($this->mp, 0, Report::XS);
+        $s3 = Factory::calculator($this->mp, 0, Report::XS);
+        $multi->addItem($s1);
+        $multi->addItem($s2);
+        $multi->addItem($s3);
+        $s1->add(5);
+        $s2->add(7);
+        $s3->add(9);
+        $this->assertSame(21, $multi->sum());
+        $this->assertSame(28, $this->stack->sum(), "Sum incl sub collector");
+        $this->assertSame([5, 7], $multi->range([0, 1])->sum(null, true), "range from collector multi key 1 to 2 as array");
+        $this->assertSame([5, 7], $multi->between([0, 1])->sum(null, true), "between from collector multi key between 0 and 1 as array");
+        $this->assertSame([3, 4, 'multi' => 21], $this->stack->between([0, 1], 'multi')->sum(null, true), "between from collector key between 0 and 1 plus 'multi' as array");
+    }
+
 
     /**
      * @dataProvider rangeParamsProvider
@@ -303,8 +259,8 @@ class CollectorTest extends TestCase {
             'FromTo' => [[1, 2, 4], [1, 4]],
             'Single items' => [[2, 4], 2, 4],
             'FromTo and singles ' => [[0, 1, 2, 'x'], [1, 2], [2, 3], 'x', 'a'],
-            'No fromKey' => [[0, 1, 2, 'x'], [null, 2]],
-            'No toKey' => [[2, 4], [2, null]],
+            'No fromKey' => [[0, 1, 2], [null, 2]],
+            'No toKey' => [[2, 4, 'x'], [2, null]],
             'Single items missing' => [[2], 2, 7],
             'Compare 0 - very strange php behavior' => [[0, 1, 2, 4, 'x'], [0, null]],
         ];

@@ -100,14 +100,14 @@ class Helper {
     /**
      * Replace percent sign (%) in method action.
      * % sign in callables will not be replaced. 
-     * @param string|int $replacemet The replacement for the %sign
+     * @param string $replacement The replacement for the %sign
      * @param array $methodAction Method action is an array having the action type
      * in the first element and the action in the second element.
      * @return array The modified method action
      */
-    public static function replacePercent($replacemet, array $methodAction) {
+    public static function replacePercent(string $replacement, array $methodAction):array {
         if (is_string($methodAction[1]) && $methodAction[0] <> Action::CLOSURE) {
-            $methodAction[1] = str_replace('%', $replacemet, $methodAction[1]);
+            $methodAction[1] = str_replace('%', $replacement, $methodAction[1]);
         }
         return $methodAction;
     }

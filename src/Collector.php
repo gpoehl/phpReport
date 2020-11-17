@@ -19,22 +19,15 @@ namespace gpoehl\phpReport;
 class Collector extends AbstractCollector {
 
     /**
-     * Add new item by magic method.
-     * Example:
-     * $collector->abc = $calculator
-     * Add item $calculator with key 'abc' to items array. 
-     */
-    public function __set($key, $value) {
-        $this->addItem($value, $key);
-    }
-
-    /**
-     * Add an item to this collector
+     * Add an item to this collector.
      * @param AbstactCollector|AbstractCalulator The item to be added
-     * @param int|string|null The item key
+     * @param int|string|null The unique item key. When the key is empty the item
+     * will be added at the end of the $items array. When the key is not empty
+     * it must be unique. 
+     * @throws \InvalidArgumentException when the key already exists.
      */
     public function addItem($item, $key = null): void {
-        if (empty($key)) {
+        if ($key === null) {
             $this->items[] = $item;
         } else {
             if (isset($this->items[$key]) || isset($this->altKeys[$key])) {

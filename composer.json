@@ -1,6 +1,6 @@
 {
     "name": "gpoehl/phpreport",
-     "description": "PHP library solving almost all common tasks for applications working with data groups. It manages group changes, provides aggregate functions and can even join data from different sources.",
+    "description": "PHP library solving almost all common tasks for applications working with data sets. It manages group changes, provides aggregate functions and can even join data from different sources.",
     "license": "LGPL-3.0-or-later",
     "authors": [
         {
@@ -10,18 +10,17 @@
     "keywords": [
         "php",
         "report",
+		"reporting"
         "grouping",
-        "group change",
         "totals",
         "subtotals",
-        "sheets",
-        "join"
+        "sheets"   
     ],
     "archive": {
         "exclude": ["/docs",  "/docs/build"]
     },
     "require": {
-        "php": "^7.4"
+        "php": ">=7.4"
     },
     "autoload": {
         "classmap": [

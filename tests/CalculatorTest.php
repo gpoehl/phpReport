@@ -39,19 +39,6 @@ class CalculatorTest extends TestCase {
         }
     }
 
-    public function testHasCounter() {
-        $this->assertTrue($this->stack->hasCounter());
-    }
-
-    public function testHasMinMax() {
-        $this->assertFalse($this->stack->hasMinMax());
-    }
-
-    public function testAddStringFailure() {
-        $this->expectWarning();
-        $this->stack->add('non numeric value');
-    }
-
     public function testCumulate() {
         $amount = 10;
         $this->stack->add($amount);

@@ -53,6 +53,7 @@ abstract class AbstractCollector implements ArrayAccess {
 
     /**
      * Magic get method to access item via arrow notation.
+     * Note: A magic setter method is not implemented. Use the addItem method instead.
      * Example: $collector->itemKey 
      * @param int|string $key the item key 
      * @return AbstractCollector|AbstractCalculator Returns the requested item
@@ -60,6 +61,7 @@ abstract class AbstractCollector implements ArrayAccess {
     public function __get($key): object {
         return $this->getItem($key);
     }
+    
 
     /* -------------------------------------------------------------------------
      * Implementation of the arrayAccess interface
@@ -167,7 +169,7 @@ abstract class AbstractCollector implements ArrayAccess {
      * @return AbstractCollector Clone of current collector with selected items.
      * @throws InvalidArgumentException When start or end item doesn't exist.
      */
-    public function range(... $ranges): AbstractCollector {
+    public function range(...$ranges): AbstractCollector {
         $collector = clone $this;
         $collector->items = [];
         $keyOffsets = array_flip(array_keys($this->items));
@@ -234,7 +236,7 @@ abstract class AbstractCollector implements ArrayAccess {
      * @param array|int|string[] $ranges Ranges or item keys for items to be filtered.
      * @return AbstractCollector Clone of current collector with filtered items.
      */
-    public function between(... $ranges): AbstractCollector {
+    public function between(...$ranges): AbstractCollector {
         $collector = clone $this;
         $collector->items = [];
         foreach ($this->items as $key => $item) {

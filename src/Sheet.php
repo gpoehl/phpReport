@@ -26,22 +26,6 @@ class Sheet extends AbstractCollector {
         $this->calculator = $calculator;
     }
 
-    /**
-     * Returns true when assigned calculator handles notNull and notZero counters.  
-     * @return boolean
-     */
-    public function hasCounter(): bool {
-        return $this->calculator->hasCounter();
-    }
-
-    /**
-     * Returns true when assigned calculator handles min and max values. 
-     * @return boolean
-     */
-    public function hasMinMax(): bool {
-        return $this->calculator->hasMinMax();
-    }
-
     private function addItem($key) {
         $item = clone $this->calculator;
         $this->items[$key] = $item;

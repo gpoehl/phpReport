@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+
 /**
  * Base class for calculator classes.
  */
