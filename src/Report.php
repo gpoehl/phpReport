@@ -20,7 +20,7 @@ namespace gpoehl\phpReport;
  */
 class Report {
 
-    const VERSION = '2.2.1';
+    const VERSION = '2.2.2';
     // Rules to execute actions
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
