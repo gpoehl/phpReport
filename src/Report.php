@@ -20,7 +20,7 @@ namespace gpoehl\phpReport;
  */
 class Report {
 
-    const VERSION = '2.2.0';
+    const VERSION = '2.2.1';
     // Rules to execute actions
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
@@ -117,7 +117,6 @@ class Report {
         $this->mp->gc = $this->gc = Factory::collector();
         $this->mp->total = $this->total = Factory::collector();
         $this->dims[] = $this->dim = new Dimension(0, 0, $target, $this->total);
-        $this->rc->addItem(Factory::calculator($this->mp, $this->dim->lastLevel, self::XS));
         return $this;
     }
 
@@ -148,7 +147,6 @@ class Report {
         $this->dim->noGroupChangeAction = $this->makeAction('noGroupChange_n', $noGroupChangeAction, $this->dim->id);
         $this->dim->detailAction = $this->makeAction('detail_n', $dataAction, $this->dim->id);
         $this->dims[] = $this->dim = new Dimension($this->dim->id + 1, $this->dim->lastLevel, $this->target, $this->total);
-        $this->rc->addItem(Factory::calculator($this->mp, $this->dim->lastLevel, self::XS));
         return $this;
     }
 
@@ -286,7 +284,10 @@ class Report {
      * Set runTimeActions and call init and totalHeader methods.
      */
     private function finalInitializion(): void {
-        reset($this->dims);
+        foreach ($this->dims as $dim){
+             $this->rc->addItem(Factory::calculator($this->mp, $dim->lastLevel, self::XS));
+        }
+         reset($this->dims);
         $this->dim= current ($this->dims);
         $this->mp->groupLevel = $this->groups->groupLevel;
         $this->executeAction('init');
@@ -401,7 +402,6 @@ class Report {
      */
     public function next($row, $rowKey = null): self {
         $this->handleGroupChanges($row, $rowKey);
-        // icrement row counter
         $this->rc->items[$this->dim->id]->inc();
         $this->dim->addValues();
         // Handle next dimension or execute detail action.
@@ -591,9 +591,9 @@ class Report {
     public function isFirst($level = null): bool {
         // For detail level compare with row counter of last group level.
         // Detail level can only be checked when in detail action. If $level is not null
-        // it must then match the detail level. 
+        // it must match the detail level. 
         if ($this->currentAction->actionKey === 'detail' && ($level === null || $level === $this->mp->level)) {
-            return ($this->rc->items[$this->getDimID($level)]->sum($level - 1) === 1);
+            return ($this->rc->items[$this->getDimID($level)]->sum($level) === 1);
         }
         return ($this->gc->items[$this->getDimID($level)]->sum($this->getLevel($level) - 1) === 1);
     }

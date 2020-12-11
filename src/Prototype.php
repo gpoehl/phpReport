@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use InvalidArgumentException;
 use NumberFormatter;
 
 /**
@@ -155,7 +156,7 @@ TABLE1;
                 return 'string: ' . htmlentities(substr($action->givenAction, 0, 60));
             default:
                 // WARNING and ERROR are handled in Report class
-                throw \InvalidArgumentException("Call type '$action->givenActionTyp' is invalid");
+                throw InvalidArgumentException("Call type '$action->givenActionTyp' is invalid");
         }
     }
 
