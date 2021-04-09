@@ -80,6 +80,7 @@ class Dimension {
     private array $calcSources = [];
     /** @var array[] Parameter for sheet items indexed by name. Will also be handled by calcGetters. */ 
     private array $sheetSources = [];
+    
     /** @var Parameter for joined data. */ 
     private array $joinSource;
 
@@ -128,7 +129,7 @@ class Dimension {
      */
     public function setJoinSource($value, array $params =[]) {
         $this->isLastDim = false;
-        $this->joinSource = [$value, $params];
+        $this->joinSource = ['value' => $value, 'params' => $params];
     }
 
     /**
@@ -138,7 +139,7 @@ class Dimension {
      * @return array
      */
     public function getGroupValues($row, $rowKey = null): array {
-        ($this->gettersSet) ?: $this->setGetters($row);
+        ($this->gettersSet) ?: $this->setGetters(is_object($row));
         $values = [];
         foreach ($this->groupGetters as $level => $getter) {
             $values [$level] = $getter->getValue($row, $rowKey);
@@ -176,12 +177,12 @@ class Dimension {
     }
 
     /**
-     * Detect row type and let GetterFactory instantiate getter objects for
-     * @param type $row
+     * Set getter objects on first request for group values 
+     * Detect row type and let GetterFactory instantiate all required getter objects
      */
-    private function setGetters($row) {
+    private function setGetters(bool $isRowAnObject):void {
         $this->gettersSet = true;
-        $factory = new getter\GetterFactory(is_object($row));
+        $factory = new getter\GetterFactory($isRowAnObject);
         foreach ($this->groups as $group) {
             $this->groupGetters[$group->level] = $factory->getGetter($group->valueSource, $group->params);
             unset($group->valueSource, $group->params);
@@ -193,7 +194,7 @@ class Dimension {
             $this->calcGetters[$name] = $factory->getSheetGetter($source[0], $source[1], $source[2]);
         }
         if (!$this->isLastDim) {
-            $this->joinGetter = $factory->getGetter($this->joinSource[0], $this->joinSource[1]);
+            $this->joinGetter = $factory->getGetter($this->joinSource['value'], $this->joinSource['params']);
         }
         unset($this->calcSources, $this->sheetSources, $this->joinSource);
     }

@@ -16,28 +16,26 @@ namespace gpoehl\phpReport\getter;
 /**
  * GetterFactory instantiates getter objects which returns a value from data row
  */
-class GetterFactory {
+class GetterFactory
+{
 
-    /** @var Object | Classname Default target for method calls when data isn't an
-     * object or closure. */
-    public $defaultTarget;
-    
-    /** @var True when data row is an object. */
-    public bool $isObject;
-
-    public function __construct(bool $isObject, $defaultTarget = null) {
-        $this->isObject = $isObject;
-        $this->defaultTarget = $defaultTarget;
+    /**
+     * @var  public bool $isObject True when data row is an object.
+     * @var Object | Classname public $defaultTarget Default target for method calls when data isn't an
+     * object or closure. 
+     */
+    public function __construct(public bool $isObject, public $defaultTarget = null) {
+        
     }
 
-   /**
-    * Instantiate an getter object to retrieve a value from data row.
-    * @param mixed $source The name of an attribute / field in the data row which
-    * holds the desired value or method / closure which gets the value. 
-    * @param array $params Optional parameter to be passed to closures and methods
-    * @return BaseGetter Object which can get a value from data row.
-    * @throws InvalidArgumentException
-    */
+    /**
+     * Instantiate an getter object to retrieve a value from data row.
+     * @param mixed $source The name of an attribute / field in the data row which
+     * holds the desired value or method / closure which gets the value. 
+     * @param array $params Optional parameter to be passed to closures and methods
+     * @return BaseGetter Object which can get a value from data row.
+     * @throws InvalidArgumentException
+     */
     public function getGetter($source, $params): BaseGetter {
         if ($source instanceOf \Closure) {
             return new GetFromCallable($source, $params);
@@ -49,15 +47,15 @@ class GetterFactory {
             case 1:
                 // Default target for objects is the object itself. Else it's the
                 // For arrays or strings the $defaultTarget.
-               $source = current($source);
-               return ($this->isObject) ? new GetFromObjectMethod($source, $params) : new GetFromCallable([$this->defaultTarget, $source], $params);
+                $source = current($source);
+                return ($this->isObject) ? new GetFromObjectMethod($source, $params) : new GetFromCallable([$this->defaultTarget, $source], $params);
             case 2:
                 return new GetFromCallable($source, $params);
             default:
                 throw new \InvalidArgumentException("Source parameter array must have only one or two elements.");
         }
     }
-    
+
     /**
      * Instantiate an getter object to retrieve a key and data value from data row
      * for sheets.
@@ -70,8 +68,8 @@ class GetterFactory {
      * @param array $params Optional parameter to be passed to closures and methods
      * @return BaseGetter Object which can get key and value from data row.
      */
-    public function getSheetGetter($keySource, $valueSource, $params) : BaseGetter{
-        if ($valueSource === null){
+    public function getSheetGetter($keySource, $valueSource, $params): BaseGetter {
+        if ($valueSource === null) {
             return $this->getGetter($keySource, $params);
         }
         return new GetForSheet([$this->getGetter($keySource, $params), $this->getGetter($valueSource, $params)], $params);
