@@ -16,43 +16,28 @@ namespace gpoehl\phpReport;
  * Group class to handle group changes
  */
 class Group {
-
-    public string $name;            // The name of group
-    public int $level;              // The group level
-    public int $dimID;              // The dim this group belongs to. 
-
-    /** @var mixed The location or callable where to find the group value from a data row.
-     * Will be unset when dimension instatiates getter class
-     */
-    public $valueSource;
-
-    /** @var array|empty Optional variadic array of parameters to get group value out of a data row. 
-     * Will be unset when dimension instatiates getter class
-     */
-    public $params;
-    public Action $headerAction;
+ 
+    // @var The group header action to be executed on begin of a group change
+    public Action $headerAction;  
+    // @var The group footer action to be executed after all group members are handled.
     public Action $footerAction;
 
-    public function __construct(string $name, int $level, int $dimID, $valueSource, $params = null) {
-        $this->name = $name;
-        $this->setLevel($level);
-        $this->setDimID($dimID);
-        $this->valueSource = $valueSource;
-        $this->params = $params;
-    }
-
-    private function setLevel(int $level) {
-        if ($level < 1) {
-            throw new \InvalidArgumentException("Grouplevel '$level' must be less one");
+    /**
+     * 
+     * @param string $name The group name
+     * @param int $level The group level
+     * @param int $dimID The id of the dim this group belongs to.
+     * @param mixed $valueSource The location or callable where to find the group value from a data row.
+     * Will be unset when dimension instatiates getter class
+     * @param array $params Parameters passed unpacked when $valueSource is a callable.
+     * Will be unset when dimension instatiates getter class
+     */
+    public function __construct(public string $name, public int $level, public int $dimID, public $valueSource,  public array $params) {
+      if ($level < 1) {
+            throw new \InvalidArgumentException("Grouplevel '$level' must not be less one");
         }
-        $this->level = $level;
-    }
-
-    private function setDimID(int $dimID) {
         if ($dimID < 0) {
-            throw new \InvalidArgumentException("DimID '$dimID' must be less zero");
+            throw new \InvalidArgumentException("DimID '$dimID' must not be less zero");
         }
-        $this->dimID = $dimID;
     }
-
 }

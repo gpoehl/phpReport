@@ -26,9 +26,6 @@ class Action {
     const WARNING = 5;
     const ERROR = 6;
 
-    /** The action key */
-    public string $actionKey;
-
     /** @var Execute action only when true */
     public bool $execute;
 
@@ -47,11 +44,10 @@ class Action {
 
     /**
      * 
-     * @param string $actionKey
+     * @param string $actionKey The action key
      * @param array $actionParameter consists of the actionTyp and the action
      */
-    public function __construct(string $actionKey, array $actionParameter) {
-        $this->actionKey = $actionKey;
+    public function __construct(public string $actionKey, array $actionParameter) {
         [$this->givenActionTyp, $this->givenAction] = $actionParameter;
     }
 

@@ -15,32 +15,29 @@ use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
 class ReportTest extends TestCase {
-
-    /**
-     * @dataProvider paramsProvider
-     */
-    public function testConstructor($data, $expected) {
-        $rep = (new Report($this->getBase(), [
-                    'actions' => ['noData' => 'nodata']]));
+    
+    public function testBasics() {
+        $rep = (new Report());
         $this->assertInstanceOf(MajorProperties::class, $rep->mp);
         $this->assertInstanceOf(Collector::class, $rep->rc);
         $this->assertInstanceOf(Collector::class, $rep->gc);
         $this->assertInstanceOf(Collector::class, $rep->total);
-        $this->assertSame([], $rep->params);
+        $this->assertSame(Null, $rep->params);
     }
 
     /**
      * @dataProvider paramsProvider
      */
-    public function testConstructorWithParams($rep, $expected) {
-        $this->assertSame($expected, $rep->params);
+    public function testConstructorParams($data) {
+         $rep = (new Report(null, null, $data));
+        $this->assertSame($data, $rep->params);
     }
 
     public function paramsProvider() {
         return [
-            'One param' => [new Report($this->getBase(), null, 'myParam'), ['myParam']],
-            'More params' => [new Report($this->getBase(), null, 'myParam1', 'myParam2', 'myParam3'), ['myParam1', 'myParam2', 'myParam3']],
-            'One param as assoc array' => [new Report($this->getBase(), null, ['p1' => 'param1', 'p2' => 'param2', 'p3' => 'param3']), [['p1' => 'param1', 'p2' => 'param2', 'p3' => 'param3']]],
+            'Empty param' => [null],
+            'One param' => ['myParam'],
+            'One param as assoc array' => [['p1' => 'param1', 'p2' => 'param2', 'p3' => 'param3']],
         ];
     }
 

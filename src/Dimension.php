@@ -13,32 +13,19 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use gpoehl\phpReport\getter\BaseGetter;
+use gpoehl\phpReport\getter\GetterFactory;
+
 /**
  * Dimension holds related data per data dimension.
  * Each report has at least one dimension. Addional ones are instantiated
  * for every joined data. 
  */
-class Dimension {
-
-    /** @var The current dimension id. First dimension has id = 0. */
-    public int $id;
+class Dimension
+{
 
     /** @var True when this is the last dimension (has not joined data). */
     public bool $isLastDim = true;
-
-    /** @var Level of first group assigned to this dimension. */
-    public int $fromLevel;
-
-    /** @var Level of last group assigned to this dimension. Same as $lastLevel
-     * from previous dimension when no group is assigned. */
-    public int $lastLevel;
-
-    /** @var Default class or object for getters using methods. */
-    private $defaultTarget;
-
-    /** @var Reference to Collector Report->total object from Report.
-     * Used to addValues() without returning values to Report object. */
-    private Collector $total;
 
     // Actions to be executed when dimension is not the last one.
 
@@ -64,82 +51,85 @@ class Dimension {
     public array $groupValues = [];
 
     /** @var Indicator if row type is detected and getter ojects are instantiated. */
-    private bool $gettersSet = false;
+    private bool $gettersInstantiated = false;
 
     /** @var BaseGetter[] Object to get group value indexed by group level. */
     private array $groupGetters = [];
 
     /** @var BaseGetter[] Object to get values for compute items and sheets indexed by name. */
-    private array $calcGetters = [];
-    
+    public array $calcGetters = [];
+
     /** @var Object to get joined values. */
-    private getter\BaseGetter $joinGetter;
-    
+    private BaseGetter $joinGetter;
+
     // Source values will be unset after instantiating of getter objects. 
-    /** @var array[] Parameter for compute items indexed by name. */ 
+
+    /** @var array[] Parameter for compute items indexed by name. */
     private array $calcSources = [];
-    /** @var array[] Parameter for sheet items indexed by name. Will also be handled by calcGetters. */ 
+
+    /** @var array[] Parameter for sheet items indexed by name. Will also be handled by calcGetters. */
     private array $sheetSources = [];
-    
-    /** @var Parameter for joined data. */ 
+
+    /** @var Parameter for joined data. */
     private array $joinSource;
 
     /**
      * Instantiate a new dimension object
-     * @param int $id The dimension id
-     * @param object|className $target Object or name of a class which holds the
-     * action methods to be called. 
-     * @param \gpoehl\phpReport\Collector $total The 'total' collector from report class 
+     * @param int $id The dimension id. First dimension has id = 0.
+     * @param int $lastLevel  Level of last group assigned to this dimension. 
+     * Same as $lastLevel from previous dimension when no group is assigned. 
+     * @param object|className $defaultTarget Object or name of a class in which the
+     * methods will be called when $source is not specified.
      */
-    public function __construct(int $id, int $lastLevel, $defaultTarget, Collector $total) {
-        $this->id = $id;
-        $this->lastLevel = $lastLevel;
-        $this->defaultTarget = $defaultTarget;
-        $this->total = $total;
+    public function __construct(public int $id, public int $lastLevel, private $defaultTarget) {
+        
     }
 
     /**
      * Keep parameters for an computed item until getter class is instantiated.
      * @param string $name
-     * @param mixed $value Source of the value to be computed
-     * @param array|empty $params Additional variadic parameters passed when  
-     * $source is a callable.
+     * @param mixed $source Source of the value to be computed
+     * @param array $params Parameters passed unpacked when $source is a callable.
      */
-    public function addCalcSource(string $name, $value, array $params =[]) {
-        $this->calcSources [$name] = [$value, $params];
+    public function setCalcSource(string $name, $source, array $params): void {
+        $this->calcSources [$name] = [$source, $params];
     }
 
     /**
      * Keep parameters for a sheet until getter class is instantiated.
      * @param string $name
-     * @param mixed $key Source of the key for the sheet
-     * @param mixed $value Source of the value for the sheet
-     * @param array|empty $params Additional variadic parameters passed when  
-     * $source is a callable.
+     * @param mixed $keySource Source of the key for the sheet
+     * @param mixed $source Source of the value for the sheet
+     * @param array $keyParams Parameters passed unpacked when $keySource is a callable.
+     * @param array $params Parameters passed unpacked when $source is a callable.
      */
-    public function addSheetSource(string $name, $key, $value, array $params= []) {
-        $this->sheetSources [$name] = [$key, $value, $params];
+    public function setSheetSource(string $name, $keySource, $source, array $keyParams, array $params): void {
+        $this->sheetSources [$name] = [$keySource, $source, $keyParams, $params];
     }
 
-     /**
+    /**
      * Keep parameters for joined data until getter class is instantiated.
-     * @param mixed $value Source of the joined data
-     * @param array|empty $params Additional variadic parameters passed when  
-     * $source is a callable.
+     * @param mixed $source Source of the joined data
+     * @param array $params Parameters passed unpacked when $source is a callable.
      */
-    public function setJoinSource($value, array $params =[]) {
+    public function setJoinSource($source, array $params): void {
         $this->isLastDim = false;
-        $this->joinSource = ['value' => $value, 'params' => $params];
+        $this->joinSource = [$source, $params];
     }
 
     /**
      * Get all group values from given row.
+     * This is the first method call for each data row. So this is the place to
+     * instantiate getters.
      * @param type $row
      * @param type $rowKey
-     * @return array
+     * @return array The requested group values indexed by group level.
      */
     public function getGroupValues($row, $rowKey = null): array {
-        ($this->gettersSet) ?: $this->setGetters(is_object($row));
+        if (!$this->gettersInstantiated) {
+            $this->instantiateGetters($row);
+            $this->gettersInstantiated = true;
+        }
         $values = [];
         foreach ($this->groupGetters as $level => $getter) {
             $values [$level] = $getter->getValue($row, $rowKey);
@@ -148,17 +138,8 @@ class Dimension {
     }
 
     /**
-     * Add values for computed items and sheets to 'total' collector
-     */
-    public function addValues(): void {
-        foreach ($this->calcGetters as $name => $getter) {
-            $this->total[$name]->add($getter->getValue($this->row, $this->rowKey));
-        }
-    }
-
-    /**
      * Get data joined to the current row
-    */
+     */
     public function getJoinedData() {
         return $this->joinGetter->getValue($this->row, $this->rowKey);
     }
@@ -180,21 +161,24 @@ class Dimension {
      * Set getter objects on first request for group values 
      * Detect row type and let GetterFactory instantiate all required getter objects
      */
-    private function setGetters(bool $isRowAnObject):void {
-        $this->gettersSet = true;
-        $factory = new getter\GetterFactory($isRowAnObject);
+    private function instantiateGetters($row): void {
+        $factory = (is_object($row)) ?
+                new GetterFactory(True, $this->defaultTarget, $row::class) :
+                new GetterFactory(false, $this->defaultTarget);
+
         foreach ($this->groups as $group) {
             $this->groupGetters[$group->level] = $factory->getGetter($group->valueSource, $group->params);
             unset($group->valueSource, $group->params);
         }
         foreach ($this->calcSources as $name => $source) {
-            $this->calcGetters[$name] = $factory->getGetter($source[0], $source[1]);
+            $this->calcGetters[$name] = $factory->getGetter(... $source);
         }
         foreach ($this->sheetSources as $name => $source) {
-            $this->calcGetters[$name] = $factory->getSheetGetter($source[0], $source[1], $source[2]);
+            $this->calcGetters[$name] = $factory->getSheetGetter(... $source);
         }
         if (!$this->isLastDim) {
-            $this->joinGetter = $factory->getGetter($this->joinSource['value'], $this->joinSource['params']);
+            $factory->isJoin = true;
+            $this->joinGetter = $factory->getGetter(... $this->joinSource);
         }
         unset($this->calcSources, $this->sheetSources, $this->joinSource);
     }

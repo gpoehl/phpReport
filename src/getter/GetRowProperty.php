@@ -14,17 +14,14 @@ declare(strict_types=1);
 namespace gpoehl\phpReport\getter;
 
 /**
- * Gets value from an array item
+ * Gets value from an object property where the data row is the object.
  */
-class GetFromArray extends BaseGetter{
+class GetRowProperty extends BaseGetter{
    
     /**
-     * @see getValue()
-     * @var $rowKey Will not be used. 
-     * @return Array item declared in $source. To allow join() on array's the
-     * warning when the item doesn't exitst will be ignored.
+     * @see BaseGetter::getValue
      */
     public function getValue($row, $rowKey = null) {
-       return @$row[$this->source];
+        return $row->{$this->source};
     }
 }

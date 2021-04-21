@@ -18,12 +18,12 @@
 # -- Project information -----------------------------------------------------
 
 project = 'phpReport'
-copyright = '2020, Günter Pöhl'
+copyright = '2021, Günter Pöhl'
 author = 'Günter Pöhl'
 
-version ='2.1.0'
+version ='3.0.0'
 # The full version, including alpha/beta/rc tags
-release = '2.1.0'
+release = '3.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -33,7 +33,7 @@ release = '2.1.0'
 # ones.
 extensions = [
     'sphinx.ext.todo',
-	'sphinx_rtd_theme',
+ 	'sphinx_rtd_theme',
 	'sphinxcontrib.phpdomain',
 ]
 

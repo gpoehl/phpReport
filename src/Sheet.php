@@ -20,10 +20,10 @@ namespace gpoehl\phpReport;
  */
 class Sheet extends AbstractCollector {
 
-    private $calculator; // calculator used to create new column on demand
-
-    public function __construct(AbstractCalculator $calculator) {
-        $this->calculator = $calculator;
+ /**
+  * @param AbstractCalculator $calculator Calculator used to create new column on demand
+  */
+    public function __construct(private AbstractCalculator $calculator) {
     }
 
     private function addItem($key) {

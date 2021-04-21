@@ -14,14 +14,16 @@ declare(strict_types=1);
 namespace gpoehl\phpReport\getter;
 
 /**
- * Gets value from an object method where the data row is the object.
+ * Interface to get value(s) related to a data row.
  */
-class GetFromObjectMethod extends BaseGetter{
-   
+interface GetValueInterface
+{
+
     /**
-     * @see BaseGetter::getValue
+     * Get the value declared by $source out of $row.
+     * @var mixed $row The current data row.
+     * @var mixed|null $rowKey The key of the current data row.
+     * @return mixed The desired data value.
      */
-    public function getValue($row, $rowKey = null) {
-        return $row->{$this->source}(... $this->params);
-    }
+    public function getValue($row, $rowKey = null);
 }

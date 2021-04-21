@@ -19,52 +19,29 @@ class DimensionTest extends TestCase {
     public function setUp(): void {
         $this->mp = Factory::properties();
         $this->total = Factory::collector();
-        $this->stack = new Dimension(1, 4, 'DefaultTarget', $this->total);
+        $this->stack = new Dimension(1, 4, 'DefaultTarget');
     }
 
     /**
      * @dataProvider rowProvider
      */
     public function testGetGroupValues($row) {
-        $group1 = new Group('A', 5, 1, 'Attr1');
+        $group1 = new Group('A', 5, 1, 'Attr1',[]);
         $this->stack->groups[] = $group1;
-        $group2 = new Group('B', 6, 1, 'Attr2');
+        $group2 = new Group('B', 6, 1, 'Attr2', []);
         $this->stack->groups[] = $group2;
-        $this->assertSame([5 => 'a', 'b'], $this->stack->getGroupValues($row, null));
+        $this->assertSame([5 => 'a', 'b'], $this->stack->getGroupValues($row, []));
     }
     
     /**
      * @dataProvider rowProvider
      */
     public function testGetJoinedData($row) {
-        $this->stack->setJoinSource('Attr5');
+        $this->stack->setJoinSource('Attr5',[]);
         $this->stack->getGroupValues($row);   // Required to setGetters()
 
         $this->stack->activateValues($row);
         $this->assertSame([['x'],['y'],['z'] ], $this->stack->getJoinedData());
-    }
-
-    /**
-     * @dataProvider rowProvider
-     */
-    public function testAddValues($row) {
-        $this->total->addItem(Factory::calculator($this->mp, 1, 1), 'A');
-        $this->stack->addCalcSource('A', 'Attr3');
-
-        $this->total->addItem(Factory::calculator($this->mp, 1, 1), 'B');
-        $this->stack->addCalcSource('B', 'Attr4');
-
-        $this->total->addItem(Factory::sheet($this->mp, 1, 1), 'C');
-        $this->stack->addSheetSource('C', 'Attr3', 'Attr4');
-
-        $this->stack->getGroupValues($row);   // Required to setGetters()
-        $this->mp->level = 1;
-
-        $this->stack->activateValues($row);
-        $this->stack->addValues();
-
-        $this->assertSame(['A' => 3, 'B' => 4, 'C' => 4], $this->total->sum(0, true));
-        $this->assertSame([3 => 4], $this->total->C->sum(0, true));
     }
 
     public function rowProvider() {

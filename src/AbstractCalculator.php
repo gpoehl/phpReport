@@ -19,8 +19,6 @@ namespace gpoehl\phpReport;
  */
 abstract class AbstractCalculator {
 
-    protected $mp;         // Major properties object
-    public $maxLevel;      // The maximum (group) level
     protected $total = []; // Array which keeps cumulated values per level
 
     /**
@@ -28,9 +26,7 @@ abstract class AbstractCalculator {
      * @param int $maxLevel The maximum (group) level 
      * @param mixed|null $objID Optioal referece of this object.
      */
-    public function __construct(MajorProperties $mp, int $maxLevel) {
-        $this->mp = $mp;
-        $this->maxLevel = $maxLevel;
+    public function __construct(protected MajorProperties $mp, public int $maxLevel) {
     }
 
     /**
