@@ -94,7 +94,7 @@ Prototyping is a way to simulate, replace or extend user actions with prototype 
 development.
 
 Each prototype action generates a html table containing some interesting stuff about
-the current data row, current data group and computed values.
+the current data row, data group values and computed values.
 
 The following example for a medium complex application shows the usage of some
 basic features.
@@ -222,11 +222,11 @@ This is also the time to uncomment the two prototype calls made above.
 
     public function totalFooter(){
         return
-            "<h1>Summary page</h1>
-            "Total sales: " . $this->rep->total->sales->sum() .
-            "Total number of customers: " . $this->rep->gc->customer->sum() .
-            "Total number of orders: " . $this->rep->gc->order->sum() .
-            "Total number of rows: " . $this->rep->rc->sum();
+            "<h1>Summary page</h1> .
+            "<br>Total sales: " . $this->rep->total->sales->sum() .
+            "<br>Total number of customers: " . $this->rep->gc->customer->sum() .
+            "<br>Total number of orders: " . $this->rep->gc->order->sum() .
+            "<br>Total number of rows: " . $this->rep->rc->sum();
     }
 ```
 
@@ -234,7 +234,7 @@ This is also the time to uncomment the two prototype calls made above.
 Requirements
 ------------
 
-The only requirement for **phpReport** is PHP 7.4.0 or later.
+The only requirement for **phpReport** is PHP 8.0 or later.
 
 Installation
 ------------
