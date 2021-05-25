@@ -10,6 +10,9 @@ data rows can be passed to phpReport all at once, row by row or in batches of
 any size. This gives greatest flexibility and more control over memory usage when
 working with large amount of data.
 
+It also allows complete seperation between a controller class and the application.
+The controller might feed the report object with the required data. 
+
 Choose the access strategy which seems most suitable for your current application
 and change this strategy on demand without touching the application.
 
