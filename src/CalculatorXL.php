@@ -27,9 +27,11 @@ class CalculatorXL extends Calculator implements MinMaxIF{
     protected $max = [];
 
     /**
+     * @param MajorPropertiesService $mp Object of major properties  
+     * @param int $maxLevel The maximum (group) level 
      * Initialize min / max with null values
      */
-    public function __construct(MajorProperties $mp, int $maxLevel) {
+    public function __construct(protected MajorProperties $mp, public int $maxLevel) {
         parent::__construct($mp, $maxLevel);
         $this->min = $this->max = array_fill(0, $maxLevel + 1, null);
     }

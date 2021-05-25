@@ -20,10 +20,11 @@ namespace gpoehl\phpReport;
 class CalculatorXS extends AbstractCalculator {
 
     /**
+     * @param MajorPropertiesService $mp Object of major properties  
+     * @param int $maxLevel The maximum (group) level 
      * Initialize all levels with 0 values
      */
-    public function __construct(MajorProperties $mp, int $maxLevel) {
-        parent::__construct($mp, $maxLevel);
+    public function __construct(protected MajorProperties $mp, public int $maxLevel) {
         $this->total = array_fill(0, $maxLevel + 1, 0);
     }
 

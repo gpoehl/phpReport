@@ -71,14 +71,15 @@ class Helper {
      */
     private static function buildMethodActionFromString(string $baseAction, string $key, bool $allowPercentSign): array {
         if ($key === 'noGroupChange_n') {
-            if (strtolower(substr($baseAction, 0, 8)) === 'warning:') {
+            $action = strtolower($baseAction);
+            if (str_starts_with($action, 'warning:')){
                 return [Action::WARNING, substr($baseAction, 8)];
             }
-            if (strtolower(substr($baseAction, 0, 6)) === 'error:') {
+            if (str_starts_with($action, 'error:')){
                 return [Action::ERROR, substr($baseAction, 6)];
             }
         }
-        if (substr($baseAction, 0, 1) === ':') {
+        if (str_starts_with($baseAction, ':')) {
             return [Action::STRING, substr($baseAction, 1)];
         }
         return (self::isValidName($baseAction, $allowPercentSign)) ? [Action::METHOD, $baseAction] : [Action::STRING, $baseAction];

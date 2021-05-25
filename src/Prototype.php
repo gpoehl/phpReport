@@ -19,7 +19,8 @@ use NumberFormatter;
  * Prototype provides some basic output to help developing classes using phpReport.
  * All methods may be called as prototye methods instead of owner methods.
  */
-class Prototype {
+class Prototype
+{
 
     private $rep;           // The report object. 
     private $nfo;           // Number formatter for ordinal numbers
@@ -88,7 +89,7 @@ TABLE1;
         $color = substr($this->colors[$methodKey], 1);
         // Modify groupheader and footer background colors. Using hex color codes
         // of a method and increase this by hex(30) * actual Level
-        if (substr($methodKey, 0, 5) === 'group') {
+        if (str_starts_with($methodKey, 'group')) {
             $color = '#' . dechex(hexdec($color) + (hexdec("000030") * $this->rep->getLevel()));
         }
         // width of column 1
@@ -109,27 +110,22 @@ TABLE1;
      */
     public function magic(): string {
         $method = $this->rep->currentAction->actionKey;
-        switch ($method) {
-            case 'groupHeader':
-            case 'groupFooter':
-                return $this->$method(
-                        $this->rep->getGroupValue(),
-                        $this->rep->getRow(),
-                        $this->rep->getRowKey(),
-                        $this->rep->getDimID(),
-                );
-            case 'detail':
-            case 'noData_n':
-            case 'data_n':
-            case 'noGroupChange_n':
-                return $this->$method(
-                        $this->rep->getRow(),
-                        $this->rep->getRowKey(),
-                        $this->rep->getDimID(),
-                );
-            default:
-                return $this->$method();
-        }
+        return match ($method) {
+            'groupHeader', 'groupFooter' =>
+            $this->$method(
+                    $this->rep->getGroupValue(),
+                    $this->rep->getRow(),
+                    $this->rep->getRowKey(),
+                    $this->rep->getDimID(),
+            ),
+            'detail', 'noData_n', 'data_n', 'noGroupChange_n' =>
+            $this->$method(
+                    $this->rep->getRow(),
+                    $this->rep->getRowKey(),
+                    $this->rep->getDimID(),
+            ),
+            default => $this->$method(),
+        };
     }
 
     /**

@@ -32,15 +32,12 @@ class Factory {
      * @throws InvalidArgumentException
      */
     public static function calculator(MajorProperties $mp, int $maxLevel, int $typ = Report::REGULAR): AbstractCalculator {
-        switch ($typ) {
-            case Report::REGULAR:
-                return new Calculator($mp, $maxLevel);
-            case Report::XS:
-                return new CalculatorXS($mp, $maxLevel);
-            case Report::XL:
-                return new CalculatorXL($mp, $maxLevel);
-        }
-        throw new InvalidArgumentException("Invalid typ ($typ) on cumulator request.");
+          return match ($typ) {
+            Report::REGULAR => new Calculator($mp, $maxLevel),
+            Report::XS => new CalculatorXS($mp, $maxLevel),
+            Report::XL => new CalculatorXL($mp, $maxLevel),
+            default => throw new InvalidArgumentException("Invalid typ ($typ) on cumulator request."),
+        };
     }
 
     /**

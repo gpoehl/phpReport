@@ -91,19 +91,12 @@ class Configurator {
             return;
         }
         foreach ($config as $param => $value) {
-            switch ($param) {
-                case 'buildMethodsByGroupName':
-                    $this->setBuildMethodsByGroupName($value);
-                    break;
-                case 'grandTotalName':
-                    $this->setGrandTotalName($value);
-                    break;
-                case 'actions':
-                    $this->setActions($value);
-                    break;
-                default:
-                    throw new \InvalidArgumentException("Unknown configuration parameter $param.");
-            }
+             $result = match ($param) {
+                'buildMethodsByGroupName' => $this->setBuildMethodsByGroupName($value),
+                'grandTotalName' => $this->setGrandTotalName($value),
+                'actions' =>  $this->setActions($value),
+                default => throw new \InvalidArgumentException("Unknown configuration parameter $param."),
+             };
         }
     }
 

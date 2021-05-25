@@ -18,9 +18,10 @@ namespace gpoehl\phpReport;
  * Handles group changes, computes values and joins multiple data sources.
  * When a named event occurs the mapped action will be executed. 
  */
-class Report {
+class Report
+{
 
-    const VERSION = '2.2.2';
+    const VERSION = '3.0.0';
     // Rules to execute actions
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
@@ -30,7 +31,6 @@ class Report {
     const XS = 1;                       // CalculatorXS class (default)
     const REGULAR = 2;                  // Calculator class (has not null and not zero counters)
     const XL = 3;                       // CalculatorXL class (has also min and max values) 
-   
 
     /** Collected return values from executed actions. */
     public ?string $output = null;
@@ -46,11 +46,6 @@ class Report {
 
     /** @var Collection of computed values, sheets and other collectors */
     public Collector $total;
-
-    /** @var Mixed[] Additional parameters given at instantiation.
-     * This library makes no use of it. Designed to be an alternate way to pass 
-     * parameters between objects (e.g. from a controller to a report class). */
-    public array $params;
 
     /** @var The currently executed action. */
     public Action $currentAction;
@@ -74,11 +69,6 @@ class Report {
     /** @var Groups object which holds any groups regardless of the related dimension. */
     private Groups $groups;
 
-    /** @var object | className Object or name of a class which holds the
-     * action methods to be called. 
-     */
-    private $target;
-
     /** @var The option how and where event actions will be executed. */
     private int $callOption = self::CALL_EXISTING;
 
@@ -101,13 +91,14 @@ class Report {
     private bool $isJobDone = false;
 
     /**
-     * @param object|string $target Default object or class name for action methods.
+     * @param $target Default object or class name where action methods will be called.
      * @param array|null $config Dynamic configuration to replace defaults set in config.php file.
-     * @param mixed[] $params Optional parameters to be passed around. @see $params.
+     * @param $params Optional parameters not used by this library itself. 
+     * Might be used as a data transfer vehicle.
      */
-    public function __construct($target = null, array $config = null, ...$params) {
-        $this->target = $target;
-        $this->params = $params;
+    public function __construct(private object|string|null $target = null,
+            array $config = null,
+            public mixed $params = null) {
         $conf = Factory::configurator($config);
         $this->groups = new Groups($conf->grandTotalName);
         $this->buildMethodsByGroupName = $conf->buildMethodsByGroupName;
@@ -116,19 +107,14 @@ class Report {
         $this->mp->rc = $this->rc = Factory::collector();
         $this->mp->gc = $this->gc = Factory::collector();
         $this->mp->total = $this->total = Factory::collector();
-        $this->dims[] = $this->dim = new Dimension(0, 0, $target, $this->total);
+        $this->dims[] = $this->dim = new Dimension(0, 0, $target);
         return $this;
     }
 
     /**
-     * Join data to the current row.
-     * Joined data can be
-     * 1) next dimension in an array
-     * 2) property content from a row object
-     * 3) result of a method in a row object
-     * 4) result of any callable
-     *  
-     * @param mixed $value Source of the joined data {@see getter\BaseGetter::getValue()}
+     * Join any data to the current row.
+     * Every join creates a new data dimension. 
+     * @param mixed $source Source of the joined data {@see getter\BaseGetter::getValue()}
      * Callables must return an iterable data set or null when no data exists. 
      * A callable must return False when the callable passes data to the nextSet()
      * or next() methods.
@@ -141,12 +127,13 @@ class Report {
      * Null for default action.
      * @param mixed[] $params Optional parameters passed to callables getting joined data.
      */
-    public function join($value = null, $noDataAction = null, $dataAction = null, $noGroupChangeAction = null, ... $params): self {
-        $this->dim->setJoinSource($value, $params);
+    public function join($source, $noDataAction = null, $dataAction = null, $noGroupChangeAction = null, ... $params): self {
+        getter\GetterFactory::verifySource($source, $params);
+        $this->dim->setJoinSource($source, $params);
         $this->dim->noDataAction = $this->makeAction('noData_n', $noDataAction, $this->dim->id);
         $this->dim->noGroupChangeAction = $this->makeAction('noGroupChange_n', $noGroupChangeAction, $this->dim->id);
         $this->dim->detailAction = $this->makeAction('detail_n', $dataAction, $this->dim->id);
-        $this->dims[] = $this->dim = new Dimension($this->dim->id + 1, $this->dim->lastLevel, $this->target, $this->total);
+        $this->dims[] = $this->dim = new Dimension($this->dim->id + 1, $this->dim->lastLevel, $this->target);
         return $this;
     }
 
@@ -159,15 +146,16 @@ class Report {
      * the **gc** collector. 
      * @param string $name Unique group name. 
      * This name will be used to build method names ({@see Configuration})
-     * @param mixed $value Source of the group value {@see getter\BaseGetter::getValue()}.
+     * @param mixed $source Source of the group value {@see getter\BaseGetter::getValue()}.
      * Defaults to the group name.
      * @param mixed $headerAction Action for group header. Null for default action.
      * @param mixed $footerAction Action for group footer. Null for default action.
      * @param mixed[] $params Optional parameters passed to callables getting the group value.
      */
-    public function group($name, $value = null, $headerAction = null, $footerAction = null, ...$params): self {
-        $value ??= $name;
-        $group = new Group($name, ++$this->mp->maxLevel, $this->dim->id, $value, $params);
+    public function group($name, $source = null, $headerAction = null, $footerAction = null, ...$params): self {
+        $source ??= $name;
+        getter\GetterFactory::verifySource($source, $params);
+        $group = new Group($name, ++$this->mp->maxLevel, $this->dim->id, $source, $params);
         If ($this->buildMethodsByGroupName === 'ucfirst') {
             $replacement = ucfirst($name);
         } else {
@@ -189,7 +177,7 @@ class Report {
      * is linked to the total collector.
      * Aggregate functions are available at each group level at any time.
      * @param string $name Unique name to reference a calculator object. 
-     * @param mixed $value Source of the value to be computed.
+     * @param mixed $source Source of the value to be computed.
      * When the $value parameter is null it defaults to the content of $name parameter.  
      * Use False when the value should not be computed automaticly. In this case
      * only the referece to the calculator object will be established. Use the
@@ -202,12 +190,15 @@ class Report {
      * aggregated data are only needed on higher levels.
      * @param mixed[] $params Optional parameters passed to callables getting the value.
      */
-    public function compute(string $name, $value = null, ?int $typ = self::XS, ?int $maxLevel = null, ...$params): self {
+    public function compute(string $name, $source = null, ?int $typ = self::XS, ?int $maxLevel = null, ...$params): self {
         $typ ??= self::XS;
-        $value ??= $name;
+        $source ??= $name;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $this->total->addItem(Factory::calculator($this->mp, $maxLevel, $typ), $name);
-        ($value === false) ?: $this->dim->addCalcSource($name, $value, $params);
+        if ($source !== false) {
+            getter\GetterFactory::verifySource($source, $params);
+            $this->dim->setCalcSource($name, $source, $params);
+        }
         return $this;
     }
 
@@ -218,14 +209,14 @@ class Report {
      * @param string $name Unique name to reference the sheet object. The
      * reference will be hold in $this->total.
      * 
-     * @param mixed $key Source of the key value. The source can return an array
-     * having data to be cumputed indexed by key.
+     * @param mixed $keySource Source of the key value. The source can return an array
+     * having data to be computed indexed by key.
      * Use False when the value should not be computed automaticly. In this case
      * only the referece to the sheet object will be established. Use the
      * sheet add() method to compute values.  
      *   
-     * @param mixed $value Source of the value to be aggregated. Use null when
-     * the $key source returns key and data in an array [key => value]
+     * @param mixed $source Source of the value to be aggregated. Use Null when
+     * the $keySource returns key and data in an array [key => value]
      * 
      * @param int|null $typ The calculator type. 
      * Typ is used to choose between a calculator class. Options are XS, REGULAR
@@ -242,11 +233,24 @@ class Report {
      * @param mixed ...$params Optional list of parameters passed `unpacked`
      * to anonymous functions and callables getting the sheet key =>value pair.
      */
-    public function sheet(string $name, $key, $value, ?int $typ = self::XS, $fromKey = null, $toKey = null, $maxLevel = null, ...$params): self {
+    public function sheet(string $name, $keySource, $source, ?int $typ = self::XS, 
+            $fromKey = null,
+            $toKey = null, 
+            ?int $maxLevel = null, 
+            ?array $keyParams = [],
+            ...$params
+            ): self {
         $typ ??= self::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $this->total->addItem(Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey), $name);
-        ($key === false) ?: $this->dim->addSheetSource($name, $key, $value, $params);
+        if ($keySource !== false) {
+            // Don't pass params to prevent raising warning. The might be use for keySource an source. 
+            getter\GetterFactory::verifySource($keySource, $keyParams);
+            if ($source !== null) {
+                getter\GetterFactory::verifySource($source, $params);
+            }
+            $this->dim->setSheetSource($name, $keySource, $source, $keyParams, $params);
+        }
         return $this;
     }
 
@@ -256,10 +260,11 @@ class Report {
      * @return int maxLevel
      * @throws InvalidArgumentException
      */
-    private function checkMaxLevel(int $maxLevel = null): int {
+    private function checkMaxLevel(?int $maxLevel): int {
         if ($maxLevel === null) {
-            $maxLevel = $this->mp->maxLevel;
-        } elseif ($maxLevel > $this->mp->maxLevel) {
+            return $this->mp->maxLevel;
+        }
+        if ($maxLevel > $this->mp->maxLevel) {
             throw new InvalidArgumentException("MaxLevel $maxLevel must be equal or less maxLevel of dim({$this->mp->maxLevel}).");
         }
         return $maxLevel;
@@ -275,7 +280,7 @@ class Report {
      */
     private function makeAction(string $actionKey, $actionParam, $replacement): Action {
         $wrk = ($actionParam !== null) ? Helper::buildMethodAction($actionParam, $actionKey) :
-                Helper::replacePercent((string)$replacement, $this->actions[$actionKey]);
+                Helper::replacePercent((string) $replacement, $this->actions[$actionKey]);
         return new Action($actionKey, $wrk);
     }
 
@@ -284,11 +289,11 @@ class Report {
      * Set runTimeActions and call init and totalHeader methods.
      */
     private function finalInitializion(): void {
-        foreach ($this->dims as $dim){
-             $this->rc->addItem(Factory::calculator($this->mp, $dim->lastLevel, self::XS));
+        foreach ($this->dims as $dim) {
+            $this->rc->addItem(Factory::calculator($this->mp, $dim->lastLevel, self::XS));
         }
-         reset($this->dims);
-        $this->dim= current ($this->dims);
+        reset($this->dims);
+        $this->dim = current($this->dims);
         $this->mp->groupLevel = $this->groups->groupLevel;
         $this->executeAction('init');
         $this->executeAction('totalHeader');
@@ -396,21 +401,22 @@ class Report {
     }
 
     /**
-     * Handles a single row.
+     * Handles a single data row.
      * @param array|object $row Data row to be processed.
-     * @param string|int|null $rowKey Optional key of $row. Defaults to null.
+     * @param $rowKey Optional key of $row. Defaults to null.
      */
-    public function next($row, $rowKey = null): self {
+    public function next($row, string|int|null $rowKey = null): void {
         $this->handleGroupChanges($row, $rowKey);
         $this->rc->items[$this->dim->id]->inc();
-        $this->dim->addValues();
+        foreach ($this->dim->calcGetters as $name => $getter) {
+            $this->total[$name]->add($getter->getValue($row, $rowKey));
+        }
         // Handle next dimension or execute detail action.
         if (!$this->dim->isLastDim) {
             $this->handleDimension();
         } else {
             $this->output .= $this->detailAction->execute($row, $rowKey, $this->dim->id);
         }
-        return $this;
     }
 
     /**
@@ -420,9 +426,9 @@ class Report {
      * are not equal with group values of previous row in same dimension.
      * When group has changed header and footer actions will be executed.
      * @param array|object $row The current row.
-     * @param int | string | null $rowKey The key of $row. 
+     * @param $rowKey The key of $row. 
      */
-    private function handleGroupChanges($row, $rowKey): void {
+    private function handleGroupChanges($row, string|int|null $rowKey): void {
         $groupValues = $this->dim->getGroupValues($row, $rowKey);
         // Check if group has changed. $diffs has an array with changed group values.
         // This is always true for next dimension (when groups are defined) 
@@ -435,7 +441,7 @@ class Report {
         }
         // Group has changed. Determine index of the highest changed group.
         $this->changedLevel = key($diffs);
-        // No footer when row is the very first one (in dimension). 
+        // No footer for first row (in actual dimension). 
         ($this->dim->row === null) ?: $this->handleFooters();
         $this->dim->activateValues($row, $rowKey, $groupValues);
         // Call Header methods from changed group in dim to last group in dim;
@@ -469,14 +475,12 @@ class Report {
     }
 
     /**
-     * Get data for next dimension out of current row.
+     * Get data for next dimension.
      * When data equals false a called function will call run() or next() 
      * methods. When we get data from $row the run() method will be called.
      * With both ways run() or next () methods will be called recursive.
      * Dimension is incremented at each call and decremented at the end
      * of this method.
-     * @param array|object $row The current data row. 
-     * @param mixed $rowKey The key of $row
      */
     private function handleDimension(): void {
         $changed = $this->noGroupChange();
