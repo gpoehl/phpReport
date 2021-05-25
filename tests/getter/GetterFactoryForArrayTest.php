@@ -5,16 +5,19 @@ declare(strict_types=1);
 /**
  * Unit test of ObjectGetterFactory class and related getter methods.
  */
+require_once __DIR__ . '/../Foo.php';
+
+use gpoehl\phpReport\getter\GetArrayItem;
 use gpoehl\phpReport\getter\GetterFactory;
 use PHPUnit\Framework\TestCase;
 
-class GetterFactoryForArrayTest extends TestCase {
-
+class GetterFactoryForArrayTest extends TestCase
+{
+    public $row = ['a', 'b', 'name' => 'nobody', 'x y' => 'key has blank'];
     public $stack;
 
     public function setUp(): void {
-        $this->stack = new GetterFactory(false, $this->getTargetClass());
-        $this->row = [999, 'productID' => 123, 'length' => 3, 'width' => 4, 'height' => 5];
+        $this->stack = new GetterFactory(false);
     }
 
     /**
@@ -27,16 +30,26 @@ class GetterFactoryForArrayTest extends TestCase {
 
     public function sourceProvider() {
         return [
-            'integer key' => [999, 0],
-            'array key' => [123, 'productID'],
-            'closure' => [12, fn($row, $rowKey) => ($row['length'] * $row['width'])],
-            'default method' => [12, ['getArea']],
-            'object method' => ['arrName', [new GetterFactoryForArrayArray(), 'getName']],
-            'object method 1 param' => ['ARRNAME', [new GetterFactoryForArrayArray(), 'getName'], true],
-            'object method 2 params' => [str_split('arrName'), [new GetterFactoryForArrayArray(), 'getName'], false, true],
-            'static class method' => [60, ['GetterFactoryForArrayArray', 'getVolume']],
-            'static class method with params' => [150, ['GetterFactoryForArrayArray', 'getWeight'], 2, 10, 20],
+            'base getter offset' => ['b', new GetArrayItem(1)],
+            'base getter assoc' => ['nobody', new GetArrayItem('name')],
+            'arr item' => ['nobody', 'name'],
+            'arr item blank in key' => ['key has blank', 'x y'],
+            'arr item index' => ['b', 1],
         ];
+    }
+
+    public function testNotFoundWarning() {
+        $this->expectWarning();
+        $this->expectWarningMessageMatches('/^Undefined array key .*"x x x"$/');
+        $getter = $this->stack->getGetter('x x x', []);
+        $getter->getValue($this->row);
+    }
+    
+    // Suppress warning by setting isJoin in getter factory 
+    public function testSuppressWarning() {
+        $this->stack->isJoin = true;
+        $getter = $this->stack->getGetter('x x x', []);
+        $this->assertSame(Null, $getter->getValue($this->row));
     }
 
     /**
@@ -53,38 +66,6 @@ class GetterFactoryForArrayTest extends TestCase {
             ['5', fn($row, $rowKey, $start, $length) => substr($row, $start, $length), 2, 1],
             ['3,5', fn($row, $rowKey, $start, $length) => substr($row, $start, $length), 0, 3],
         ];
-    }
-
-    public function getTargetClass() {
-        return new class() {
-
-            public function getArea($row, $rowKey) {
-                return $row['length'] * $row['width'];
-            }
-
-            public static function getWeight($row, $rowKey, $weightPerUnit, $tareWeight = 0, $extraWeight = 0) {
-                return $this->Area($row, $rowKey) * $row['height'] * $weightPerUnit + $tareWeight + $extraWeight;
-            }
-        };
-    }
-
-}
-
-class GetterFactoryForArrayArray {
-
-    private $name = 'arrName';
-
-    public function getName($row, $rowKey, $asUppercase = false, $asArray = false) {
-        $name = ($asUppercase) ? strtoupper($this->name) : $this->name;
-        return ($asArray) ? str_split($name) : $name;
-    }
-
-    public static function getVolume($row, $rowKey) {
-        return $row['length'] * $row['width'] * $row['height'];
-    }
-
-    public static function getWeight($row, $rowKey, $weightPerUnit, $tareWeight = 0, $extraWeight = 0) {
-        return self::getVolume($row, $rowKey) * $weightPerUnit + $tareWeight + $extraWeight;
     }
 
 }
