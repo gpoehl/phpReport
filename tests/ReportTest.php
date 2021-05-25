@@ -6,7 +6,6 @@ declare(strict_types=1);
  * Unit test of Report class.
  * For tests with multiple dimensions see ReportMultipleDimensionTest file
  */
-
 use gpoehl\phpReport\CalculatorXS;
 use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\Helper;
@@ -14,8 +13,9 @@ use gpoehl\phpReport\MajorProperties;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
-class ReportTest extends TestCase {
-    
+class ReportTest extends TestCase
+{
+
     public function testBasics() {
         $rep = (new Report());
         $this->assertInstanceOf(MajorProperties::class, $rep->mp);
@@ -29,7 +29,7 @@ class ReportTest extends TestCase {
      * @dataProvider paramsProvider
      */
     public function testConstructorParams($data) {
-         $rep = (new Report(null, null, $data));
+        $rep = (new Report(null, null, $data));
         $this->assertSame($data, $rep->params);
     }
 
@@ -92,19 +92,19 @@ class ReportTest extends TestCase {
     public function testChunkOfRowsWithOptionFinalizeIsFalseAndNext() {
         $rep = (new Report($this->getBase()))
                 ->setCallOption(Report::CALL_ALWAYS)
-                ->run([['A'], ['B']], false)
-                ->next(['C'])
-                ->end();
-        $this->assertSame('init, totalHeader, detail, detail, detail, totalFooter, close, ', $rep);
+                ->run([['A'], ['B']], false);
+        $rep->next(['C']);
+        $rep->end();
+        $this->assertSame('init, totalHeader, detail, detail, detail, totalFooter, close, ', $rep->output);
     }
 
     public function testNextForOneRowNoGroups() {
         $rep = (new Report($this->getBase()))
                 ->setCallOption(Report::CALL_ALWAYS)
-                ->run(null, false)
-                ->next(['A'])
-                ->end();
-        $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
+                ->run(null, false);
+        $rep->next(['A']);
+        $rep->end();
+        $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep->output);
     }
 
     public function testGroupsOnOneRow() {
@@ -126,7 +126,7 @@ class ReportTest extends TestCase {
                         'totalHeader' => [$this->getOtherClass(), 'staticCallMethod'], // Static callable
                         'noData' => [$this->getOtherClass(), 'callMethod'], // Object callable
                         'totalFooter' => 'callMethod', // Normal method call
-                        'close' => function() {
+                        'close' => function () {
                             return 'closure';                           // Closure
                         },
                     ]]))
@@ -206,7 +206,7 @@ class ReportTest extends TestCase {
         return ([
             [0, 1, 2, 3, array_values($data)],
             [0, 1, 2, 3, (object) array_values($data)],
-            ]);
+        ]);
     }
 
     /**
@@ -265,27 +265,27 @@ class ReportTest extends TestCase {
         $this->assertSame(3, $rep->gc->b->sum(0));      // Total b groups
         $this->assertSame(5, $rep->gc->c->sum(0));      // Total c groups
     }
-    
-     /**
+
+    /**
      * @dataProvider buildMethodsByGroupNameProvider
      */
     public function testBuildMethodsByGroupName($rule, $name, $expectedHeader, $expectedFooter) {
         $rep = (new Report($this->getBase(),
-                [
+                        [
                     'actions' => ['groupHeader' => 'header%', 'groupFooter' => 'footer%'],
                     'buildMethodsByGroupName' => $rule
-                    ]))
+                        ]))
                 ->group($name, 'ga')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([['ga' => 1, 'gb' => 2]]);
-        $this->assertSame('init, totalHeader, ' . $expectedHeader . ', detail, ' . $expectedFooter . ', totalFooter, close, ', $rep);   
+        $this->assertSame('init, totalHeader, ' . $expectedHeader . ', detail, ' . $expectedFooter . ', totalFooter, close, ', $rep);
     }
 
     public function buildMethodsByGroupNameProvider() {
         return [
-            [true, 'a',  'headera', 'footera'],
-            ['ucfirst', 'a',  'headerA', 'footerA'],
-            [false, 'a',  'header1', 'footer1'],
+            [true, 'a', 'headera', 'footera'],
+            ['ucfirst', 'a', 'headerA', 'footerA'],
+            [false, 'a', 'header1', 'footer1'],
         ];
     }
 

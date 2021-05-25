@@ -2,161 +2,57 @@
 Introduction
 ============
 
-|project_name| is designed to be the backbone for all applications needing 
-control over group changes or when calculation of totals and subtotals is required.
-This is usually the case for reports but there are a lot of other use cases.
+|project_name| is a solid foundation for most applications working with
+data sets having to deal with group changes or to calculate totals and subtotals.
+Creating reports it the most typical scenario but there are a lot of other use cases. 
 
-|project_name| integrates into any framework without configuration. You'll never have
-do extend your classes to use |project_name|. So your application can still extend
-from any framework class.
+While |project_name| will handle most of the repetive tasks it is wide open to 
+let you use all your business objects and methods. It also integrates seamless
+without any configuration into any framework. 
 
-Use of |project_name| is very simple even when you work with very 
-complex data structures.  
+The absence of data input tools permits the use of your own tools. This has the
+advantage of 
 
-Data retrieval is done by your own (framework) methods. |project_name| will work with
-this data no matter if you provide a data set or an multi dimensional array. 
-Joining data, even between different sources, is also easy to accomplish.
+* Nothing extra to learn
+* Free selection of the most suitable access strategie
+* Access to all data sources
+* Working with all kind of data like arrays, csv files, Excel tables or data objects
 
-Getting started
----------------
+To enhance the data input capabilities you can easily combine data rows with any other
+data sources and handle them together as a single source. 
+This is implemented by the `join` function an let's you
 
-After instantiation of the report class call the data() method to specifiy which
-the data handler to be used. The data handler is responsible to return values from a data row.
-Out of the box there are an ArrayDataHandler and an ObjectDataHandler. You can
-also use the 'array' or 'object' aliases. 
+* Iterate over nested or multidimensional arrays
+* Iterate over one to many relations provided by data objects
+* Read and iterate over additional data from any source
 
-Then call the group() method for each group that will be controlled. 
+|project_name| also don't prepares any output. Actions are invoked on certain
+events (e.g. call a method `customerHeader` after a group change) which gives 
+you 100% control over what and how something will be done. Create most complex
+reports, create grid tables, print charts, write data into a file or database, 
+send mails, create pdf files or do whatever else comes into your mind.
 
-Use the aggregate() method to get aggregate functions for an field / attribute. The
-sheet() method organizes these in an horizontal way like in a spreadsheet.
-
-Then pass your data to the run() method.
-
-At certain events defined actions will be executed. As you can imagine thats the
-place to do whatever needs to be done.
-
-.. note::
-   You have full access to all your existing models. No matter if these are
-   data models or models implementing your business rules. 
-    
-
-A report which controls two groups and summarizes totals may look like
-this example.
-
-.. code-block:: php
-
-    use gpoehl\phpreport\Report;
-
-    require_once(__DIR__ . '/../vendor/autoload.php');
-   
-    class MyFirstReport {
-
-        // The report object. Use $rep->output to render the output. 
-        public $rep;
-        
-        /**
-        * It might also be a good idea to instantiate the Report in your
-        * controller.
-        */
-        public function __construct($data){
-            // initialize report
-            $this->rep = (new Report($this)) 
-            ->group('customer')         
-            ->group('invoice', 'invoiceID')
-            ->compute('sales', fn($row) => $row->amount * $row->price);
-            // Start execution. $data is an iterable having some data rows
-            $this->rep->run($data);
-        }
-
-        public function init(){
-            return "<h1>My very first report</h1>";
-        } 
-
-        public function customerHeader($customer, $row){
-            return "<h2>Customer $customer</h2>" . $customer->address;
-        } 
-
-        public function invoiceHeader($invoice, $row){
-            return "<h3>Invoice ID = $invoice</h3>";
-        } 
-
-        // Will be called for each data row
-        public function detail($row, $rowKey){
-            return "<br>$row->item: $row->description";
-        } 
-
-        // $row in footer methods is the previous row, not the one which triggered the group change.
-        public function invoiceFooter($invoice, $row){
-            return "Total sales for invoice $invoice = " . $this->rep->total->sales->sum();
-        } 
-
-        public function customerFooter($customer, $row){
-            return "Total sales for customer $customer = " . $this->rep->total->sales->sum();
-        }
-
-        public function totalFooter(){
-            return 
-                "Total sales = $this->rep->total->sales->sum()" .
-                "Total number of customers: $this->rep->gc->customer->sum()" .
-                "Total number of invoices:  $this->rep->gc->invoice->sum()" .
-                "Total number of rows:  $this->rep->rc->sum()" ;
-        } 
-   }   
-   
-
- 
-
- 
-
-Main features are:
-
-Data handling
-  In the most simple form you will call the run method and pass your dataset to this 
-  method. phpReport will the iterate over this dataset and execute certain actions.
-
-  It is not required to build a dataset upfront. You can optionally call the run
-  method without any data and call the next method once for each data row.
-  This might save a lot of memory and processing time.
-
-  phpReport is also able to handle multi-dimensional arrays. Calling the data method
-  tells which element contains the sub-array. phpReport will then iterate of the
-  sub-array. Sub-array can also have elements where you want specific actions when
-  the value changes. So call the group method after the data method to declare
-  this element. Same is true for values to be aggregated.
-
-  phpReport might also getting related data to a given row. See data section for
-  details.
-  Out of the box phpReport offers row counters.
+Of course there is much more |project_name| has to offer. 
 
 Aggregating values    
-  With phpReport it's easy to aggregate values. While calling the aggregate method
-  your values are cumulated. Your might also let phpReport count how often you got
-  a not null or not zero value as well as figure out the min and max value.
+  By calling the `compute` method a calculator object will be instantiated. This
+  will aggregate the declared source value and provides for all declared
+  groups totals, subtotals and running totals as well as counters for values 
+  being not null or empty. The calculator object might also determine minimum 
+  and maximum values.
 
 Sheets
-  Sheets are a very powerful to aggregate values horizontally. Assume 
-  you want to present your calculated data in a table grouped by month. All you need
-  to do is calling the sheet method and tell where to find the key (month) and
-  where to find the value.
+  Sheets aggregates values vertically. This makes tabular representation of data
+  a snap. Columns can be pre-defined or will be instantiated on demand based on the
+  value of a declared key source. 
 
-Group changes
-  phpReport monitors as much groups as you like. As soon as a value changes phpReport
-  executes certain actions like calling group header and group footer methods.
-  See actions section for more details.
-  To let phpReport know which attributes or elements should be monitored call the
-  group method once for for each group. 
-  Out of the box phpReport offers group counters which lets you know how often
-  a certain value (or group) occurs in an other group.
+  Grouping, ranging and filtering of sheet columns provides countless combinations
+  for building totals.
 
 Prototyping
-  Beginners and experienced users of phpReport can benefit from the prototype system.
-  Prototying lets you know which method would habe been called, what data row triggered
-  the actions, what are the values of the group fields and the values of aggregated
-  fields.
-  [Prototyping](prototype.rst)
+  Prototyping is a way to simulate, replace or extend user actions with prototype actions during
+  development.
+
+  Each prototype action generates a html table containing some interesting stuff about
+  the current data row, data group values and computed values.
  
-
-
-
-
-

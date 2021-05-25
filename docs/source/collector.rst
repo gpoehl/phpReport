@@ -4,6 +4,9 @@ Collector
 A collector class is designed to hold and manage multiple items. An item can 
 be an other collector or an calculator object.
 
+.. include:: defaultCollectors.rst
+
+
 The main responsibilty of an collector is to call methods in assigned items.
 To make sure that the cumputation of calculated values works correct calculator
 objects must be registered to the **total** collector or to one of his child collectors. 

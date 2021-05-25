@@ -405,7 +405,7 @@ class Report
      * @param array|object $row Data row to be processed.
      * @param $rowKey Optional key of $row. Defaults to null.
      */
-    public function next($row, string|int|null $rowKey = null): self {
+    public function next($row, string|int|null $rowKey = null): void {
         $this->handleGroupChanges($row, $rowKey);
         $this->rc->items[$this->dim->id]->inc();
         foreach ($this->dim->calcGetters as $name => $getter) {
@@ -417,7 +417,6 @@ class Report
         } else {
             $this->output .= $this->detailAction->execute($row, $rowKey, $this->dim->id);
         }
-        return $this;
     }
 
     /**
