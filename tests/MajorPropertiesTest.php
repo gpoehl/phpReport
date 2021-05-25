@@ -4,8 +4,8 @@ declare(strict_types=1);
 /**
  * Unit test of MajorProperties class
  */
+
 use gpoehl\phpReport\MajorProperties;
-use PHPUnit\Framework\Error\Notice;
 use PHPUnit\Framework\TestCase;
 
 class MajorPropertiesTest extends TestCase {

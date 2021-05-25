@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 use gpoehl\phpReport\Factory;
 use gpoehl\phpReport\Report;
-use PHPUnit\Framework\Error\Warning;
 use PHPUnit\Framework\TestCase;
 
 class CalculatorTest extends TestCase {
