@@ -12,12 +12,12 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
-
 /**
  * Summarize values and count how often not null and not zero values are given
  * to the add() method.
  */
-class Calculator extends AbstractCalculator implements NnAndNzCounterIF{
+class Calculator extends AbstractCalculator implements NnAndNzCounterIF
+{
 
     /** @var int[] not null counter. How many added values had a value not equal to zero. */
     protected $nn = [];

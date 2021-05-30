@@ -23,25 +23,22 @@ class ConfiguratorTest extends TestCase {
         $conf = new Configurator(['buildMethodsByGroupName' => 'invalid']);
     }
 
-    public function testSetActions() {
-        $conf = new Configurator(['actions' => ['init' => 'myInit']]);
-        $this->assertSame('myInit', $conf->actions['init'][1]);
-        $this->expectException(InvalidArgumentException::class);
-        $conf = new Configurator(['actions' => ['invalidKey' => 'anyValue']]);
-    }
-
     public function testSetGrandTotalName() {
         $conf = new Configurator(['grandTotalName' => 'validName']);
         $this->assertSame('validName', $conf->grandTotalName);
-        $this->assertSame('validNameHeader', $conf->actions['totalHeader'][1]);
-        $this->assertSame('validNameFooter', $conf->actions['totalFooter'][1]);
         $this->expectException(InvalidArgumentException::class);
-        $conf = new Configurator(['grandTotalName' => 'invalid Name']);
+        new Configurator(['grandTotalName' => 'invalid Name']);
+    }
+    
+     public function testEmptyGrandTotalName() {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Grand total name can not be empty.");
+        new Configurator(['grandTotalName' => '']);
     }
 
     public function testInvalidConfigurationParameter() {
         $this->expectException(InvalidArgumentException::class);
-        new Configurator(['invalid' => 'invalid Paramemeter']);
+        new Configurator(['invalid' => 'invalid Parameter']);
     }
 
 }

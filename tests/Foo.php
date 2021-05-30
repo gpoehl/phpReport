@@ -94,15 +94,5 @@ class Foo
         $row = (object) $row;
         return $word . ' ' .self::$pubStat . ' and ' . $row->name;
     }
-    
-//    public function x (){
-//        return self::PUBCONST;
-//    }
-//    public static function y (){
-//        return self::PUBCONST;
-//    }
 
 }
-$t = new Foo();
-echo $t->staticAdd(1,7);
-echo constant('foo::PUBCONST');

@@ -78,15 +78,6 @@ class Factory {
     }
 
     /**
-     * Instantiate a new configurator object
-     * @param array $config The configuration parameter
-     * @return Configurator
-     */
-    public static function configurator(array $config = null) {
-        return new Configurator($config);
-    }
-
-    /**
      * Instantiate a new major properties object
      * @return MajorProperties
      */

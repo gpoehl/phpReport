@@ -5,6 +5,8 @@ declare(strict_types=1);
 /**
  * Unit test of Report class. Handling of multiple data dimensions
  */
+
+use gpoehl\phpReport\Action;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
@@ -125,21 +127,13 @@ class ReportMultiDimensionTest extends TestCase {
         ];
     }
 
-    public function testNoGroupChangeThrowsException() {
-        $this->expectException(RuntimeException::class);
-        $this->getBase()
-                ->rep
-                ->group('group1', 0)
-                ->join('C', null, null, 'error:No Group Change')
-                ->run([['A', 'B', 'C' => [[1, 3]]], ['A', 'X', 'C' => [[4, 5]]]]);
-    }
-
+   
     public function testNoGroupChangeTriggersWarning() {
-        $this->expectNotice();
+        $this->expectWarning();
         $this->getBase()
                 ->rep
                 ->group('group1', 0)
-                ->join('C', null, null, 'warning:No Group Change')
+                ->join('C', null, null, ['No Group Change', Action::WARNING])
                 ->run([['A', 'B', 'C' => [[1, 3]]], ['A', 'X', 'C' => [[4, 5]]]]);
     }
 

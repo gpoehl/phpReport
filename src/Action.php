@@ -4,7 +4,7 @@
  * This file is part of the gpoehl/phpReport library.
  *
  * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
- * @copyright ©2020 Günter Pöhl
+ * @copyright ©2021 Günter Pöhl
  * @link      https://github.com/gpoehl/phpReport/readme
  * @author    Günter Pöhl  <phpReport@gmx.net>
  */
@@ -13,102 +13,136 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use gpoehl\phpReport\action\CallableAction;
+use gpoehl\phpReport\action\ErrorExecuter;
+use gpoehl\phpReport\action\StringAction;
+use gpoehl\phpReport\Prototype;
+use gpoehl\phpReport\Report;
+
 /**
  * Action to be executed when Report triggers an event
  */
-class Action {
+class Action
+{
+    
+    // pattern to check that method or variable names are valid.
+    // pattern_n extends pattern to accept also the % sign
+    static $pattern = "/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/";
+    static $pattern_n = "/^[a-zA-Z_%\x7f-\xff][a-zA-Z0-9_%\x7f-\xff]*$/";
 
-    // Action types 
+    // Action target keys  
     const STRING = 1;
-    const CLOSURE = 2;
-    const CALLABLE = 3;
-    const METHOD = 4;
-    const WARNING = 5;
-    const ERROR = 6;
+    const METHOD = 2;
+    const CLOSURE = 3;
+    const CALLABLE = 4;
+    // Action kind  
+    const OUTPUT = 0;
+    const WARNING = \E_USER_WARNING;
+    const NOTICE = \E_USER_NOTICE;
+    const ERROR = \E_USER_ERROR;
 
-    /** @var Execute action only when true */
-    public bool $execute;
-
-    /** @var The action type describing the given action */
-    public int $givenActionTyp;
-
-    /** @var The given action. Like a default action. The action to be executed
-     * is set in setRunTimeAction method */
-    public $givenAction;
-
-    /** @var The action type really used to exectute the action. */
-    private int $runTimeActionTyp;
-
-    /** @var The real action to be executed */
-    private $runTimeAction;
+    private int $kind = 0;
+    // @var $targetKey Key related to given target
+    public int $targetKey = 0;
+    // The target after taking the callOption into account
+    private $runtimeTarget;
 
     /**
-     * 
-     * @param string $actionKey The action key
-     * @param array $actionParameter consists of the actionTyp and the action
+     * @param string $key The action key. Used to call methods in prototype class. 
+     * @param mixed $target The target action. Usually a method name. Closure,
+     * callable or a string is also possible. False to never invoce the action.
+     * @param int|null $kind One of the action kinds (output, warning , notice, error).
+     * Defaults to output. 
+     * @param string|null $replacement Optinal replacement for the % sign in $target
+     * @throws InvalidArgumentException
      */
-    public function __construct(public string $actionKey, array $actionParameter) {
-        [$this->givenActionTyp, $this->givenAction] = $actionParameter;
+    public function __construct(public string $key, public $target, string $replacement = null) {
+        if ($target !== false) {
+            $this->targetKey = $this->detectTargetKey($replacement);
+            if (!in_array($this->kind, [self::OUTPUT, self::NOTICE, self::WARNING, self::ERROR])) {
+                throw new \InvalidArgumentException("Invalid action kind '$this->kind'.");
+            }
+        }
     }
 
     /**
-     * Set runtime action.
-     * Runtime action is used to execute an action. 
-     * Runtime action depends primarily on the call option and action type.
+     * Detect the target key related to the given target
+     * @return int The target key
+     * @throws InvalidArgumentException
+     */
+    private function detectTargetKey($replacement): int {
+        if (is_array($this->target)) {
+            if (count($this->target) !== 2) {
+                throw new InvalidArgumentException("Action target array must have 2 elements.");
+            }
+            // When second element equals false action[0] is handled as string.
+            if ($this->target[1] === false) {
+                $this->target = $this->replace($replacement, $this->target[0]);
+                return self::STRING;
+            } elseif (is_integer($this->target[1])) {
+                // Second target element is the action kind
+                $this->kind = $this->target[1];
+                $this->target = $this->target[0];
+            }
+        }
+        if ($this->target instanceof \Closure) {
+            return self::CLOSURE;
+        }
+
+        $this->target = $this->replace($replacement, $this->target);
+
+        return match (true) {
+            is_array($this->target) => self::CALLABLE,
+            preg_match(self::$pattern, $this->target) === 1 => self::METHOD,
+            default => self::STRING,
+        };
+    }
+
+    private function replace($replacement, $subject) {
+        if ($replacement !== null) {
+            if (is_array($subject)) {
+                $subject[1] = str_replace('%', $replacement, $subject[1]);
+            } else {
+                $subject = str_replace('%', $replacement, $subject);
+            }
+        }
+        return $subject;
+    }
+
+    /**
+     * Set the target to be executed when an event occurs.
+     * The given target might be redirected depending on the $callOption.
+
      * @param object $target Object which holds the methods to be called. 
      * @param Prototype $prototype The prototype object which executes prototype actions.
      * @param int $callOption The option how and where event actions will be executed. 
      */
-    public function setRunTimeAction(object $target, ?Prototype $prototype, int $callOption): void {
-        // Don't even call prototype action when action equals false
-        if ($this->givenAction === false) {
-            $this->execute = false;
-        } else {
-            // Set defaults. RunTimeActionTyp is usually the same as the givenActionTyp.
-            $this->execute = true;
-            // Given action tpyes  CLOSURE and METHOD are both CALLABLE RunTimeActionTyp.
-            $this->runTimeActionTyp = ($this->givenActionTyp === self::CLOSURE || $this->givenActionTyp === self::METHOD) ?
-                    self::CALLABLE : $this->givenActionTyp;
-
-            // Warning and error actions will not be called in target or prototye object.
-            if ($this->givenActionTyp >= self::WARNING) {
-                $this->runTimeAction = $this->givenAction;
-            } elseif ($callOption === Report::CALL_ALWAYS_PROTOTYPE) {
-                // Call always prototype. Run time action type must be set to CALLABLE. 
-                $this->runTimeActionTyp = self::CALLABLE;
-                $this->runTimeAction = [$prototype, $this->actionKey];
-            } elseif ($this->givenActionTyp !== self::METHOD) {
-                // String, closure or callable ([class, method] array)
-                $this->runTimeAction = $this->givenAction;
-            } elseif ($callOption === Report::CALL_ALWAYS || method_exists($target, $this->givenAction)) {
-                // CALL_ALWAYS means that a method in the target class will be called
-                // no matter if the method really exists.
-                $this->runTimeAction = [$target, $this->givenAction];
-            } elseif ($callOption === Report::CALL_PROTOTYPE) {
-                // Call protoype when method doesn't exists in target class and callOption equals Call_Prototype 
-                $this->runTimeAction = [$prototype, $this->actionKey];
-            } else {
-                // None of the above conditions are true. So no action is required.
-                $this->execute = false;
-            }
-        }
+//    public function setRunTimeAction(object $target, ?Prototype $prototype, int $callOption) {
+    public function setRuntimeTarget(object $target, $prototype, int $callOption) {
+        $this->runtimeTarget = match (true) {
+            $this->targetKey === 0 => null,
+            $this->targetKey === self::CALLABLE => new CallableAction($this->target),
+            $callOption === Report::CALL_ALL_PROTOTYPE,
+            $callOption === Report::CALL_ALWAYS_PROTOTYPE && $this->targetKey === self::METHOD => new CallableAction([$prototype, $this->key]),
+            $this->targetKey === self::STRING => new StringAction($this->target),
+            $this->targetKey === self::CLOSURE || $this->targetKey === self::CALLABLE => new CallableAction($this->target),
+            // Now we habe only a method
+            $callOption === Report::CALL_ALWAYS,
+            method_exists($target, $this->target) => new CallableAction([$target, $this->target]),
+            $callOption === Report::CALL_PROTOTYPE => new CallableAction([$prototype, $this->key]),
+            default => null
+        };
     }
 
-    public function execute(...$params) {
-        if ($this->execute) {
-            switch ($this->runTimeActionTyp) {
-                case self::CALLABLE:
-                    return ($this->runTimeAction)(...$params);
-                case self::STRING:
-                    return ($this->runTimeAction);
-                case self::WARNING:
-                    trigger_error($this->runTimeAction . ' RowKey = ' . $params[1], E_USER_NOTICE);
-                case self::ERROR:
-                    throw new \RuntimeException($this->runTimeAction . ' RowKey = ' . $params[1]);
-                default:
-                    throw new \InvalidArgumentException("Action type {$this->runTimeActionTyp} is invalid");
-            }
-        }
+    public function execute(... $params) {
+        return ($this->kind === self::OUTPUT) ?
+                $this->runtimeTarget?->execute(... $params) :
+                trigger_error($this->runtimeTarget?->execute(... $params), $this->kind);
+    }
+
+    public static function isNameValid($value, bool $allowReplacement = false): bool {
+        return ($allowReplacement) ? (bool) preg_match(self::$pattern, $value) : 
+            (bool) preg_match(self::$pattern_n, $value);
     }
 
 }

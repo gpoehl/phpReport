@@ -4,7 +4,7 @@
  * This file is part of the gpoehl/phpReport library.
  *
  * @license   GNU LGPL v3.0 - For details have a look at the LICENSE file
- * @copyright ©2019 Günter Pöhl
+ * @copyright ©2021 Günter Pöhl
  * @link      https://github.com/gpoehl/phpReport/readme
  * @author    Günter Pöhl  <phpReport@gmx.net>
  */
@@ -16,13 +16,12 @@ namespace gpoehl\phpReport;
  * Configurator handles configuration options
  * It loads the config file and merges configuration parameters
  */
-class Configurator {
-    
+class Configurator
+{
+
     /**
-     * @var array[] An array of all possible actions.
-     * Action names are mapped to actions to be exected.
-     * Key is the action name while value is an array having the the action
-     * type at first element and the action to be executed as second element.
+     * @var array[] An array of all possible actions indexed by the action key.
+     * Action keys are mapped to actions to be executed.
      * Action is usually a method to be called within the owner class or 
      * a string to be appended to $output. But there are much more options.
      * Please check the documentation.
@@ -35,26 +34,29 @@ class Configurator {
      * current dimension id.
      */
     public $actions = [
-        'init' => [Action::METHOD, 'init'],
-        'totalHeader' => [Action::METHOD, '%Header'],
-        'groupHeader' => [Action::METHOD, '%Header'],
-        'detail' => [Action::METHOD, 'detail'],
-        'groupFooter' => [Action::METHOD, '%Footer'],
-        'totalFooter' => [Action::METHOD, '%Footer'],
-        'close' => [Action::METHOD, 'close'],
-        // : sign declares string explicit to avoid method calls when callOption = CALL_ALWAYS
-        'noData' => [Action::STRING, '<br><strong>No data found</strong><br>'], // Dimension = 0
-        'noData_n' => [Action::METHOD, 'noDataDim%'],
-        'detail_n' => [Action::METHOD, false],
-        'noGroupChange_n' => [Action::ERROR, "error:Current row in dimension % didn't trigger a group change."],
+        'init' => 'init',
+        'totalHeader' => '%Header',
+        'groupHeader' => '%Header',
+        'detail' => 'detail',
+        'groupFooter' => '%Footer',
+        'totalFooter' => '%Footer',
+        'close' => 'close',
+        'noData' => '<br><strong>No data found</strong><br>', // Dimension = 0
+        'noData_n' => 'noDataDim%',
+        'detail_n' => 'detail%',
+        'noGroupChange_n' => ["Current row in dimension % didn't trigger a group change.", Action::ERROR],
     ];
-    
-    /** @var true | false | 'ucfirst' Rule to build method groupheader and -footer names. */ 
+
+    /** @var true | false | 'ucfirst' Rule to build method groupheader and -footer 
+     * as well as totalHeader and -footer names. 
+     * True will replace the % sign by the group name, false by the groupID. 
+     * 'ucfirst' will use the reselut of the ucfirst($groupName) function. 
+     */
     public $buildMethodsByGroupName = true;
 
-    /** @var The name of the grand total group (Level = 0). */ 
+    /** @var The name of the grand total group (Level = 0). */
     public string $grandTotalName = 'total';
-   
+
     /** @var Name and location of the configuration file. */
     static $filename = '/../config.php';
 
@@ -64,7 +66,6 @@ class Configurator {
     public function __construct(array $config = null) {
         $this->loadConfigurationFile();
         $this->setConfiguration($config);
-        $this->finalize();
     }
 
     /**
@@ -87,16 +88,15 @@ class Configurator {
      * @throws InvalidArgumentException
      */
     private function setConfiguration(array $config = null): void {
-        if (is_null($config)) {
-            return;
-        }
-        foreach ($config as $param => $value) {
-             $result = match ($param) {
-                'buildMethodsByGroupName' => $this->setBuildMethodsByGroupName($value),
-                'grandTotalName' => $this->setGrandTotalName($value),
-                'actions' =>  $this->setActions($value),
-                default => throw new \InvalidArgumentException("Unknown configuration parameter $param."),
-             };
+        if ($config !== null) {
+            foreach ($config as $param => $value) {
+                $result = match ($param) {
+                    'buildMethodsByGroupName' => $this->setBuildMethodsByGroupName($value),
+                    'grandTotalName' => $this->setGrandTotalName($value),
+                    'actions' => $this->setActions($value),
+                    default => throw new \InvalidArgumentException("Unknown configuration parameter $param."),
+                };
+            }
         }
     }
 
@@ -109,7 +109,7 @@ class Configurator {
      * @throws InvalidArgumentException
      */
     private function setBuildMethodsByGroupName($value): void {
-        if ($value !== true && $value !== false) {
+        if (!is_bool($value)) {
             $value = trim(strtolower($value));
             if ($value !== 'ucfirst') {
                 throw new \InvalidArgumentException("BuildMethodsByGroupName must be true, false or 'ucfirst'");
@@ -126,11 +126,12 @@ class Configurator {
     private function setGrandTotalName(string $name): void {
         $name = trim($name);
         if ($name === null || $name == '') {
-            return;
+            throw new \InvalidArgumentException("Grand total name can not be empty.");
         }
-        if (!Helper::isValidName($name)) {
-            throw new \InvalidArgumentException("grandTotalName must be a valid attribute name ('$name' given). ");
+        if (!Action::isNameValid($name)) {
+            throw new \InvalidArgumentException("Grand total name '$name' is invalid.");
         }
+        
         $this->grandTotalName = $name;
     }
 
@@ -140,26 +141,13 @@ class Configurator {
      * @param array $actions 
      * @throws InvalidArgumentException
      */
-    private function setActions(array $actions) :void {
+    private function setActions(array $actions): void {
         foreach ($actions as $key => $baseAction) {
             // Make sure method key is valid
             if (!isset($this->actions[$key])) {
-                throw new \InvalidArgumentException("Action key '$key' is invalid");
+                throw new InvalidArgumentException("Action key '$key' is invalid");
             }
-            $this->actions[$key] = Helper::buildMethodAction(
-                            $baseAction,
-                            $key,
-                            !in_array($key, ['init', 'detail', 'close', 'noData'])
-            );
-        }
-    }
-
-    /**
-     * Replace % sign in totalHeader and totalFooter actions with GrandTotalName
-     */
-    private function finalize() :void {
-        foreach (['totalHeader', 'totalFooter'] as $key) {
-            $this->actions[$key] = Helper::replacePercent($this->grandTotalName, $this->actions[$key]);
+            $this->actions[$key] = $baseAction;
         }
     }
 

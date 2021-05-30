@@ -21,12 +21,13 @@ namespace gpoehl\phpReport;
 class Report
 {
 
-    const VERSION = '3.0.0';
+    const VERSION = '3.1.0';
     // Rules to execute actions
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
-    const CALL_PROTOTYPE = 2;         // Call methods in prototype class when not implemented in owner class.
-    const CALL_ALWAYS_PROTOTYPE = 3;  // Call methods in prototype class for any action.
+    const CALL_PROTOTYPE = 2;         // Call prototype for methods not implemented in owner class.
+    const CALL_ALWAYS_PROTOTYPE = 3;  // Call prototype for all methods.
+    const CALL_ALL_PROTOTYPE = 4;     // Call prototype for all actions not being a callable.
     // Calculator class selection
     const XS = 1;                       // CalculatorXS class (default)
     const REGULAR = 2;                  // Calculator class (has not null and not zero counters)
@@ -99,7 +100,7 @@ class Report
     public function __construct(private object|string|null $target = null,
             array $config = null,
             public mixed $params = null) {
-        $conf = Factory::configurator($config);
+        $conf = new Configurator($config);
         $this->groups = new Groups($conf->grandTotalName);
         $this->buildMethodsByGroupName = $conf->buildMethodsByGroupName;
         $this->actions = $conf->actions;
@@ -156,13 +157,8 @@ class Report
         $source ??= $name;
         getter\GetterFactory::verifySource($source, $params);
         $group = new Group($name, ++$this->mp->maxLevel, $this->dim->id, $source, $params);
-        If ($this->buildMethodsByGroupName === 'ucfirst') {
-            $replacement = ucfirst($name);
-        } else {
-            $replacement = ($this->buildMethodsByGroupName) ? $name : (string) $group->level;
-        }
-        $group->headerAction = $this->makeAction('groupHeader', $headerAction, $replacement);
-        $group->footerAction = $this->makeAction('groupFooter', $footerAction, $replacement);
+        $group->headerAction = $this->makeAction('groupHeader', $headerAction, $group->level, $name);
+        $group->footerAction = $this->makeAction('groupFooter', $footerAction, $group->level, $name);
         $this->groups->addGroup($group);
         $this->dim->groups[] = $group;
         $this->dim->lastLevel = $group->level;
@@ -233,13 +229,13 @@ class Report
      * @param mixed ...$params Optional list of parameters passed `unpacked`
      * to anonymous functions and callables getting the sheet key =>value pair.
      */
-    public function sheet(string $name, $keySource, $source, ?int $typ = self::XS, 
+    public function sheet(string $name, $keySource, $source, ?int $typ = self::XS,
             $fromKey = null,
-            $toKey = null, 
-            ?int $maxLevel = null, 
+            $toKey = null,
+            ?int $maxLevel = null,
             ?array $keyParams = [],
             ...$params
-            ): self {
+    ): self {
         $typ ??= self::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $this->total->addItem(Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey), $name);
@@ -278,10 +274,18 @@ class Report
      * @param mixed $replacement
      * @return Action The new action object.
      */
-    private function makeAction(string $actionKey, $actionParam, $replacement): Action {
-        $wrk = ($actionParam !== null) ? Helper::buildMethodAction($actionParam, $actionKey) :
-                Helper::replacePercent((string) $replacement, $this->actions[$actionKey]);
-        return new Action($actionKey, $wrk);
+    private function makeAction(string $actionKey, $actionParam, int $level, ?string $name = null): Action {
+        if ($name === null) {
+            $replacement = (string) $level;
+        } else {
+            $replacement = match ($this->buildMethodsByGroupName) {
+                true => $name,
+                false => (string) $level,
+                'ucfirst' => ucfirst($name),
+            };
+        }
+        $actionParam ??= $this->actions[$actionKey];
+        return new Action($actionKey, $actionParam, $replacement);
     }
 
     /**
@@ -342,17 +346,17 @@ class Report
      */
     private function setRunTimeActions(): void {
         $params = [$this->target, $this->prototype, $this->callOption];
-        $this->detailAction->setRunTimeAction(...$params);
+        $this->detailAction->setRunTimeTarget(...$params);
         foreach ($this->groups->items as $group) {
-            $group->headerAction->setRunTimeAction(...$params);
-            $group->footerAction->setRunTimeAction(...$params);
+            $group->headerAction->setRunTimeTarget(...$params);
+            $group->footerAction->setRunTimeTarget(...$params);
         }
         // Exclude last dimension. Has no data from data() method. 
         foreach ($this->dims as $dim) {
             if (!$dim->isLastDim) {
-                $dim->noDataAction->setRunTimeAction(...$params);
-                $dim->noGroupChangeAction->setRunTimeAction(...$params);
-                $dim->detailAction->setRunTimeAction(...$params);
+                $dim->noDataAction->setRunTimeTarget(...$params);
+                $dim->noGroupChangeAction->setRunTimeTarget(...$params);
+                $dim->detailAction->setRunTimeTarget(...$params);
             }
         }
     }
@@ -362,8 +366,10 @@ class Report
      * @param string $key The action key of $this->actions
      */
     private function executeAction(string $key): void {
-        $this->currentAction = new Action($key, $this->actions[$key]);
-        $this->currentAction->setRunTimeAction($this->target, $this->prototype, $this->callOption);
+        $this->currentAction = ($key === 'totalHeader' || $key === 'totalFooter') ?
+                $this->makeAction($key, $this->actions[$key], 0, $this->groups->grandTotalName) :
+                new Action($key, $this->actions[$key]);
+        $this->currentAction->setRuntimeTarget($this->target, $this->prototype, $this->callOption);
         $this->output .= $this->currentAction->execute();
     }
 
@@ -596,7 +602,7 @@ class Report
         // For detail level compare with row counter of last group level.
         // Detail level can only be checked when in detail action. If $level is not null
         // it must match the detail level. 
-        if ($this->currentAction->actionKey === 'detail' && ($level === null || $level === $this->mp->level)) {
+        if ($this->currentAction->key === 'detail' && ($level === null || $level === $this->mp->level)) {
             return ($this->rc->items[$this->getDimID($level)]->sum($level) === 1);
         }
         return ($this->gc->items[$this->getDimID($level)]->sum($this->getLevel($level) - 1) === 1);
@@ -613,7 +619,7 @@ class Report
      * or asked for group levels not higher than the current one.
      */
     public function isLast($level = null): bool {
-        if ($this->currentAction->actionKey !== 'groupFooter') {
+        if ($this->currentAction->key !== 'groupFooter') {
             throw new \InvalidArgumentException('isLast() can only be answered in groupFooters');
         }
         $level = ($level === null) ? $this->mp->level - 1 : $this->mp->getLevel($level);

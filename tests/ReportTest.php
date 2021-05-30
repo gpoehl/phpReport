@@ -8,7 +8,6 @@ declare(strict_types=1);
  */
 use gpoehl\phpReport\CalculatorXS;
 use gpoehl\phpReport\Collector;
-use gpoehl\phpReport\Helper;
 use gpoehl\phpReport\MajorProperties;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
@@ -116,56 +115,6 @@ class ReportTest extends TestCase
         $this->assertSame('init, totalHeader, aHeader, bHeader, detail, bFooter, aFooter, totalFooter, close, ', $rep);
     }
 
-    /**
-     * @dataProvider callOptionsProvider
-     */
-    public function testActionTypes($option, $ex1, $ex2, $ex3, $ex4, $ex5) {
-        $rep = (new Report($this->getBase(), [
-                    'actions' => [
-                        'init' => 'init', // normal method
-                        'totalHeader' => [$this->getOtherClass(), 'staticCallMethod'], // Static callable
-                        'noData' => [$this->getOtherClass(), 'callMethod'], // Object callable
-                        'totalFooter' => 'callMethod', // Normal method call
-                        'close' => function () {
-                            return 'closure';                           // Closure
-                        },
-                    ]]))
-                ->setCallOption($option)
-                ->run(null);
-        $this->assertStringContainsString($ex1, $rep);
-        $this->assertStringContainsString($ex2, $rep);
-        $this->assertStringContainsString($ex3, $rep);
-        $this->assertStringContainsString($ex4, $rep);
-        $this->assertStringContainsString($ex5, $rep);
-    }
-
-    public function callOptionsProvider() {
-        return [
-            [Report::CALL_ALWAYS, 'init, ', 'other method called static, ', 'other method called on object, ', 'my method called on object, ', 'closure'],
-            [Report::CALL_PROTOTYPE, '>init</th>', 'other method called static, ', 'other method called on object, ', 'my method called on object, ', 'closure'],
-            [Report::CALL_ALWAYS_PROTOTYPE, '>init</th>', '>totalHeader', '>noData</th>', '>totalFooter', '>close</th>'],
-        ];
-    }
-
-    // No action will be executed when method call is requested and
-    // method does not exist in owner class
-    public function testNotExistingMethods() {
-        $rep = (new Report($this->getBase(), ['actions' => [
-                        'init' => 'init', // normal method
-                        'totalHeader' => [$this->getOtherClass(), 'staticCallMethod'], // Static callable
-                        'noData' => [$this->getBase(), 'callMethod'], // Object callable
-                        'totalFooter' => 'callMissing', // Missing method forces prototype
-                        'close' => fn() => 'closure', // Closure
-                    ]]))
-                ->setCallOption(Report::CALL_EXISTING)
-                ->run(null);
-        $this->assertStringNotContainsString('init', $rep);
-        $this->assertStringContainsString('other method called static', $rep);
-        $this->assertStringContainsString('my method called on object', $rep);
-        $this->assertStringNotContainsString('totalFooter', $rep);
-        $this->assertStringContainsString('closure', $rep);
-    }
-
     public function testPrototype() {
         $proto = $this->getPrototype();
         $rep = (new Report($proto))
@@ -269,23 +218,26 @@ class ReportTest extends TestCase
     /**
      * @dataProvider buildMethodsByGroupNameProvider
      */
-    public function testBuildMethodsByGroupName($rule, $name, $expectedHeader, $expectedFooter) {
+    public function testBuildMethodsByGroupName($rule, $name, $header, $footer, $totalHeader, $totalFooter) {
         $rep = (new Report($this->getBase(),
-                        [
-                    'actions' => ['groupHeader' => 'header%', 'groupFooter' => 'footer%'],
+                        ['actions' => [
+                        'groupHeader' => 'header%',
+                        'groupFooter' => 'footer%',
+                        'totalHeader' => 'header%',
+                        'totalFooter' => 'footer%'],
                     'buildMethodsByGroupName' => $rule
                         ]))
                 ->group($name, 'ga')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([['ga' => 1, 'gb' => 2]]);
-        $this->assertSame('init, totalHeader, ' . $expectedHeader . ', detail, ' . $expectedFooter . ', totalFooter, close, ', $rep);
+        $this->assertSame("init, $totalHeader, $header, detail, $footer, $totalFooter, close, ", $rep);
     }
 
     public function buildMethodsByGroupNameProvider() {
         return [
-            [true, 'a', 'headera', 'footera'],
-            ['ucfirst', 'a', 'headerA', 'footerA'],
-            [false, 'a', 'header1', 'footer1'],
+            [true, 'a', 'headera', 'footera', 'headertotal', 'footertotal'],
+            ['ucfirst', 'a', 'headerA', 'footerA', 'headerTotal', 'footerTotal'],
+            [false, 'a', 'header1', 'footer1', 'header0', 'footer0'],
         ];
     }
 
