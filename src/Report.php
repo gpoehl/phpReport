@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use gpoehl\phpReport\getter\GetterFactory;
+use gpoehl\phpReport\output\AbstractOutput;
+use InvalidArgumentException;
+
 /**
  * Main class of phpReport.
  * Handles group changes, computes values and joins multiple data sources.
@@ -27,14 +31,14 @@ class Report
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
     const CALL_PROTOTYPE = 2;         // Call prototype for methods not implemented in owner class.
     const CALL_ALWAYS_PROTOTYPE = 3;  // Call prototype for all methods.
-    const CALL_ALL_PROTOTYPE = 4;     // Call prototype for all actions not being a callable.
+    const CALL_ALL_PROTOTYPE = 4;     // Call prototype for all actions which are not a callable and action is not false.
     // Calculator class selection
     const XS = 1;                       // CalculatorXS class (default)
     const REGULAR = 2;                  // Calculator class (has not null and not zero counters)
     const XL = 3;                       // CalculatorXL class (has also min and max values) 
 
     /** Collected return values from executed actions. */
-    public ?string $output = null;
+//    public ?string $output = null;
 
     /** @var Major properties to be passed to calculator objects. */
     public MajorProperties $mp;
@@ -56,7 +60,9 @@ class Report
     private array $actions = [];
 
     /** @var The runTimeAction for 'detail' event. */
+    private Action $detailHeaderAction;
     private Action $detailAction;
+    private Action $detailFooterAction;
 
     /** @var Dimension[] An arrray of data dimension objects. */
     private array $dims = [];
@@ -91,6 +97,13 @@ class Report
      */
     private bool $isJobDone = false;
 
+    /** @var Action execution for levels above $skipLevel will be ignored. */
+    private int|bool $skipLevel = false;
+
+    /* @var $toCumulate Holds objects which has 'cumulateToNextLevel' method */
+    private array $toCumulate;
+    public $out;
+
     /**
      * @param $target Default object or class name where action methods will be called.
      * @param array|null $config Dynamic configuration to replace defaults set in config.php file.
@@ -99,17 +112,30 @@ class Report
      */
     public function __construct(private object|string|null $target = null,
             array $config = null,
+            ?AbstractOutput $outputHandler = null,
             public mixed $params = null) {
         $conf = new Configurator($config);
         $this->groups = new Groups($conf->grandTotalName);
         $this->buildMethodsByGroupName = $conf->buildMethodsByGroupName;
         $this->actions = $conf->actions;
         $this->mp = Factory::properties();
-        $this->mp->rc = $this->rc = Factory::collector();
-        $this->mp->gc = $this->gc = Factory::collector();
-        $this->mp->total = $this->total = Factory::collector();
+        $this->toCumulate[] = $this->mp->rc = $this->rc = Factory::collector();
+        $this->toCumulate[] = $this->mp->gc = $this->gc = Factory::collector();
+        $this->toCumulate[] = $this->mp->total = $this->total = Factory::collector();
         $this->dims[] = $this->dim = new Dimension(0, 0, $target);
+        $this->out = ($outputHandler) ? $outputHandler : new $conf->outputHandler();
+        if ($this->out InstanceOf CumulateIF) {
+            $this->registerToCumulate($this->out);
+        }
         return $this;
+    }
+
+    /**
+     * Register object which has CumulateIF implemented.
+     * Method 'cumulateToNextLevel' will be called after each group footer.
+     */
+    public function registerToCumulate(CumulateIF $obj): void {
+        $this->toCumulate[] = $obj;
     }
 
     /**
@@ -129,7 +155,7 @@ class Report
      * @param mixed[] $params Optional parameters passed to callables getting joined data.
      */
     public function join($source, $noDataAction = null, $dataAction = null, $noGroupChangeAction = null, ... $params): self {
-        getter\GetterFactory::verifySource($source, $params);
+        GetterFactory::verifySource($source, $params);
         $this->dim->setJoinSource($source, $params);
         $this->dim->noDataAction = $this->makeAction('noData_n', $noDataAction, $this->dim->id);
         $this->dim->noGroupChangeAction = $this->makeAction('noGroupChange_n', $noGroupChangeAction, $this->dim->id);
@@ -153,12 +179,14 @@ class Report
      * @param mixed $footerAction Action for group footer. Null for default action.
      * @param mixed[] $params Optional parameters passed to callables getting the group value.
      */
-    public function group($name, $source = null, $headerAction = null, $footerAction = null, ...$params): self {
+    public function group($name, $source = null, $beforeAction = null, $headerAction = null, $footerAction = null, $afterAction = null, ...$params): self {
         $source ??= $name;
-        getter\GetterFactory::verifySource($source, $params);
+        GetterFactory::verifySource($source, $params);
         $group = new Group($name, ++$this->mp->maxLevel, $this->dim->id, $source, $params);
+        $group->beforeAction = $this->makeAction('beforeGroup', $beforeAction, $group->level, $name);
         $group->headerAction = $this->makeAction('groupHeader', $headerAction, $group->level, $name);
         $group->footerAction = $this->makeAction('groupFooter', $footerAction, $group->level, $name);
+        $group->afterAction = $this->makeAction('afterGroup', $afterAction, $group->level, $name);
         $this->groups->addGroup($group);
         $this->dim->groups[] = $group;
         $this->dim->lastLevel = $group->level;
@@ -192,7 +220,7 @@ class Report
         $maxLevel = $this->checkMaxLevel($maxLevel);
         $this->total->addItem(Factory::calculator($this->mp, $maxLevel, $typ), $name);
         if ($source !== false) {
-            getter\GetterFactory::verifySource($source, $params);
+            GetterFactory::verifySource($source, $params);
             $this->dim->setCalcSource($name, $source, $params);
         }
         return $this;
@@ -241,9 +269,9 @@ class Report
         $this->total->addItem(Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey), $name);
         if ($keySource !== false) {
             // Don't pass params to prevent raising warning. The might be use for keySource an source. 
-            getter\GetterFactory::verifySource($keySource, $keyParams);
+            GetterFactory::verifySource($keySource, $keyParams);
             if ($source !== null) {
-                getter\GetterFactory::verifySource($source, $params);
+                GetterFactory::verifySource($source, $params);
             }
             $this->dim->setSheetSource($name, $keySource, $source, $keyParams, $params);
         }
@@ -271,12 +299,16 @@ class Report
      * Action objects are used to execute actions mapped to events.
      * @param string $actionKey The event name.
      * @param array|null|false $actionParam
-     * @param mixed $replacement
+     * @param int $level the group level. -1 for init and close actions.
+     * @param string | null $name Group or Totalx name which replaces the % sign in $actionParam
      * @return Action The new action object.
      */
     private function makeAction(string $actionKey, $actionParam, int $level, ?string $name = null): Action {
         if ($name === null) {
+            // It's a dimension specific action
             $replacement = (string) $level;
+            // Setting level for output classes
+            $level = $this->dim->lastLevel;
         } else {
             $replacement = match ($this->buildMethodsByGroupName) {
                 true => $name,
@@ -285,7 +317,7 @@ class Report
             };
         }
         $actionParam ??= $this->actions[$actionKey];
-        return new Action($actionKey, $actionParam, $replacement);
+        return new Action($actionKey, $this->out->actionKeyMapper[$actionKey], $level, $actionParam, $replacement);
     }
 
     /**
@@ -301,7 +333,9 @@ class Report
         $this->mp->groupLevel = $this->groups->groupLevel;
         $this->executeAction('init');
         $this->executeAction('totalHeader');
-        $this->detailAction = new Action('detail', $this->actions['detail']);
+        $this->detailHeaderAction = new Action('detailHeader', $this->out->actionKeyMapper['detailHeader'], $this->mp->maxLevel, $this->actions['detailHeader']);
+        $this->detailAction = new Action('detail', $this->out->actionKeyMapper['detail'], $this->mp->maxLevel, $this->actions['detail']);
+        $this->detailFooterAction = new Action('detailFooter', $this->out->actionKeyMapper['detailFooter'], $this->mp->maxLevel, $this->actions['detailFooter']);
         unset($this->actions['init'], $this->actions['totalHeader'], $this->actions['groupHeader'], $this->actions['groupFooter'],
                 $this->actions['noData_n'], $this->actions['data_n'], $this->actions['noGroupChange_n'], $this->actions['detail']);
         $this->setRunTimeActions();
@@ -328,7 +362,7 @@ class Report
      */
     public function setCallOption(int $callOption): self {
         if ($callOption < 0 || $callOption > 3) {
-            throw new \InvalidArgumentException('Invalid call option');
+            throw new InvalidArgumentException('Invalid call option');
         }
         if ($callOption >= self::CALL_PROTOTYPE && !isset($this->prototype)) {
             $this->prototype = new Prototype($this);
@@ -346,7 +380,9 @@ class Report
      */
     private function setRunTimeActions(): void {
         $params = [$this->target, $this->prototype, $this->callOption];
+        $this->detailHeaderAction->setRunTimeTarget(...$params);
         $this->detailAction->setRunTimeTarget(...$params);
+        $this->detailFooterAction->setRunTimeTarget(...$params);
         foreach ($this->groups->items as $group) {
             $group->headerAction->setRunTimeTarget(...$params);
             $group->footerAction->setRunTimeTarget(...$params);
@@ -366,11 +402,29 @@ class Report
      * @param string $key The action key of $this->actions
      */
     private function executeAction(string $key): void {
-        $this->currentAction = ($key === 'totalHeader' || $key === 'totalFooter') ?
+        $action = ($key === 'totalHeader' || $key === 'totalFooter') ?
                 $this->makeAction($key, $this->actions[$key], 0, $this->groups->grandTotalName) :
-                new Action($key, $this->actions[$key]);
-        $this->currentAction->setRuntimeTarget($this->target, $this->prototype, $this->callOption);
-        $this->output .= $this->currentAction->execute();
+                new Action($key, $this->out->actionKeyMapper[$key], -1, $this->actions[$key]);
+        $action->setRuntimeTarget($this->target, $this->prototype, $this->callOption);
+        $this->execute($action);
+    }
+
+    private function execute(Action $action, ... $params) {
+        if ($action->runtimeTarget) {
+            $this->currentAction = $action;
+            $output = ($action->targetKey === Action::STRING) ? $action->target :
+                    ($action->runtimeTarget)(... $params);
+            if ($output !== null) {
+                if ($output === false && $action->key === 'beforeGroup') {
+                    return false;
+                }
+                if ($action->kind === Action::OUTPUT) {
+                    $this->out->write($output, $action->level, $action->outputKey);
+                } else {
+                    trigger_error($output, $action->kind);
+                }
+            }
+        }
     }
 
     /**
@@ -413,6 +467,9 @@ class Report
      */
     public function next($row, string|int|null $rowKey = null): void {
         $this->handleGroupChanges($row, $rowKey);
+        if ($this->skipLevel !== false) {
+            return;
+        }
         $this->rc->items[$this->dim->id]->inc();
         foreach ($this->dim->calcGetters as $name => $getter) {
             $this->total[$name]->add($getter->getValue($row, $rowKey));
@@ -420,8 +477,14 @@ class Report
         // Handle next dimension or execute detail action.
         if (!$this->dim->isLastDim) {
             $this->handleDimension();
-        } else {
-            $this->output .= $this->detailAction->execute($row, $rowKey, $this->dim->id);
+        } elseif ($this->detailAction->runtimeTarget) {
+            $output = ($this->detailAction->targetKey === Action::STRING) ?
+                    $this->detailAction->target :
+                    ($this->detailAction->runtimeTarget)($row, $rowKey);
+            if ($output !== null) {
+                // trigger_error() for details makes no sense. Condition not checked.
+                $this->out->write($output, $this->detailAction->level, $this->detailAction->outputKey);
+            }
         }
     }
 
@@ -450,16 +513,25 @@ class Report
         // No footer for first row (in actual dimension). 
         ($this->dim->row === null) ?: $this->handleFooters();
         $this->dim->activateValues($row, $rowKey, $groupValues);
+
         // Call Header methods from changed group in dim to last group in dim;
         // Array slice with negative offset!
         $this->lowestHeader = $this->dim->lastLevel;
-        foreach (array_slice($this->dim->groups, $this->changedLevel - $this->dim->lastLevel - 1) as $group) {
+        $this->skipLevel = false;
+        for ($i = $this->changedLevel; $i <= $this->dim->lastLevel; $i++) {
+            $group = $this->groups->items[$i];
             $this->mp->level = $group->level;
             $this->gc->items[$group->level]->inc();
-            $this->currentAction = $group->headerAction;
-            $this->output .= $this->currentAction->execute($groupValues[$group->level], $this->dim->row, $this->dim->rowKey, $this->dim->id);
+            if ($this->execute($group->beforeAction, $groupValues[$group->level], $this->dim->row, $this->dim->rowKey) === false) {
+                $this->skipLevel = $group->level;
+                break;
+            }
+            $this->execute($group->headerAction, $groupValues[$group->level], $this->dim->row, $this->dim->rowKey);
         }
-        $this->currentAction = $this->detailAction;
+        if ($this->dim->isLastDim && $this->skipLevel === false)  {
+            $this->execute($this->detailHeaderAction, $row,  $rowKey);
+            $this->currentAction = $this->detailAction;
+        }
     }
 
     /**
@@ -468,15 +540,21 @@ class Report
      */
     private function handleFooters(): void {
         for ($this->mp->level = $this->lowestHeader; $this->mp->level >= $this->changedLevel; $this->mp->level--) {
-            $wrk = null;
-            $group = $this->groups->items[$this->mp->level];
-            $this->dim = $this->dims[$group->dimID];
-            $this->currentAction = $group->footerAction;
-            $this->output .= $this->currentAction->execute($this->dim->groupValues[$this->mp->level],
-                    $this->dim->row, $this->dim->rowKey, $this->dim->id);
-            $this->rc->cumulateToNextLevel();
-            $this->gc->cumulateToNextLevel();
-            $this->total->cumulateToNextLevel();
+            if ($this->skipLevel === false || $this->mp->level >= $this->skipLevel) {
+                $group = $this->groups->items[$this->mp->level];
+                $this->dim = $this->dims[$group->dimID];
+                if ($this->dim->isLastDim && $this->mp->level === $this->dim->lastLevel) {
+                    $this->execute($this->detailFooterAction, $this->dim->row,  $this->dim->rowKey);
+                }
+                $this->execute($group->footerAction, $this->dim->groupValues[$this->mp->level],
+                        $this->dim->row, $this->dim->rowKey);
+                $this->execute($group->afterAction, $this->dim->groupValues[$this->mp->level],
+                        $this->dim->row, $this->dim->rowKey);
+            }
+            // Cumulation is required even for skipped levels. Data row might have added values.
+            foreach ($this->toCumulate as $obj) {
+                $obj->cumulateToNextLevel($this->mp->level);
+            }
         }
     }
 
@@ -490,13 +568,12 @@ class Report
      */
     private function handleDimension(): void {
         $changed = $this->noGroupChange();
-        $this->currentAction = $this->dim->detailAction;
-        $this->output .= $this->currentAction->execute($this->dim->row, $this->dim->rowKey, $this->dim->id);
+        $this->execute($this->dim->detailAction, $this->dim->row, $this->dim->rowKey, $this->dim->id);
         $this->currentAction = $this->detailAction;
         $prevDim = $this->dim;
         // Load next dimension
         $this->dim = next($this->dims);
-        // Reset group values of new dim only when previos dim had a group change.
+        // Reset group values of new dim only when previous dim had a group change.
         (!$changed) ?: $this->dim->groupValues = [];
         $nextDimData = $prevDim->getJoinedData();
         ($nextDimData === false) ?: $this->nextSet($nextDimData);
@@ -516,8 +593,7 @@ class Report
         if ($this->changedLevel !== null || empty($this->dim->groups)) {
             return true;
         }
-        $this->currentAction = $this->dim->noGroupChangeAction;
-        $this->output .= $this->currentAction->execute($this->dim->row, $this->dim->rowKey, $this->dim->id);
+        $this->execute($this->dim->noGroupChangeAction, $this->dim->row, $this->dim->rowKey, $this->dim->id);
         $this->currentAction = $this->detailAction;
         return false;
     }
@@ -539,7 +615,7 @@ class Report
         }
         $this->executeAction('totalFooter');
         $this->executeAction('close');
-        return $this->output;
+        return $this->out->get();
     }
 
     /**
@@ -548,9 +624,29 @@ class Report
      */
     private function noData_n(): void {
         $this->dim = prev($this->dims);
-        $this->currentAction = $this->dim->noDataAction;
-        $this->output .= $this->currentAction->execute($this->dim->row, $this->dim->rowKey, $this->dim->id);
+        $this->execute($this->dim->noDataAction, $this->dim->row, $this->dim->rowKey, $this->dim->id);
         $this->dim = next($this->dims);
+    }
+
+    /**
+     * Write value to output object.
+     * This method calls the write method of the output object.
+     * @param mixed $value The value to be written
+     * @param string | int | null type $group where the output belongs to.
+     * @param AbstractOutput | null type $group where the output belongs to.
+     * Defaults to the current group level.
+     * @param string | int | null $key The actionKey where the output belongs to.
+     * Defaults to the current action.
+     */
+    public function write($value, string|int|null $group = null, string|int|null $key = null, AbstractOutput $output = null) {
+        $groupLevel = $this->mp->getLevel($group);
+        if ($key === null) {
+            $key = $this->currentAction->outputKey;
+        } elseif (is_string($key)) {
+            $key = $this->out->actionKeyMapper[$key];
+        }
+        $output ??= $this->out;
+        $output->write($value, $groupLevel, $key);
     }
 
     /**
@@ -615,16 +711,16 @@ class Report
      * @param string|itn|null $level The group level to be checked. Defaults to the
      * next higher group level.
      * @return bool True when it is the last footer within $level, else false.
-     * @throws \InvalidArgumentException when method is not called in a group footer
+     * @throws InvalidArgumentException when method is not called in a group footer
      * or asked for group levels not higher than the current one.
      */
     public function isLast($level = null): bool {
         if ($this->currentAction->key !== 'groupFooter') {
-            throw new \InvalidArgumentException('isLast() can only be answered in groupFooters');
+            throw new InvalidArgumentException('isLast() can only be answered in groupFooters');
         }
         $level = ($level === null) ? $this->mp->level - 1 : $this->mp->getLevel($level);
         if ($level >= $this->mp->level) {
-            throw new \InvalidArgumentException('isLast() can check only for higher group levels');
+            throw new InvalidArgumentException('isLast() can check only for higher group levels');
         }
         return ($this->isJobDone || $level >= $this->changedLevel);
     }

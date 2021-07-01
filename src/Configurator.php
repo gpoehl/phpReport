@@ -26,8 +26,8 @@ class Configurator
      * a string to be appended to $output. But there are much more options.
      * Please check the documentation.
      * 
-     * The percent sign (%) in groupHeader and groupFooter will be replaced by a 
-     * pattern build depending on $buildMethodsByGroupName rules.
+     * Percent sign (%) in beforeGroup, groupHeader, groupFooter and afterGroup will
+     * be replaced by a pattern depending on $buildMethodsByGroupName rules.
      * The percent sign in totalHeader and totalFooter actions will be replaced 
      * by the value of $grandTotalName.
      * In data_n and noData_n actions the percent sign will be replaced by the
@@ -36,9 +36,13 @@ class Configurator
     public $actions = [
         'init' => 'init',
         'totalHeader' => '%Header',
+        'beforeGroup' => '%BeforeGroup',
         'groupHeader' => '%Header',
+        'detailHeader' => 'detailHeader',
         'detail' => 'detail',
+        'detailFooter' => 'detailFooter',
         'groupFooter' => '%Footer',
+        'afterGroup' => '%AfterGroup',
         'totalFooter' => '%Footer',
         'close' => 'close',
         'noData' => '<br><strong>No data found</strong><br>', // Dimension = 0
@@ -46,6 +50,9 @@ class Configurator
         'detail_n' => 'detail%',
         'noGroupChange_n' => ["Current row in dimension % didn't trigger a group change.", Action::ERROR],
     ];
+
+    /** @var Classname for default output handler */
+    public string $outputHandler = output\StringOutput::class;
 
     /** @var true | false | 'ucfirst' Rule to build method groupheader and -footer 
      * as well as totalHeader and -footer names. 
@@ -131,7 +138,7 @@ class Configurator
         if (!Action::isNameValid($name)) {
             throw new \InvalidArgumentException("Grand total name '$name' is invalid.");
         }
-        
+
         $this->grandTotalName = $name;
     }
 

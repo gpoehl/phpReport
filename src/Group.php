@@ -17,10 +17,14 @@ namespace gpoehl\phpReport;
  */
 class Group {
  
+    // @var The group header action to be executed before the headerAction
+    public Action $beforeAction;  
     // @var The group header action to be executed on begin of a group change
     public Action $headerAction;  
     // @var The group footer action to be executed after all group members are handled.
     public Action $footerAction;
+    // @var The group header action to be executed after the footerAction
+    public Action $afterAction;  
 
     /**
      * 

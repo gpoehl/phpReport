@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/Foo.php';
-
 /**
- * Unit test of Group class
+ * Unit test of Action class
  */
 use gpoehl\phpReport\Action;
 use gpoehl\phpReport\Prototype;
@@ -16,29 +14,32 @@ class ActionTest extends TestCase
 {
 
     public object $prototype;
-    static object $target;
+    static object $targetObj;
 
     public static function setUpBeforeClass(): void {
 
         // Simulatate default target class
-        self::$target = new class {
+        self::$targetObj = new class {
 
             public function __call($name, $args) {
-                return $name;
+                
             }
 
             public function header(... $args) {
-                return 'header';
+                
             }
         };
     }
 
+    /**
+     * Mock the prototype class. 
+     * Run all tests with method 'groupHeader'.
+     * Mocked prototype class will always return the first parameter. 
+     */
     public function setUp(): void {
         $stub = $this->getMockBuilder(Prototype::class)
                 ->disableOriginalConstructor()
                 ->getMock();
-        $stub->method('groupHeader')
-                ->will($this->returnArgument(0));
         $this->prototype = $stub;
     }
 
@@ -48,122 +49,155 @@ class ActionTest extends TestCase
      * @dataProvider actionCallableProvider
      * @dataProvider actionMethodProvider
      * @dataProvider actionMethodNotExistsProvider
+     * @dataProvider actionFalseProvider
+     * @dataProvider triggerProvider
      */
-    public function testExecuter($expected, $key, $actionParameter, $callOption) {
-        $action = new Action($key, $actionParameter);
-        $action->setRuntimeTarget(self::$target, $this->prototype, $callOption);
-        $this->assertSame($expected, $action->execute('abc', 'row', 1, 0));
+    public function testExecuter($expectTargetKey, $expect, $target, $callOption, $error = null) {
+        $action = new Action('groupHeader', null, 1, $target);
+        $action->setRuntimeTarget(self::$targetObj, $this->prototype, $callOption);
+        $this->assertEquals($expectTargetKey, $action->targetKey,);
+        if (is_array($expect)) {
+            // Replace true and false with class to be called 
+            $expect = match ($expect[0]) {
+                null => $expect[1],
+                true => [$this->prototype, $expect[1]],
+                false => [self::$targetObj, $expect[1]],
+                default => $expect
+            };
+        }
+        if (($action->runtimeTarget === true) && $action->targetKey === Action::STRING) {
+            // String but not in prototype
+            $this->assertEquals($expect, $action->target);
+        } else {
+            $this->assertEquals($expect, $action->runtimeTarget);
+        }
+        if ($error === null) {
+            $this->assertEquals(Action::OUTPUT, $action->kind);
+        } else {
+            $this->assertEquals($error, $action->kind);
+        }
     }
 
     public function actionStringProvider() {
-        $expect = 'xyz';
-        $actionParam = ['xyz', false];
+        $key = Action::STRING;
+        $expectPrototye = [true, 'groupHeader'];
+        $expect = 'could_be_a_method';
+        $actionParam = [$expect, false];
         return [
-            'string' => ['ab cd', 'groupHeader', 'ab cd', Report::CALL_EXISTING],
-            'string0' => [$expect, 'groupHeader', $actionParam, Report::CALL_EXISTING],
-            'string1' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALWAYS],
-            'string2' => [$expect, 'groupHeader', $actionParam, Report::CALL_PROTOTYPE],
-            'string3' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'string4' => ['abc', 'groupHeader', $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'string1' => [$key, 'ab cd', 'ab cd', Report::CALL_EXISTING],
+            'string2' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
+            'string3' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
+            'string4' => [$key, $expect, $actionParam, Report::CALL_PROTOTYPE],
+            'string5' => [$key, $expect, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
+            'string6' => [$key, $expectPrototye, $actionParam, Report::CALL_ALL_PROTOTYPE],
         ];
     }
 
     public function actionClosureProvider() {
+        $key = Action::CLOSURE;
         $actionParam = fn($p1, $p2, $p3, $p4) => ($p1);
-        $expect = 'abc';
+        $expect = [null, $actionParam];
         return [
-            'closure0' => [$expect, 'groupHeader', $actionParam, Report::CALL_EXISTING],
-            'closure1' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALWAYS],
-            'closure2' => [$expect, 'groupHeader', $actionParam, Report::CALL_PROTOTYPE],
-            'closure3' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'closure4' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'closure1' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
+            'closure2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
+            'closure3' => [$key, $expect, $actionParam, Report::CALL_PROTOTYPE],
+            'closure4' => [$key, $expect, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
+            'closure5' => [$key, [true, 'groupHeader'], $actionParam, Report::CALL_ALL_PROTOTYPE],
         ];
     }
 
     public function actionCallableProvider() {
-        $actionParam = [new Foo(), 'foo'];
-        $expect = 'funcFoo';
+        $key = Action::CALLABLE;
+        $actionParam = $expect = ['foo', 'bar'];
         return [
-            'callable0' => [$expect, 'groupHeader', $actionParam, Report::CALL_EXISTING],
-            'callable1' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALWAYS],
-            'callable2' => [$expect, 'groupHeader', $actionParam, Report::CALL_PROTOTYPE],
-            'callable3' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'callable4' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'callable1' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
+            'callable2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
+            'callable3' => [$key, $expect, $actionParam, Report::CALL_PROTOTYPE],
+            'callable4' => [$key, $expect, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
+            'callable5' => [$key, $expect, $actionParam, Report::CALL_ALL_PROTOTYPE],
         ];
     }
 
     public function actionMethodProvider() {
         $actionParam = 'header';
-        $expect = 'header';
+        $key = Action::METHOD;
+        $expectPrototye = [true, 'groupHeader'];
+        $expect = [false, $actionParam];
         return [
-            'method0' => [$expect, 'groupHeader', $actionParam, Report::CALL_EXISTING],
-            'method1' => [$expect, 'groupHeader', $actionParam, Report::CALL_ALWAYS],
-            'method2' => [$expect, 'groupHeader', $actionParam, Report::CALL_PROTOTYPE],
-            'method3' => ['abc', 'groupHeader', $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'method4' => ['abc', 'groupHeader', $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'method1' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
+            'method2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
+            'method3' => [$key, $expect, $actionParam, Report::CALL_PROTOTYPE],
+            'method4' => [$key, $expectPrototye, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
+            'method5' => [$key, $expectPrototye, $actionParam, Report::CALL_ALL_PROTOTYPE],
         ];
     }
 
     public function actionMethodNotExistsProvider() {
         $actionParam = 'headerNotExist';
+        $key = Action::METHOD;
+        $expectPrototye = [true, 'groupHeader'];
+        $expect = [false, $actionParam];
         return [
-            'nonExistingMethod0' => [Null, 'groupHeader', $actionParam, Report::CALL_EXISTING],
-            'nonExistingMethod1' => ['headerNotExist', 'groupHeader', $actionParam, Report::CALL_ALWAYS],
-            'nonExistingMethod2' => ['abc', 'groupHeader', $actionParam, Report::CALL_PROTOTYPE],
-            'nonExistingMethod3' => ['abc', 'groupHeader', $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'nonExistingMethod4' => ['abc', 'groupHeader', $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'NoMmethod1' => [$key, Null, $actionParam, Report::CALL_EXISTING],
+            'NoMmethod2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
+            'NoMmethod3' => [$key, $expectPrototye, $actionParam, Report::CALL_PROTOTYPE],
+            'NoMmethod4' => [$key, $expectPrototye, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
+            'NoMmethod5' => [$key, $expectPrototye, $actionParam, Report::CALL_ALL_PROTOTYPE],
         ];
     }
 
-    /**
-     * @dataProvider triggerProvider
-     */
-    public function testWarning($expected, $key, $actionParameter) {
-        $this->expectWarning();
-        $this->expectWarningMessage($expected);
-        $action = new Action($key, [$actionParameter, Action::WARNING]);
-        $action->setRuntimeTarget(self::$target, $this->prototype, Report::CALL_EXISTING);
-        $action->execute('abc', 'row', 1, 0);
-    }
-
-    /**
-     * @dataProvider triggerProvider
-     */
-    public function testNotice($expected, $key, $actionParameter) {
-        $this->expectNotice();
-        $this->expectNoticeMessage($expected);
-        $action = new Action($key, [$actionParameter, Action::NOTICE]);
-        $action->setRuntimeTarget(self::$target, $this->prototype, Report::CALL_EXISTING);
-        $action->execute('abc', 'row', 1, 0);
-    }
-
-    /**
-     * @dataProvider triggerProvider
-     */
-    public function testError($expected, $key, $actionParameter) {
-        $this->expectError();
-        $this->expectExceptionMessage($expected);
-        $action = new Action($key, [$actionParameter, Action::ERROR]);
-        $action->setRuntimeTarget(self::$target, $this->prototype, Report::CALL_EXISTING);
-        $action->execute('abc', 'row', 1, 0);
+    // Parameter false will never be executed
+    public function actionFalseProvider() {
+        $actionParam = false;
+        $key = Action::NOTHING;
+        $expectPrototye = Null;
+        $expect = false;
+        return [
+            'False1' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
+            'False2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
+            'False3' => [$key, $expectPrototye, $actionParam, Report::CALL_PROTOTYPE],
+            'False4' => [$key, $expectPrototye, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
+            'False5' => [$key, $expectPrototye, $actionParam, Report::CALL_ALL_PROTOTYPE],
+        ];
     }
 
     public function triggerProvider() {
+        $error = Action::ERROR;
+        $callAction = Report::CALL_ALWAYS;
         return [
-            'Warning string' => ['Warning message', 'groupHeader', 'Warning message'],
-            'Warning method' => ['header', 'groupHeader', 'header'],
-            'Warning closure' => ['abc', 'groupHeader', fn($p1, $p2, $p3, $p4) => ($p1)],
-            'Warning callable' => ['funcFoo', 'groupHeader', [new Foo(), 'foo']],
+            'String' => [Action::STRING, 'Warning message', ['Warning message', $error], $callAction, $error],
+            'StringArr' => [Action::STRING, 'WarningMessage', [['WarningMessage', false], $error], $callAction, $error],
+            'Method' => [Action::METHOD, [false, 'header'], ['header', $error], $callAction, $error],
+            'Closure' => [Action::CLOSURE, fn($p1) => ($p1), [fn($p1) => ($p1), $error], $callAction, $error],
+            'Callable' => [Action::CALLABLE, ['class', 'foo'], [['class', 'foo'], $error], $callAction, $error],
         ];
     }
 
-    public function actionNoticeAndErrorProvider() {
-        return [
-            'String' => ['Error or warning message', 'groupHeader', 'Error or warning message'],
-            'Method' => ['header', 'groupHeader', 'header'],
-            'Closure' => ['abc', 'groupHeader', fn($p1, $p2, $p3, $p4) => ($p1)],
-            'Callable' => ['funcFoo', 'groupHeader', [new Foo(), 'foo']],
-        ];
+    public function testInvalidActionKind() {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Invalid action kind '999'.");
+        $action = new Action('init', null, 1, ['abc', 999]);
+    }
+
+    public function testInvalidArrayElements() {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Action target array must have 2 elements.");
+        $action = new Action('init', null, 1, ['abc', 999, 44]);
+    }
+
+    public function testIsValidNameReturnsTrue() {
+        $this->assertTrue(Action::isNameValid('a'));
+        $this->assertTrue(Action::isNameValid('äöüÄÖÜß'));
+        $this->assertTrue(Action::isNameValid('__a'));
+        $this->assertTrue(Action::isNameValid('a%', true), '% sign allowed');
+    }
+
+    public function testIsValidNameReturnsFalse() {
+        $this->assertFalse(Action::isNameValid('a b'), 'has blank');
+        $this->assertFalse(Action::isNameValid('1a'), 'start with a number');
+        $this->assertFalse(Action::isNameValid('a%'), '% sign not allowed');
+        $this->assertFalse(Action::isNameValid('a\v'), 'has backslash');
+        $this->assertFalse(Action::isNameValid('a/v'), 'has slash');
     }
 
 }

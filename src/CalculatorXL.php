@@ -61,8 +61,7 @@ class CalculatorXL extends Calculator implements MinMaxIF{
     /**
      * Cumulate attribute values to higher level
      */
-    public function cumulateToNextLevel(): void {
-        $level = $this->mp->level;
+    public function cumulateToNextLevel(int $level): void {
         if ($level > $this->maxLevel) {
             return;
         }

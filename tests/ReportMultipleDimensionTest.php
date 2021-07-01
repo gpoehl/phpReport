@@ -66,10 +66,10 @@ class ReportMultiDimensionTest extends TestCase {
                 ->run(null, false);
 
         $this->assertInstanceOf(Report::class, $rep);
-        $this->assertSame('init<<>>totalHeader<<>>', $rep->output);
-        $rep->output = '';
+        $this->assertSame('init<<>>totalHeader<<>>', $rep->out->get());
+        $rep->out->delete();
         $rep->next($row, 'k1');
-        $this->assertSame($expected, substr($rep->output, 0, -4));
+        $this->assertSame($expected, substr($rep->out->get(), 0, -4));
     }
 
     public function rowDetailProvider() {
@@ -102,11 +102,11 @@ class ReportMultiDimensionTest extends TestCase {
                 ->run(null, false);
         // First row. Assertion in not really necessary.
         $rep->next($rows[0], 'k1');
-        $this->assertSame('init<<>>totalHeader<<>>group1Header<<>>detail0<<>>detail<<>>', $rep->output);
+        $this->assertSame('init<<>>totalHeader<<>>group1Header<<>>detail0<<>>detail<<>>', $rep->out->get());
         // Clear output and test second row which didn't trigger a group change.
-        $rep->output = '';
+        $rep->out->delete();
         $rep->next($rows[1], 'k2');
-        $this->assertSame($expected, substr($rep->output, 0, -4));
+        $this->assertSame($expected, substr($rep->out->get(), 0, -4));
     }
 
     public function noGroupChangeProvider() {
@@ -158,75 +158,88 @@ class ReportMultiDimensionTest extends TestCase {
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run(null, false);
 
-        $out = explode('<<>>', substr($rep->output, 0, -4));
+        $out = explode('<<>>', substr($rep->out->get(), 0, -4));
         $this->assertSame(2, count($out));
         $this->assertSame('init', $out[0]);
         $this->assertSame('totalHeader', $out[1]);
 
-        $rep->output = '';
+        $rep->out->delete();
         $dimrows = [['D' => 11, 'E' => '1a'], ['D' => 11, 'E' => '1b'], ['D' => 12, 'E' => '2a']];
         $row = ['A' => 10, 'B' => 20, 'C' => $dimrows];
         $rowKey = 'k1';
         $rep->next($row, $rowKey);
-        $out = explode('<<>>', substr($rep->output, 0, -4));
-        $this->assertSame(9, count($out));
+        $out = explode('<<>>', substr($rep->out->pop(), 0, -4));
+        $this->assertSame(12, count($out));
         $this->assertSame('g1Header arg0=10 arg1=' . json_encode($row)
-                . ' arg2="' . $rowKey . '" arg3=0', $out[0]);
+                . ' arg2="' . $rowKey .'"', $out[0]);
         $this->assertSame('g2Header arg0=20 arg1=' . json_encode($row)
-                . ' arg2="' . $rowKey . '" arg3=0', $out[1]);
+                . ' arg2="' . $rowKey  .'"', $out[1]);
         $this->assertSame('detail0 arg0=' . json_encode($row)
                 . ' arg1="' . $rowKey . '" arg2=0', $out[2]);
         $this->assertSame('g3Header arg0=11 arg1=' . json_encode($dimrows[0])
-                . ' arg2=0 arg3=1', $out[3]);
+                . ' arg2=0', $out[3]);
+        $this->assertSame('detailHeader arg0=' . json_encode($dimrows[0])
+                . ' arg1=0', $out[4]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[0])
-                . ' arg1=0 arg2=1', $out[4]);
+                . ' arg1=0', $out[5]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[1])
-                . ' arg1=1 arg2=1' , $out[5]);
+                . ' arg1=1' , $out[6]);
+        $this->assertSame('detailFooter arg0=' . json_encode($dimrows[1])
+                . ' arg1=1' , $out[7]);
         $this->assertSame('g3Footer arg0=11 arg1=' . json_encode($dimrows[1])
-                . ' arg2=1 arg3=1', $out[6]);
+                . ' arg2=1', $out[8]);
         $this->assertSame('g3Header arg0=12 arg1=' . json_encode($dimrows[2])
-                . ' arg2=2 arg3=1', $out[7]);
+                . ' arg2=2', $out[9]);
+        $this->assertSame('detailHeader arg0=' . json_encode($dimrows[2])
+                . ' arg1=2', $out[10]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[2])
-                . ' arg1=2 arg2=1', $out[8]);
+                . ' arg1=2', $out[11]);
 
         // no group change at dim 0 but same data in dim 1.
-        $rep->output = '';
         $rowKey = 'k2';
         $rep->next($row, $rowKey);
-        $out = explode('<<>>', substr($rep->output, 0, -4));
-        $this->assertSame(9, count($out));
+        $out = explode('<<>>', substr($rep->out->pop(), 0, -4));
+        $this->assertSame(13, count($out));
         $this->assertSame('noGroupChange0 arg0=' . json_encode($row)
                 . ' arg1="' . $rowKey . '" arg2=0', $out[0]);
         $this->assertSame('detail0 arg0=' . json_encode($row)
                 . ' arg1="' . $rowKey . '" arg2=0', $out[1]);
-        // Footer for last row in dim 1 of previous dim 0 row
+        $this->assertSame('detailFooter arg0=' . json_encode($dimrows[2])
+                . ' arg1=2' , $out[2]);
         $this->assertSame('g3Footer arg0=12 arg1=' . json_encode($dimrows[2])
-                . ' arg2=2 arg3=1', $out[2]);
+                . ' arg2=2', $out[3]);
         $this->assertSame('g3Header arg0=11 arg1=' . json_encode($dimrows[0])
-                . ' arg2=0 arg3=1', $out[3]);
+                . ' arg2=0', $out[4]);
+        $this->assertSame('detailHeader arg0=' . json_encode($dimrows[0])
+                . ' arg1=0', $out[5]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[0])
-                . ' arg1=0 arg2=1', $out[4]);
+                . ' arg1=0', $out[6]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[1])
-                . ' arg1=1 arg2=1', $out[5]);
+                . ' arg1=1', $out[7]);
+          $this->assertSame('detailFooter arg0=' . json_encode($dimrows[1])
+                . ' arg1=1' , $out[8]);
         $this->assertSame('g3Footer arg0=11 arg1=' . json_encode($dimrows[1])
-                . ' arg2=1 arg3=1', $out[6]);
+                . ' arg2=1', $out[9]);
         $this->assertSame('g3Header arg0=12 arg1=' . json_encode($dimrows[2])
-                . ' arg2=2 arg3=1', $out[7]);
+                . ' arg2=2', $out[10]);
+         $this->assertSame('detailHeader arg0=' . json_encode($dimrows[2])
+                . ' arg1=2', $out[11]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[2])
-                . ' arg1=2 arg2=1', $out[8]);
+                . ' arg1=2', $out[12]);
 
-        $rep->output = '';
         $rep->end();
-        $out = explode('<<>>', substr($rep->output, 0, -4));
-        $this->assertSame(5, count($out));
+        $out = explode('<<>>', substr($rep->out->pop(), 0, -4));
+        $this->assertSame(6, count($out));
+          $this->assertSame('detailFooter arg0=' . json_encode($dimrows[2])
+                . ' arg1=2' , $out[0]);
         $this->assertSame('g3Footer arg0=12 arg1=' . json_encode($dimrows[2])
-                . ' arg2=2 arg3=1', $out[0]);
+                . ' arg2=2', $out[1]);
         $this->assertSame('g2Footer arg0=20 arg1=' . json_encode($row)
-                . ' arg2="' . $rowKey . '" arg3=0', $out[1]);
+                . ' arg2="' . $rowKey . '"', $out[2]);
         $this->assertSame('g1Footer arg0=10 arg1=' . json_encode($row)
-                . ' arg2="' . $rowKey . '" arg3=0', $out[2]);
-        $this->assertSame('totalFooter', $out[3]);
-        $this->assertSame('close', $out[4]);
+                . ' arg2="' . $rowKey . '"', $out[3]);
+        $this->assertSame('totalFooter', $out[4]);
+        $this->assertSame('close', $out[5]);
     }
 
     /**

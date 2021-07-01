@@ -18,13 +18,13 @@ namespace gpoehl\phpReport;
  */
 class MajorProperties {
 
-    public $level = 0;          // The current execution level
+    public int $level = 0;          // The current execution level
     public $rc;                 // Collector object of row counters
     public $gc;                 // Collector object of group counters  
     public $total;              // Collector object of sum and sheet cumulators  
     /** @var int[] Group level indexed by group name. */
     public $groupLevel = [];    
-    public $maxLevel = 0;      // The last group level 
+    public int $maxLevel = 0;      // The last group level 
 
     /**
      * Get the group level.

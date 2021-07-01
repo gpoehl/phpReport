@@ -48,7 +48,9 @@ TABLE1;
         'totalFooter' => '#b4faa3',
         'groupHeader' => '#93db00',
         'groupFooter' => '#93db00',
+         'detailHeader' => '#ffb76f',
         'detail' => '#ffb76f',
+         'detailFooter' => '#ffb76f',
         'noData' => '#ff4000',
         'noData_n' => '#f78181',
         'noGroupChange_n' => '#f88080',
@@ -115,13 +117,11 @@ TABLE1;
                     $this->rep->getGroupValue(),
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
-                    $this->rep->getDimID(),
             ),
-            'detail', 'noData_n', 'data_n', 'noGroupChange_n' =>
+            'detail', 'detailHeader' ,'detailFooter', 'noData_n', 'data_n', 'noGroupChange_n' =>
             $this->$method(
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
-                    $this->rep->getDimID(),
             ),
             //  Methods without extra parameters,
             default => $this->$method(),
@@ -175,12 +175,18 @@ TABLE1;
         $content .= $this->renderChildGroupCounter();
         return $this->renderAction($content);
     }
+    
+     public function beforeGroup($val, $row, $rowKey): string {
+        $content = $this->renderRowValues($row, $rowKey);
+        $val = $val ?? 'Null';
+        return $this->renderAction($content, ", Group value = $val");
+    }
 
-    public function groupHeader($val, $row, $rowKey, $dimID): string {
+    public function groupHeader($val, $row, $rowKey): string {
         $content = $this->renderRowValues($row, $rowKey);
         $content .= $this->renderGroupCounter();
         $val = $val ?? 'Null';
-        return $this->renderAction($content, ", Dim = $dimID, Group value = $val");
+        return $this->renderAction($content, ", Group value = $val");
     }
 
     /**
@@ -192,7 +198,7 @@ TABLE1;
      * @param type $rowKey
      * @return string Table with data related to a group footer
      */
-    public function groupFooter($val, $row, $rowKey, $dimID): string {
+    public function groupFooter($val, $row, $rowKey): string {
         $content = ($this->rep->isLast()) ?
                 "I'm the last " . $this->rep->getGroupName() :
                 "There are more {$this->rep->getGroupName()}(s)";
@@ -206,14 +212,37 @@ TABLE1;
         $content .= $this->renderGroupCounter();
         $content .= $this->renderChildGroupCounter();
         $val ??= 'Null';
-        return $this->renderAction($content, ", Dim = $dimID, Group value = $val");
+        return $this->renderAction($content, ", Group value = $val");
+    }
+    
+    public function afterGroup($val, $row, $rowKey): string {
+        $content = ($this->rep->isLast()) ?
+                "I was the last " . $this->rep->getGroupName() :
+                "There are more {$this->rep->getGroupName()}(s)";
+        $content .= ($this->rep->getLevel() === 1) ? ' within this job.' :
+                ' in group ' . $this->rep->getGroupName($this->rep->getLevel() - 1);
+        $content .= '<br>' . $this->renderRowValues($row, $rowKey);
+
+        $content .= $this->renderRowCounter();
+        $content .= $this->renderGroupCounter();
+        $content .= $this->renderChildGroupCounter();
+        $val ??= 'Null';
+        return $this->renderAction($content, ", Group value = $val");
     }
 
+    public function detailHeader($row, $rowKey): string {
+        return $this->renderAction('DetailHeader' , ", Dim = {$this->rep->getDimID()}");
+    }
+    
     public function detail($row, $rowKey): string {
         $content = $this->renderRowValues($row, $rowKey);
         $content .= $this->renderTotals();
         $content .= $this->renderRowCounter();
         return $this->renderAction($content, ", Dim = {$this->rep->getDimID()} RowKey = $rowKey");
+    }
+    
+    public function detailFooter($row, $rowKey): string {
+        return $this->renderAction('DetailFooter' , ", Dim = {$this->rep->getDimID()}");
     }
 
     public function noData(): string {

@@ -140,9 +140,9 @@ abstract class AbstractCollector implements ArrayAccess {
      * Cumulate computed values to next higher group level.
      * Values of the current group level will be initialized with default values.
      */
-    public function cumulateToNextLevel(): void {
+    public function cumulateToNextLevel(int $level): void {
         foreach ($this->items as $item) {
-            $item->cumulateToNextLevel();
+            $item->cumulateToNextLevel($level);
         }
     }
 

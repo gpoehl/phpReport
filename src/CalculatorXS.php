@@ -71,8 +71,7 @@ class CalculatorXS extends AbstractCalculator {
      * Add values from the current level to the next higher level (which is 1 less
      * then the current level). Values on current level will be reset to zero. 
      */
-    public function cumulateToNextLevel(): void {
-        $level = $this->mp->level;
+    public function cumulateToNextLevel(int $level): void {
         if ($level <= $this->maxLevel) {
             $this->total[$level - 1] += $this->total[$level];
             $this->total[$level] = 0;

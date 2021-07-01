@@ -50,12 +50,12 @@ class CalculatorXSTest extends TestCase {
         $this->assertSame($amount, $this->stack->sum());
         $this->assertSame($amount, $this->stack->sum(2));
 
-        $this->stack->cumulateToNextLevel();
+        $this->stack->cumulateToNextLevel($this->mp->level);
         $this->assertSame(0, $this->stack->sum());
 
         $this->assertSame($amount, $this->stack->sum($this->mp->level - 1));
         $this->stack->add($amount);
-        $this->stack->cumulateToNextLevel();
+        $this->stack->cumulateToNextLevel($this->mp->level);
         $this->assertSame($amount * 2, $this->stack->sum($this->mp->level - 1));
     }
 
@@ -64,7 +64,7 @@ class CalculatorXSTest extends TestCase {
         $this->stack->add($amount);
         $this->assertSame($amount, $this->stack->sum());
         $this->mp->level = 10;
-        $this->stack->cumulateToNextLevel();
+        $this->stack->cumulateToNextLevel($this->mp->level);
         $this->assertSame($amount, $this->stack->sum(2));
     }
 

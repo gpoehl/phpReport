@@ -53,7 +53,7 @@ abstract class AbstractCalculator {
     /**
      * Cumulates values and counters to the next higher level 
      */
-    abstract public function cumulateToNextLevel(): void;
+    abstract public function cumulateToNextLevel(int $level): void;
 
     abstract public function add($value): void;
 

@@ -2,8 +2,8 @@
 
 /**
  * Configuration file to replace default actions.
- * Percent sign (%) in groupHeader and groupFooter will be replaced by a 
- * pattern depending on $buildMethodsByGroupName rules.
+ * Percent sign (%) in beforeGroup, groupHeader, groupFooter and afterGroup will
+ * be replaced by a pattern depending on $buildMethodsByGroupName rules.
  * Percent sign in totalHeader and totalFooter will be replaced by the value
  * of $grandTotalName.
  * Percent sign in noData_n, detail_n and nogroupChange_n will be replaced by 
@@ -22,9 +22,11 @@ return [
     'actions' => [
     // 'init' => 'init',
     // 'totalHeader' => '%Header',
+    // 'beforeGroup' => '%BeforeGroup',
     // 'groupHeader' => '%Header',
     // 'detail' => 'detail',
     // 'groupFooter' => '%Footer',
+    // 'afterGroup' => '%AfterGroup',
     // 'totalFooter' => '%Footer',
     // 'close' => 'close',
   

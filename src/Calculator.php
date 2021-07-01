@@ -43,7 +43,7 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
             $this->nn[$this->maxLevel]++;
             if ($value !== 0) {
                 $this->nz[$this->maxLevel]++;              // increase non zero counter
-                $this->total[$this->maxLevel] += $value;    // add value 
+                $this->total[$this->maxLevel] += $value;   // add value 
             }
         }
     }
@@ -57,8 +57,7 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
      * Add values from the current level to the next higher level (which is 1 less
      * then the current level. Values on current level will be reset to zero. 
      */
-    public function cumulateToNextLevel(): void {
-        $level = $this->mp->level;
+    public function cumulateToNextLevel(int $level): void {
         if ($level <= $this->maxLevel) {
             $next = $level - 1;
             $this->total[$next] += $this->total[$level];
