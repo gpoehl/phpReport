@@ -1,6 +1,6 @@
 {
     "name": "gpoehl/phpreport",
-    "description": "Solid foundation for applications working with data sets (e.g. reports) having to deal with group changes or to calculate totals and subtotals.",
+    "description": "PHP library to process data sets for applications like reports. Handles group changes, calculates totals and subtotals and joins several data sets.",
     "authors": [
         {
             "name": "Guenter Poehl"
@@ -9,7 +9,8 @@
     "keywords": [
         "php",
         "report",
-	"reporting", 
+		"reporting", 
+		"group",
         "grouping",
         "totals",
         "subtotals",

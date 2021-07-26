@@ -39,7 +39,18 @@ ________
     This event only occurs when the given data set is empty. 
     In this case the following events will never be raised.
 
-groupHeader($groupValue, $row, $rowKey, $dimID)
+
+beforeGroupHeader($groupValue, $row, $rowKey)
+_____________________________________________
+
+    Raised before the group header action. To suppress any further actions
+    return 'false'.  
+
+    :param mixed $groupValue: The current group value.
+    :param array|object $row: The current row which triggered the group change.
+    :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
+
+groupHeader($groupValue, $row, $rowKey)
 _______________________________________________
 
     Raised when group values between two rows are not equal. Each group has
@@ -53,7 +64,6 @@ _______________________________________________
     :param mixed $groupValue: The current group value.
     :param array|object $row: The current row which triggered the group change.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
-    :param int $dimID: The current data dimension. Initial data dimension equals 0.
    
 groupFooter($groupValue, $row, $rowKey, $dimID)
 _______________________________________________
@@ -68,6 +78,22 @@ _______________________________________________
     to the last row within this group and **not** to the latest read row which triggered
     the group change.
 
+afterGroupFooter($groupValue, $row, $rowKey)
+____________________________________________
+
+    Raised after groupFooter. Might be used to handle the current output.
+    Examples:
+    Write outut to file and reset current output.
+    Generate pdf file.
+    Send output per mail.
+
+beforeDetail($row, $rowKey)
+___________________________
+
+    Raised before detail actions. This is after the last afterGroupFooter action.
+    Might be used to create header for details when groupFooter of last group
+    is not suitable or to be more flexible.
+
 detail($row, $rowKey)
 _____________________
 
@@ -77,6 +103,10 @@ _____________________
     :param array|object $row: The current row.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
 
+afterDetail($row, $rowKey)
+___________________________
+
+    Raised after detail actions. 
 
 Methods for multi dimensional data
 ----------------------------------

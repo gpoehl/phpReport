@@ -18,7 +18,8 @@ Within the configuration file you can specify exactly what action will be execut
 During instantiation of the report class you might replace some of the configuration
 parameters. 
 
-Events like a group change will trigger an individual groupHeader action for defined 
+
+Events like a group change will trigger individual action for defined 
 groups. To be able to execute different action types the group() 
 method also allows replacing the default action.
   

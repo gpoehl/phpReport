@@ -528,8 +528,8 @@ class Report
             }
             $this->execute($group->headerAction, $groupValues[$group->level], $this->dim->row, $this->dim->rowKey);
         }
-        if ($this->dim->isLastDim && $this->skipLevel === false)  {
-            $this->execute($this->detailHeaderAction, $row,  $rowKey);
+        if ($this->dim->isLastDim && $this->skipLevel === false) {
+            $this->execute($this->detailHeaderAction, $row, $rowKey);
             $this->currentAction = $this->detailAction;
         }
     }
@@ -544,7 +544,7 @@ class Report
                 $group = $this->groups->items[$this->mp->level];
                 $this->dim = $this->dims[$group->dimID];
                 if ($this->dim->isLastDim && $this->mp->level === $this->dim->lastLevel) {
-                    $this->execute($this->detailFooterAction, $this->dim->row,  $this->dim->rowKey);
+                    $this->execute($this->detailFooterAction, $this->dim->row, $this->dim->rowKey);
                 }
                 $this->execute($group->footerAction, $this->dim->groupValues[$this->mp->level],
                         $this->dim->row, $this->dim->rowKey);
@@ -676,7 +676,7 @@ class Report
      * Get the dimID related to a group level.
      * @param string|int|null $level The group level for which the dimID will be returned. Defaults to the
      * current group level.
-     * @return int The dimenion ID for the requested level. 
+     * @return int The dimension ID for the requested level. 
      */
     public function getDimID($level = null): int {
         if ($level === null) {
@@ -737,7 +737,7 @@ class Report
         if ($dimID === null) {
             return $this->dim->row;
         }
-        ($dimID >= 0) ?: $dimID = $this->dim->id - $dimID;
+        $dimID = ($dimID >= 0) ?: $dimID + $this->dim->id;
         return $this->dims[$dimID]->row;
     }
 
@@ -753,7 +753,7 @@ class Report
         if ($dimID === null) {
             return $this->dim->rowKey;
         }
-        ($dimID >= 0) ?: $dimID = $this->dim->id - $dimID;
+        $dimID = ($dimID >= 0) ?: $dimID + $this->dim->id;
         return $this->dims[$dimID]->rowKey;
     }
 
@@ -777,7 +777,6 @@ class Report
         for ($i = 1; $i <= $this->dimId; $i++) {
             $wrk += $this->dims[0]->groupValues;
         }
-
         return $wrk;
     }
 

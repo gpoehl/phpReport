@@ -48,13 +48,13 @@ TABLE1;
         'totalFooter' => '#b4faa3',
         'groupHeader' => '#93db00',
         'groupFooter' => '#93db00',
-         'detailHeader' => '#ffb76f',
+        'detailHeader' => '#ffb76f',
         'detail' => '#ffb76f',
-         'detailFooter' => '#ffb76f',
+        'detailFooter' => '#ffb76f',
         'noData' => '#ff4000',
         'noData_n' => '#f78181',
         'noGroupChange_n' => '#f88080',
-        'data_n' => '#ff8000',
+        'detail_n' => '#ff8000',
     ];
     // Additional option signs for action keys 
     private $signs = [
@@ -118,10 +118,16 @@ TABLE1;
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
             ),
-            'detail', 'detailHeader' ,'detailFooter', 'noData_n', 'data_n', 'noGroupChange_n' =>
+            'detail', 'detailHeader' ,'detailFooter',  =>
             $this->$method(
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
+            ),
+             'noData_n', 'detail_n', 'noGroupChange_n' =>
+            $this->$method(
+                    $this->rep->getRow(),
+                    $this->rep->getRowKey(),
+                    $this->rep->getDimID()
             ),
             //  Methods without extra parameters,
             default => $this->$method(),
@@ -270,7 +276,7 @@ TABLE1;
      * @param int $dimID The current dimension id
      * @return string Created output 
      */
-    public function data_n($row, $rowKey, int $dimID): string {
+    public function detail_n($row, $rowKey, int $dimID): string {
         $content = $this->renderRowValues($row, $rowKey);
         $content .= $this->renderRowCounter();
         return $this->renderAction($content, ", Dim = $dimID Rowkey = $rowKey");
@@ -298,7 +304,9 @@ TABLE1;
         if ($row === null) {
             $out = 'No data given.';
         } else {
-            $out = json_encode($row);
+            $out = (is_object($row)) ? 
+                'Object of class: ' . $row::class. '<br>' : '';
+            $out .= json_encode($row);
             // Truncate to a maximum length of 250
             if (strlen($out) > 250) {
                 $out = substr($out, 0, 245) . ' ...';
