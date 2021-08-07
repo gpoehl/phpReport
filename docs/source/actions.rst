@@ -5,7 +5,7 @@ Before we start to learn any details about using |project_name| we need to know
 something about actions.
 
 Calling the run() method starts the execution and |project_name| takes control over the 
-program flow. Whenever an important event occurs an action might be exectued.
+program flow. Whenever an important event occurs an action might be invoked.
 
 Typical actions are: 
 
@@ -32,13 +32,3 @@ The returned value will be appended to $output.
 The above rules can be altered by calling the setCallOption(). 
 
 .. include:: actionMethods.rst
-
-
-     
-   
-   
-
-
-
-
-

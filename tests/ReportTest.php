@@ -6,7 +6,6 @@ declare(strict_types=1);
  * Unit test of Report class.
  * For tests with multiple dimensions see ReportMultipleDimensionTest file
  */
-
 use gpoehl\phpReport\CalculatorXS;
 use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\MajorProperties;
