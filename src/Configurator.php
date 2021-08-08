@@ -20,20 +20,19 @@ class Configurator
 {
 
     /**
-     * @var array[] An array of all possible actions indexed by the action key.
-     * Action keys are mapped to actions to be executed.
+     * @var $action[] Default actions indexed by the action key.
+     * Action keys are mapped to actions to be invoked.
      * Action is usually a method to be called within the owner class or 
      * a string to be appended to $output. But there are much more options.
      * Please check the documentation.
      * 
-     * Percent sign (%) in beforeGroup, groupHeader, groupFooter and afterGroup will
-     * be replaced by a pattern depending on $buildMethodsByGroupName rules.
-     * The percent sign in totalHeader and totalFooter actions will be replaced 
-     * by the value of $grandTotalName.
-     * In data_n and noData_n actions the percent sign will be replaced by the
-     * current dimension id.
+     * Percent sign (%) will be replaced
+     * - in beforeGroup, groupHeader, groupFooter and afterGroup by a pattern
+     * depending on $buildMethodsByGroupName rules.
+     * - in totalHeader and totalFooter by the value of $grandTotalName.
+     * - in noData_n, detail_n and nogroupChange_n by the dimension ID.
      */
-    public $actions = [
+    public array $actions = [
         'init' => 'init',
         'totalHeader' => '%Header',
         'beforeGroup' => '%BeforeGroup',
@@ -77,8 +76,8 @@ class Configurator
 
     /**
      * Load configuration from configuration file.
-     * Parameters from config file will replace default values.
-     * @throws Exception When file can not be loaded.
+     * Parameters from config file replaces default values.
+     * @throws Exception When file can't be loaded.
      */
     private function loadConfigurationFile(): void {
         if (!is_readable(__DIR__ . self::$filename)) {

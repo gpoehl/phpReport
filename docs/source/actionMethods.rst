@@ -1,25 +1,25 @@
 Named events
 ............
 
-Each named event is mapped to an action. 
+Each named event is mapped to an action.
 Below all events are listed. Parameters passed to the action object are shown
-in parenthesis. 
+in parenthesis.
 
-.. note: Not all actions make use of the parameters.  
+.. note: Not all actions make use of the parameters.
 
 
 Data independent events
------------------------ 
+-----------------------
 
-These methods are called even when no data are provided.  
+These methods are called even when no data are provided.
 
 init()
 ______
     First event. Use to initialize application properties independent
-    from the __construct method.  
+    from the __construct method.
 
 close()
-_______        
+_______
     Last event. Use to clean up the dishes independent from __destruct method.
 
 totalHeader()
@@ -32,11 +32,11 @@ _____________
     Called once to build the total footer page of the report.
 
 Data driven events
-------------------    
+------------------
 
 noData()
 ________
-    This event only occurs when the given data set is empty. 
+    This event only occurs when the given data set is empty.
     In this case the following events will never be raised.
 
 
@@ -44,7 +44,7 @@ beforeGroupHeader($groupValue, $row, $rowKey)
 _____________________________________________
 
     Raised before the group header action. To suppress any further actions
-    return 'false'.  
+    return 'false'.
 
     :param mixed $groupValue: The current group value.
     :param array|object $row: The current row which triggered the group change.
@@ -54,7 +54,7 @@ groupHeader($groupValue, $row, $rowKey)
 _______________________________________________
 
     Raised when group values between two rows are not equal. Each group has
-    its own groupHeader. 
+    its own groupHeader.
 
     Group headers are executed from the changed group level down to the lowest
     declared group (within an data dimension).
@@ -64,13 +64,13 @@ _______________________________________________
     :param mixed $groupValue: The current group value.
     :param array|object $row: The current row which triggered the group change.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
-   
+
 groupFooter($groupValue, $row, $rowKey, $dimID)
 _______________________________________________
 
     groupFooters are executed like groupHeaders when group values between to rows
-    are not equal. 
-    
+    are not equal.
+
     But the footers are called from the lowest declared group (within a dimension)
     up to the changed group.
 
@@ -97,7 +97,7 @@ ___________________________
 detail($row, $rowKey)
 _____________________
 
-    Executed for each row of the last data dimension. When the row triggered 
+    Executed for each row of the last data dimension. When the row triggered
     a group change then the related group footers and group headers will be called before.
 
     :param array|object $row: The current row.
@@ -106,12 +106,12 @@ _____________________
 afterDetail($row, $rowKey)
 ___________________________
 
-    Raised after detail actions. 
+    Raised after detail actions.
 
 Methods for multi dimensional data
 ----------------------------------
 
-Following events belongs only to data sources having joined data.  
+Following events belongs only to data sources having joined data.
 
 noData_n($dimID)
 ________________
@@ -122,22 +122,26 @@ ________________
 detail_n($row, $rowKey)
 _______________________
 
-    Except for the last dimension this event is raised for each data row (See detail method).   
+    Except for the last dimension this event is raised for each data row (See detail method).
 
-    When group(s) are declared for this data dimension consider using groupHeader 
-    and groupFooter methods instead. 
+    When group(s) are declared for this data dimension consider using groupHeader
+    and groupFooter methods instead.
 
     :param array|object $row: The current row.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
 
-noGroupChange_n($row, $rowKey)
-______________________________
+noGroupChange_n($row, $rowKey, $dimID)
+______________________________________
 
-    Raised when for a data dimension group(s) are declared but current row has the same group
-    values than previous row.
-    In a well designed data model this should not happen. If you can't change
-    the model consider what you have to do in such situations.
-    Ignoring this case, trigger a warning or throw an exception are valid options.
+    Raised only for rows not related to the last dimension and when
+    group(s) are declared but current row don't trigger a group change.
+    (Row has the same group values than previous row.)
+    In most cases this is an unexpected behaviour and you might want to trigger
+    an error. That's also the default behaviour.
+
+    But sometimes it's deliberated (e.g. From a date field only the year or
+    month is declared as a group) and you want to handle this non unique rows.
 
     :param array|object $row: The current row which triggered the group change.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
+    :param int $dimID: The ID of the current data dimension.

@@ -581,12 +581,12 @@ class Report
     }
 
     /**
-     * Execute action when groups are defined but no group change occurred.
-     * This situation occurs when current row has no distinct group values.
-     * Rows might have unique 'key' values but group fields don't mirror them
-     * (e.g. From a date field only year or month is declared as a group).
-     * Only the owner of the data knows if this is expected or not. If it's
-     * not expected action should raise a warning or exception. 
+     * Invoke action when groups are defined for a dimension but no group change occurred.
+     * This happens when current row has no distinct group values. 
+     * Either the declared groups don't match the real key(s) of the row 
+     * (e.g. From a date field only the year or month is declared as a group)
+     * or your data aren't unique. 
+     * Usually the is not expected and you might want to trigger an error. 
      * @return bool true when group has changed, false when not.
      */
     private function noGroupChange(): bool {
