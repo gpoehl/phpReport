@@ -20,7 +20,7 @@ advantage of
 
 To enhance the data input capabilities you can easily combine data rows with any other
 data sources and handle them together as a single source. 
-This is implemented by the `join` function an let's you
+This is implemented by the `join` function and let's you
 
 * Iterate over nested or multidimensional arrays
 * Iterate over one to many relations provided by data objects

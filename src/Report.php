@@ -30,15 +30,15 @@ class Report
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
     const CALL_PROTOTYPE = 2;         // Call prototype for methods not implemented in owner class.
-    const CALL_ALWAYS_PROTOTYPE = 3;  // Call prototype for all methods.
-    const CALL_ALL_PROTOTYPE = 4;     // Call prototype for all actions which are not a callable and action is not false.
+    const CALL_ALWAYS_PROTOTYPE = 3;  // Call always prototype even when method exists in owner class.
+    const CALL_ALL_PROTOTYPE = 4;     // Call prototype for all actions which are not callables and action is not false.
     // Calculator class selection
     const XS = 1;                       // CalculatorXS class (default)
     const REGULAR = 2;                  // Calculator class (has not null and not zero counters)
     const XL = 3;                       // CalculatorXL class (has also min and max values) 
 
-    /** Collected return values from executed actions. */
-//    public ?string $output = null;
+    /** Object which collects output. */
+    public AbstractOutput $out;
 
     /** @var Major properties to be passed to calculator objects. */
     public MajorProperties $mp;
@@ -102,7 +102,6 @@ class Report
 
     /* @var $toCumulate Holds objects which has 'cumulateToNextLevel' method */
     private array $toCumulate;
-    public $out;
 
     /**
      * @param $target Default object or class name where action methods will be called.

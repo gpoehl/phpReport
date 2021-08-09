@@ -19,29 +19,29 @@ return [
     // 
     // Actions to be performed when key events occurs
     'actions' => [
-        // 'init' => 'init',
-        // 'totalHeader' => '%Header',
-        // 'beforeGroup' => '%BeforeGroup',
-        // 'groupHeader' => '%Header',
-        // 'detail' => 'detail',
-        // 'groupFooter' => '%Footer',
-        // 'afterGroup' => '%AfterGroup',
-        // 'totalFooter' => '%Footer',
-        // 'close' => 'close',
-        //
-        // Action when job got not data
-        // 'noData' => ':<br><strong>No data found</strong><br>', 
-        //
-        // Action when join() method don't serve data.
-        // 'noData_n' => 'noDataDim%',          
-        //
-        // Action for each row in dimensions < last dimension. Usually not needed.
-        // Group haeders and footers should be prefered.
-        // 'detail_n' => 'detai%',
-        //
-        // Action only for rows not related to the last dimension and when
-        // group(s) are declared but current row don't trigger a group change.
-        // 'noGroupChange_n' => ["Current row in dimension % didn't trigger a group change.", Action:ERROR]
-        // 'noGroupChange_n' => 'noGroupChange%'
+    // 'init' => 'init',
+    // 'totalHeader' => '%Header',
+    // 'beforeGroup' => '%BeforeGroup',
+    // 'groupHeader' => '%Header',
+    // 'detail' => 'detail',
+    // 'groupFooter' => '%Footer',
+    // 'afterGroup' => '%AfterGroup',
+    // 'totalFooter' => '%Footer',
+    // 'close' => 'close',
+    //
+    // Action when job got not data
+    // 'noData' => ':<br><strong>No data found</strong><br>', 
+    //
+    // Action when join() method don't serve data.
+    // 'noData_n' => 'noDataDim%',          
+    //
+    // Action for each row in dimensions < last dimension. Usually not needed.
+    // Group haeders and footers should be prefered.
+    // 'detail_n' => 'detai%',
+    //
+    // Action only for rows not related to the last dimension and when
+    // group(s) are declared but current row don't trigger a group change.
+    // 'noGroupChange_n' => ["Current row in dimension % didn't trigger a group change.", Action:ERROR]
+    // 'noGroupChange_n' => 'noGroupChange%'
     ],
 ];

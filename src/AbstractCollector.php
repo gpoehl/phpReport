@@ -21,7 +21,8 @@ use InvalidArgumentException;
  * Class is declared as abstract to avoid instantiation. It has no abstract
  * methods.
  */
-abstract class AbstractCollector implements ArrayAccess {
+abstract class AbstractCollector implements ArrayAccess
+{
 
     /** @var Array of calculator or collector objects. */
     public array $items = [];
@@ -61,7 +62,6 @@ abstract class AbstractCollector implements ArrayAccess {
     public function __get($key): object {
         return $this->getItem($key);
     }
-    
 
     /* -------------------------------------------------------------------------
      * Implementation of the arrayAccess interface

@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
-
 /**
  * Base class for calculator classes.
  */
-abstract class AbstractCalculator {
+abstract class AbstractCalculator
+{
 
     protected $total = []; // Array which keeps cumulated values per level
 
@@ -27,6 +27,7 @@ abstract class AbstractCalculator {
      * @param mixed|null $objID Optioal referece of this object.
      */
     public function __construct(protected MajorProperties $mp, public int $maxLevel) {
+        
     }
 
     /**
