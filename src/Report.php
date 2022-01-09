@@ -18,9 +18,10 @@ use gpoehl\phpReport\output\AbstractOutput;
 use InvalidArgumentException;
 
 /**
- * Main class of phpReport.
+ * Main class of phpReport library.
+ * 
  * Handles group changes, computes values and joins multiple data sources.
- * When a named event occurs the mapped action will be executed. 
+ * Actions will be invoked on defined events. 
  */
 class Report
 {
@@ -298,7 +299,7 @@ class Report
      * Action objects are used to execute actions mapped to events.
      * @param string $actionKey The event name.
      * @param array|null|false $actionParam
-     * @param int $level the group level. -1 for init and close actions.
+     * @param int $level the group level.
      * @param string | null $name Group or Totalx name which replaces the % sign in $actionParam
      * @return Action The new action object.
      */
@@ -403,7 +404,7 @@ class Report
     private function executeAction(string $key): void {
         $action = ($key === 'totalHeader' || $key === 'totalFooter') ?
                 $this->makeAction($key, $this->actions[$key], 0, $this->groups->grandTotalName) :
-                new Action($key, $this->out->actionKeyMapper[$key], -1, $this->actions[$key]);
+                new Action($key, $this->out->actionKeyMapper[$key], 0, $this->actions[$key]);
         $action->setRuntimeTarget($this->target, $this->prototype, $this->callOption);
         $this->execute($action);
     }
@@ -411,6 +412,7 @@ class Report
     private function execute(Action $action, ... $params) {
         if ($action->runtimeTarget) {
             $this->currentAction = $action;
+            $params[]= $action->level;
             $output = ($action->targetKey === Action::STRING) ? $action->target :
                     ($action->runtimeTarget)(... $params);
             if ($output !== null) {
@@ -479,7 +481,7 @@ class Report
         } elseif ($this->detailAction->runtimeTarget) {
             $output = ($this->detailAction->targetKey === Action::STRING) ?
                     $this->detailAction->target :
-                    ($this->detailAction->runtimeTarget)($row, $rowKey);
+                    ($this->detailAction->runtimeTarget)($row, $rowKey, $this->detailAction->level);
             if ($output !== null) {
                 // trigger_error() for details makes no sense. Condition not checked.
                 $this->out->write($output, $this->detailAction->level, $this->detailAction->outputKey);
@@ -550,7 +552,7 @@ class Report
                 $this->execute($group->afterAction, $this->dim->groupValues[$this->mp->level],
                         $this->dim->row, $this->dim->rowKey);
             }
-            // Cumulation is required even for skipped levels. Data row might have added values.
+            // Cumulation is required even for skipped levels.
             foreach ($this->toCumulate as $obj) {
                 $obj->cumulateToNextLevel($this->mp->level);
             }
@@ -627,26 +629,7 @@ class Report
         $this->dim = next($this->dims);
     }
 
-    /**
-     * Write value to output object.
-     * This method calls the write method of the output object.
-     * @param mixed $value The value to be written
-     * @param string | int | null type $group where the output belongs to.
-     * @param AbstractOutput | null type $group where the output belongs to.
-     * Defaults to the current group level.
-     * @param string | int | null $key The actionKey where the output belongs to.
-     * Defaults to the current action.
-     */
-    public function write($value, string|int|null $group = null, string|int|null $key = null, AbstractOutput $output = null) {
-        $groupLevel = $this->mp->getLevel($group);
-        if ($key === null) {
-            $key = $this->currentAction->outputKey;
-        } elseif (is_string($key)) {
-            $key = $this->out->actionKeyMapper[$key];
-        }
-        $output ??= $this->out;
-        $output->write($value, $groupLevel, $key);
-    }
+    
 
     /**
      * ******************************************************************************************

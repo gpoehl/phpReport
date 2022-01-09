@@ -16,7 +16,7 @@ return [
     //
     // Name of grand total group.
     // 'grandTotalName' => 'total',
-    // 
+    //
     // Actions to be performed when key events occurs
     'actions' => [
     // 'init' => 'init',
@@ -30,10 +30,10 @@ return [
     // 'close' => 'close',
     //
     // Action when job got not data
-    // 'noData' => ':<br><strong>No data found</strong><br>', 
+    // 'noData' => ':<br><strong>No data found</strong><br>',
     //
     // Action when join() method don't serve data.
-    // 'noData_n' => 'noDataDim%',          
+    // 'noData_n' => 'noDataDim%',
     //
     // Action for each row in dimensions < last dimension. Usually not needed.
     // Group haeders and footers should be prefered.

@@ -1,33 +1,74 @@
 # phpReport
 
-phpReport is a modern PHP library solving almost all commonly tasks for applications
+phpReport is a modern PHP library to handle almost all commonly tasks for applications
 working with data groups.
-It's designed to help with simple reports and develops full power for difficult
-challenges like writing invoices.
 
-The open architecture allows a seamless integration within every environment.
+Reports are the most typical kind of such apps but usage of phpReport is not limited
+to them. Even the most challenging programs can substantially simplified with the
+help of phpReport.
 
-Due to the combination of configuration, declaration and interaction between
-phpReport and your application any of your specific operating processes can be
-handled without forcing the processes to adapt to the software.
+phpReport integrates seamless into your environment. It's designed to supplement
+the tools or framework you're already using.
+
+So there is for instance no feature which reads data. That let's you access all
+kind of data from any source without any limitation.
+
+phpReport can iterate over your data, control group changes, calculate totals
+and subtotals, handle counters and much more.
+
+The most important part is the way of interaction with your application.
+Whenever an event (like a group change) occurs one or more user defined action(s)
+will be invoked. An action is an object which usually calls a method in your
+application but can do any other stuff.
+
+This concept makes sure that there's never a situation which could stop your developement
+process. You always have full power of whatever php itself has to offer.
+
 
 Documentation can be viewed at https://phpreport.readthedocs.io/en/latest/
 
+
+Installation
+------------
+
+Official installation method is via composer and its packagist package [gpoehl/phpreport](https://packagist.org/packages/gpoehl/phpReport).
+
+```
+$ composer require gpoehl/phpreport
+```
+
+
 Configuration
 -------------
-The purpose of configuration is to map named events to actions. Most likely an action
-is a method to be called in the application object but can be anything else.
-The config.php file is the place to override system wide default action types and
-action method names to meet your naming conventions.
+phpReport runs out of the box and can also be used with any php framework without
+configuration.
+
+Nevertheless phpReport is highly configurable. It let's you alter the default actions
+to be invoked on events as well as the rules how method names are build to reflect
+naming conventions used in your organisation.
+See the config.php file for system wide settings. The configuration might also
+altered for each phpReport instance by passing parameters the class constructor.
+
+Instantiation
+-------------
+
+To create a new phpReport object call
+
+```php
+$rep = new Report($this);
+```
+
+The first parameter refers to the object which has the methods to be called on event actions.
+More parameters can be used to configure the current phpReport instance.
+
 
 Declaration
 -----------
-With just four declaration methods (instead of configuration by an array) you'll
-setup the skeleton of your application.
+With just four declaration methods you'll setup the skeleton of your application.
 
 The **group()** method declares a new data group and instantiates a group counter.
 phpReport will then compare group values between data rows, execute actions
-mapped to the group header and footer events and increments the group counter.   
+mapped to the group header and footer events and increments the group counter.
 
 The **compute()** method lets phpReport know that you want use aggregate functions like
 sum(), min(), max() or that you'll ask for not null and not zero counters.
@@ -82,11 +123,18 @@ values behave like data would have been served as a flat record.
 
 Data output
 -----------
-Usually phpReport doesn't generate any output for you. Actions are the place to define
-what has to happen. So you can write data to a database table, a file (eg. excel file),
-an HTML string, generate a pdf document or send emails. Of course you can do it all together.  
-There's only one rule: Whatever you return from an action will be appended to the
-public variable $output.
+With the exception of prototyping phpReport doesn't generate any output for you.
+Actions are the place to define what has to happen. So you can write data to a database table, a file (eg. excel file),
+an HTML string, generate pdf documents or send emails. Of course you can do it all together.
+
+To create an output string you can make usage of the output classes. The returned
+value from invoked actions will always be written to one of the output objects.
+The default object just appends the returned value to a variable.
+The more comfortabel one uses arrays and allows additional direct writing to one of the
+nine bands per group level. Bands usually have header, data and footer data as well as
+header, data and footer for summary data on top or at the end of a group.
+Methods like get() or pop() makes output handling very flexible.
+
 
 Usage and prototyping
 ---------------------
@@ -106,7 +154,7 @@ class FirstExample{
 
     public Report $rep;
 
-    /** @var Customer[] Array of customer objects. /*
+    /** @var Customers[] Array of customer objects. /*
     public function __construct(array $customers){
         $this->rep  = (new Report($this))
         ->group ('region')
@@ -119,7 +167,7 @@ class FirstExample{
         ->compute ('amount')
         ->setCallOption(Report::CALL_PROTOTYPE);
         $this->rep->run($data);
-        echo $this->rep->output;
+        echo $this->rep->out->get();
     }
 
 }
@@ -135,9 +183,9 @@ taken out of the 'region' and the 'customerID' properties of the customer object
 To join customer with orders the join method let's declare where to get them from.
 In this example we're going to call the getOrdersByDate method and pass an extra
 parameter to select only orders of the current year.
- 
+
 Note that 'getOrdersByDate' is wrapped in an array to differentiate property and
-method names.  
+method names.
 
 Usually the called method will return related rows and phpReport will iterate over
 those rows.
@@ -164,10 +212,10 @@ The setCallOption call activates the prototype function.
 To start execution the run() method is called. Here we pass all customer objects
 at once to the report object.
 
-Eventually we are echoing the collected return values from the action methods.   
+Eventually we are echoing the collected return values from the action methods.
 
 Complex computation of values
-===========================
+=============================
 
 As mentioned above we want / need to calculate the monthly discount ourselves. The
 monthFooter method is called after all orders within a month are processed.
@@ -175,7 +223,7 @@ monthFooter method is called after all orders within a month are processed.
 The first line shows how to gets the sum of the computed value 'amount' per month.
 The second line does a calculation which in reality will be much more complex.
 The calculator add method adds the discount value. The cumulated value is
-available at all group levels.   
+available at all group levels.
 
 By implementing an action method the related prototype method will (dependent on
 the callOption parameter) no longer be called. You can call the prototype
@@ -197,7 +245,7 @@ The program above is fully working. All you've to do is preparing the desired ou
 Implement only those action methods you really need. phpReport is smart enough to
 call only existing methods unless you really ask for.
 
-This is also the time to uncomment the two prototype calls made above.  
+This is also the time to uncomment the two prototype calls made above.
 
 ```php
 
@@ -236,14 +284,7 @@ Requirements
 
 The only requirement for **phpReport** is PHP 8.0 or later.
 
-Installation
-------------
 
-Official installation method is via composer and its packagist package [gpoehl/phpReport](https://packagist.org/packages/gpoehl/phpReport).
-
-```
-$ composer require gpoehl/phpReport
-```
 
 
 Support us

@@ -16,7 +16,7 @@ class StringOutputTest extends TestCase
 
     public function testWrite() {
         $out = $this->mock;
-        $out->write('a', 1, 'i');
+        $out->write('a', 1, 9);
         $out->write('b', 1);
         $out->write('c');
         $this->assertEquals('abc', $out->get());
@@ -24,9 +24,9 @@ class StringOutputTest extends TestCase
 
     public function testPrepend() {
         $out = $this->mock;
-        $out->prepend('a', 1, 'i');
-        $out->prepend('b', 1, 'gh');
-        $out->prepend('c', 1, 'tf');
+        $out->prepend('a', 1, 9);
+        $out->prepend('b', 1);
+        $out->prepend('c');
         $this->assertEquals('cba', $out->get());
     }
 
@@ -35,7 +35,7 @@ class StringOutputTest extends TestCase
         $out->write('abc');
         $this->assertEquals('abc', $out->get());
         $this->assertEquals('abc', $out->get(1));
-        $this->assertEquals('abc', $out->get(1, 'gf'));
+        $this->assertEquals('abc', $out->get(1, 2));
     }
 
     public function testPop() {
@@ -60,7 +60,7 @@ class StringOutputTest extends TestCase
         $out->delete(1);
         $this->assertEquals('', $out->get());
         $out->write('abc');
-        $out->delete(1, 'init');
+        $out->delete(1, 2);
         $this->assertEquals('', $out->get());
     }
 

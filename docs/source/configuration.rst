@@ -1,14 +1,19 @@
 Configuration
 =============
 
-|project_name| lets you configure the real action to be performed for events 
+The purpose of configuration is to map named events to actions. Most likely an action
+is a method to be called in the application object but can be anything else.
+The config.php file is the place to override system wide default action types and
+action method names to meet your naming conventions.
+
+|project_name| lets you configure the real action to be performed for events
 which triggers one or more actions.
 
 Whenever an event occurs the action defined to an action key will be performed.
 
 For each possible action to be executed you can declare what should be done.
 Each action key has a default action assigned. Within the **config.php** file the
-default actions might be adjusted to meet your personal favorites or to follow 
+default actions might be adjusted to meet your personal favorites or to follow
 business rules of your orgisation.
 
 
@@ -21,7 +26,7 @@ business rules of your orgisation.
    "Ouput a string", "Action is not a legal method name or begins with an :"
    "Throw an error", "Action begins with error:"
    "Raise a warning", "Action begins with warning:"
-   "Do nothing", "Action equals false"  
+   "Do nothing", "Action equals false"
 
 The following table lists all possible actions, assigned defaults and notices
 how the % sign the will be replaced during run time.
@@ -35,35 +40,35 @@ how the % sign the will be replaced during run time.
           - % replaced by
         * - init
           - init
-          - 
+          -
         * - close
           - close
-          - 
-        * - totalHeader    
+          -
+        * - totalHeader
           - %Header
           - $grandTotalName
-        * - totalFooter    
+        * - totalFooter
           - %Footer
           - $grandTotalName
-        * - groupHeader    
+        * - groupHeader
           - %Header
           - | group name or
             | group level
-        * - groupFooter    
+        * - groupFooter
           - %Footer
           - | group name or
             | group level
-        * - detail    
+        * - detail
           - detail
-          - 
-        * - noData    
+          -
+        * - noData
           - <br><strong>No data found </strong><br>
-          - 
-        * - noData_n    
+          -
+        * - noData_n
           - noDataDim%
           - dimension id
-        * - noGroupChange    
-          - | error:Current row in dimension % didn't 
+        * - noGroupChange
+          - | error:Current row in dimension % didn't
             | trigger a group change.
           - dimension id
 
@@ -72,14 +77,14 @@ Next to the actions parameter you can also declare the following parameters:
 
 .. php:attr:: grandTotalName
 
-    The name for the grand total group. Will also be used to 
+    The name for the grand total group. Will also be used to
     build actions for action keys totalHeader and totalFooter.
 
     .. note:: You can always access grand totals by group level of 0.
 
-.. php:attr:: buildMethodsByGroupName 
+.. php:attr:: buildMethodsByGroupName
 
-    When true the % sign actions related to groupHeader and 
+    When true the % sign actions related to groupHeader and
     groupFooter will be replaced by the group names. When false by the numeric group
     level.
 
@@ -95,8 +100,8 @@ Assuming 'grandTotalName' is unchanged and has the value of 'total' the action t
 The same rule applies to the 'totalFooter' action.
 
 Similar rules are true for the 'groupHeader' and 'groupFooter' actions. But as we need an action for each defined group the % sign will be replaced by the group name.
-Example: 
-You defined group changes for 'region'. 'customer' and 'invoice'. 
+Example:
+You defined group changes for 'region'. 'customer' and 'invoice'.
 
 region regionHeader regionFooter
 customer customerHeader customerFooter
@@ -132,11 +137,11 @@ In many cases you won't instantiate **phpReport** when your data query doen't re
 So it's not worth to create a method in each report which returns such a string.
 The solution is to declare this string as a default. A : sign at the beginning makes sure that this string is always treated as a string and can not be mixed up with a method name.
 
-The % sign in 'noData_n' actions will be replaced by the number of current dimension when the current dimension is greater than 0. See multi dimensional data for more details. 
+The % sign in 'noData_n' actions will be replaced by the number of current dimension when the current dimension is greater than 0. See multi dimensional data for more details.
 
 The very last parameter is called 'userConfig'. This is an optional way how you can pass data around. **phpReport** isself does't use this values.
 
 
-.. note:: 
+.. note::
     All directives can be altered when initializing a new |project_name|. Some
-    even when calling a method. 
+    even when calling a method.

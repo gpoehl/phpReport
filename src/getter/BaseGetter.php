@@ -16,28 +16,18 @@ namespace gpoehl\phpReport\getter;
 /**
  * BaseGetter is the base class for all getter classes
  */
-abstract class BaseGetter
-implements GetValueInterface
+abstract class BaseGetter implements GetValueInterface
 {
-   
 
     /**
      * @var mixed $source The source (attribute name, array key or method / closure) where
-     * to find the desired value in a data row. 
+     * to find the desired value in a data row.
      * For sheets $source is an array having a source for the sheet key and value.
      *
-     * @var array Variadic list of optional parameters passed to closures and methods.
+     * @var array $params Optional parameters passed unpacked to closures and methods.
      */
     public function __construct(protected $source, protected ?array $params = null) {
         
     }
 
-    /**
-     * Get the value declared by $source out of $row.
-     * @var mixed $row The data row wich holds the value.
-     * @var int|string|null $rowKey The key of the data row. Can be used to build
-     * the value to be returned.
-     * @return mixed The desired data value (by $source) from $row.
-     */
-//    public abstract function getValue($row, $rowKey = null);
 }

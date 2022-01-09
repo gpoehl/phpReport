@@ -15,35 +15,36 @@ namespace gpoehl\phpReport\output;
 
 /**
  * Basic writer class
+ * Output is managed as plain string.
+ * Parameter for level and 8sub)key are ignored.
  */
 class StringOutput extends AbstractOutput
 {
 
     private $output = '';
 
-
-    public function write($value, int $level = 0, $key = null) {
+    public function write($value, ?int $level = null, ?int $key = null) {
         $this->output .= $value . $this->separator;
     }
 
-    public function prepend($value, int $level = 0, ?string $key = null) {
+    public function prepend($value, ?int $level = null, ?int $key = null) {
         $this->output = $value . $this->separator . $this->output;
     }
 
-    public function get(?int $level = null, ?string $key = null): ?string {
-        if (empty($this->separator) || empty($this->output)){
+    public function get(?int $level = null, ?int $key = null): ?string {
+        if (empty($this->separator) || empty($this->output)) {
             return $this->output;
         }
-      return  substr($this->output, 0, -strlen($this->separator));
+        return substr($this->output, 0, -strlen($this->separator));
     }
 
-    public function pop(?int $level = null, ?string $key = null): string {
+    public function pop(?int $level = null, $key = null): ?string {
         $wrk = $this->get();
         $this->output = '';
         return $wrk;
     }
 
-    public function delete(?int $level = null, ?string $key = null) {
+    public function delete(?int $level = null, ?int $key = null): void {
         $this->output = '';
     }
 

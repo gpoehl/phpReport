@@ -55,8 +55,8 @@ abstract class AbstractCollector implements ArrayAccess
     /**
      * Magic get method to access item via arrow notation.
      * Note: A magic setter method is not implemented. Use the addItem method instead.
-     * Example: $collector->itemKey 
-     * @param int|string $key the item key 
+     * Example: $collector->itemKey
+     * @param int|string $key the item key
      * @return AbstractCollector|AbstractCalculator Returns the requested item
      */
     public function __get($key): object {
@@ -68,7 +68,7 @@ abstract class AbstractCollector implements ArrayAccess
      * ---------------------------------------------------------------------- */
 
     /*
-     * Add new item to items array via array notation 
+     * Add new item to items array via array notation
      * @param int|string $offset The item key
      * @param AbstractCollector|AbstractCalculator $value The item
      */
@@ -86,7 +86,7 @@ abstract class AbstractCollector implements ArrayAccess
     }
 
     /*
-     * Get item via array notation 
+     * Get item via array notation
      * @param int|string $offset The item or alternate key
      * @see getItem()
      */
@@ -100,8 +100,8 @@ abstract class AbstractCollector implements ArrayAccess
      * ---------------------------------------------------------------------- */
 
     /**
-     * Get all itmes 
-     * @return AbstractCollector|AbstractCalculator[] 
+     * Get all itmes
+     * @return AbstractCollector|AbstractCalculator[]
      */
     public function getItems(): array {
         return $this->items;
@@ -121,10 +121,10 @@ abstract class AbstractCollector implements ArrayAccess
     }
 
     /**
-     * Adds values to related calculators or to other collectors. 
-     * @param array $values Key represents the collector item or alternate key. 
+     * Adds values to related calculators or to other collectors.
+     * @param array $values Key represents the collector item or alternate key.
      * Value is the value to be added or another array for recursive item strucures.
-     * When item doesn't exist php raises a notice. 
+     * When item doesn't exist php raises a notice.
      */
     public function add(array $values): void {
         foreach ($values as $key => $value) {
@@ -150,21 +150,21 @@ abstract class AbstractCollector implements ArrayAccess
      * Extract ranges of items.
      *
      * Returns ranges of items located between start and end keys.
-     * 
+     *
      * When a range is an array value1 is the start and value2 the end key.
      * When one of the keys don't exist the value of the altKey will be used instead.
      * When the items still doesn't exist an error will be thrown.
-     * 
+     *
      * If start key equals Null the range begins at the first item.
      * When the end key equals Null the range ends at the last item.
-     *   
+     *
      * When a range is not an array then the item with the corresponding key or
      * altKey is returned if it exist. If this doesn't exist php raise a notice.
-     * 
+     *
      * Item keys are preserved. Sort order within ranges are preserved. Ranges
      * are returned in given order. When items belong to multiple ranges only
      * the first occurence will returned.
-     * 
+     *
      * @param array|int|string[] $ranges Ranges or item keys for items to be filtered.
      * @return AbstractCollector Clone of current collector with selected items.
      * @throws InvalidArgumentException When start or end item doesn't exist.
@@ -210,7 +210,7 @@ abstract class AbstractCollector implements ArrayAccess
      * Find an item by key or alternate key.
      * When item is found by the given key this key will be returned. When the item
      * is found via the value of the alternate key will returned.
-     * @param int|string $key The item or alternate key 
+     * @param int|string $key The item or alternate key
      * @return int|string|false The item key when an item exists. Else False.
      */
     private function findItemKey($key) {
@@ -222,15 +222,15 @@ abstract class AbstractCollector implements ArrayAccess
 
     /**
      * Filters items where key is between values.
-     * 
+     *
      * Iterates over each collector item. If a range is an array and the item key
      * is between value1 and value2 of this range (inclusive) the item is returned.
-     * 
-     * If the range isn't an the item with the corresponding key is returned. 
-     * 
+     *
+     * If the range isn't an the item with the corresponding key is returned.
+     *
      * If a range matches the key of a named range then the named range value will
      * be used to filter the items.
-     * 
+     *
      * Item keys and sort order are preserved.
      *
      * @param array|int|string[] $ranges Ranges or item keys for items to be filtered.
@@ -261,7 +261,7 @@ abstract class AbstractCollector implements ArrayAccess
      * Iterates over each item in the array passing key and value to the callback
      * function. If the callback function returns TRUE, the current item is returned
      * into the cloned collector. Item keys are preserved.
-     * @param callable $callable The callback function to use. 
+     * @param callable $callable The callback function to use.
      * @return AbstractCollector Clone of current collector with filtered items
      */
     public function filter(callable $callable): AbstractCollector {
@@ -277,11 +277,11 @@ abstract class AbstractCollector implements ArrayAccess
 
     /**
      * Alter item collection by executing a php array command.
-     * @param callable $command Any php array command which accepts an 
-     * array as the first parameter. 
+     * @param callable $command Any php array command which accepts an
+     * array as the first parameter.
      * @param mixed[] $params Additional parameters passed to the php command.
      * @return AbstractCollector Clone of current collector with applied command
-     * on the items array. 
+     * on the items array.
      */
     public function cmd(callable $command, ...$params): AbstractCollector {
         $collector = clone $this;

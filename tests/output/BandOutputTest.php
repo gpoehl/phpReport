@@ -21,7 +21,7 @@ class BandOutputTest extends TestCase
     }
 
     public function testWrite() {
-        $this->write('a', -1, 'init');
+        $this->write('a', 0, 'init');
         $this->write('b', 0, 'totalHeader');
         $this->write('c', 1, 'groupHeader');
         $this->write('d', 2, 'groupHeader');
@@ -31,17 +31,12 @@ class BandOutputTest extends TestCase
         $this->write('h', 2, 'groupFooter');
         $this->write('i', 1, 'groupFooter');
         $this->write('j', 0, 'totalFooter');
-        $this->write('k', -1, 'close');
-        
-//        echo "\n TestWrite \n";
-//        var_dump($this->mock->output);
-//          echo "\n\n";
-        
+        $this->write('k', 0, 'close');
         $this->assertEquals(implode(range('a', 'k')), $this->mock->get());
     }
 
     public function testWriteWithCumulate() {
-        $this->write('a', -1, 'init');
+        $this->write('a', 0, 'init');
         $this->write('b', 0, 'totalHeader');
         $this->write('c', 1, 'groupHeader');
         $this->write('d', 2, 'groupHeader');
@@ -57,16 +52,15 @@ class BandOutputTest extends TestCase
         $this->write('m', 2, 'groupFooter');
         $this->write('n', 1, 'groupFooter');
         $this->write('o', 0, 'totalFooter');
-        $this->write('p', -1, 'close');
-        $this->assertEquals(implode(range('a', 'p')), $this->mock->get(-1));
+        $this->write('p', 0, 'close');
+        $this->assertEquals(implode(range('a', 'p')), $this->mock->get(0));
     }
 
     public function testGet() {
         $this->testWrite();
         $out = $this->mock;
         $this->assertEquals(implode(range('a', 'k')), $out->get());
-        $this->assertEquals(implode(range('a', 'k')), $out->get(-1));
-        $this->assertEquals(implode(range('b', 'j')), $out->get(0));
+        $this->assertEquals(implode(range('a', 'k')), $out->get(0));
         $this->assertEquals(implode(range('c', 'i')), $out->get(1));
         $this->assertEquals(implode(range('d', 'h')), $out->get(2));
     }
@@ -79,8 +73,6 @@ class BandOutputTest extends TestCase
         $out->delete(1);
         $this->assertEquals('abjk', $out->get());
         $out->delete(0);
-        $this->assertEquals('ak', $out->get());
-         $out->delete(-1);
         $this->assertEquals('', $out->get());
     }
     
@@ -99,8 +91,8 @@ class BandOutputTest extends TestCase
         $this->assertEquals(implode(range('a', 'c')) . implode(range('i', 'k')), $out->get());
         $this->assertEquals('ci', $out->pop(1));
         $this->assertEquals('abjk', $out->get());
-        $this->assertEquals('bj', $out->pop(0));
-        $this->assertEquals('ak', $out->get());
+        $this->assertEquals('abjk', $out->pop(0));
+        $this->assertEquals('', $out->get());
     }
 
 }
