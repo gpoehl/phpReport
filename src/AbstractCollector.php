@@ -42,10 +42,10 @@ abstract class AbstractCollector implements ArrayAccess
 
     /**
      * Set alternate key for an item.
-     * @param int|string $key Unique altenate key.
-     * @param int|string $itemKey The key of the item in $items.
+     * @param $key Unique alternate key.
+     * @param $itemKey The key of the item in $items.
      */
-    public function setAltKey($key, $itemKey): void {
+    public function setAltKey(int|string $key, int|string $itemKey): void {
         if (isset($this->items[$key]) || isset($this->altKeys[$key])) {
             throw new InvalidArgumentException("Key '$key' already exists.");
         }
@@ -77,7 +77,7 @@ abstract class AbstractCollector implements ArrayAccess
         $this->addItem($value, $offset);
     }
 
-    public function offsetExists($offset) {
+    public function offsetExists(mixed $offset): bool {
         return isset($this->items[$offset]) || isset($this->items[$this->altKeys[$offset]]);
     }
 

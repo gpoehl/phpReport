@@ -20,8 +20,8 @@ namespace gpoehl\phpReport;
 class CalculatorXS extends AbstractCalculator {
 
     /**
-     * @param MajorPropertiesService $mp Object of major properties  
-     * @param int $maxLevel The maximum (group) level 
+     * @param MajorPropertiesService $mp Object of major properties
+     * @param int $maxLevel The maximum (group) level
      * Initialize all levels with 0 values
      */
     public function __construct(protected MajorProperties $mp, public int $maxLevel) {
@@ -29,31 +29,11 @@ class CalculatorXS extends AbstractCalculator {
     }
 
     /**
-     * Returns always false. Counters for notNull and notZero values are not implemented. 
-     * @return false
-     */
-    public function hasCounter(): bool {
-        return false;
-    }
-
-    /**
-     * Returns always false. Methods to handle min and max values are not implemented. 
-     * @return false
-     */
-    public function hasMinMax(): bool {
-        return false;
-    }
-
-    /**
      * Add given $value to $maxLevel
      * @param numeric|null $value The value to be added
      */
-    public function add($value): void {
+    public function add(int|float|string|null $value): void {
         $this->total[$this->maxLevel] += $value;
-    }
-
-    protected function initializeValue($value, int $level): void {
-        $this->total[$level] = $value;
     }
 
     /**
@@ -69,7 +49,7 @@ class CalculatorXS extends AbstractCalculator {
      /**
      * Cumulate attribute values to higher level.
      * Add values from the current level to the next higher level (which is 1 less
-     * then the current level). Values on current level will be reset to zero. 
+     * then the current level). Values on current level will be reset to zero.
      */
     public function cumulateToNextLevel(int $level): void {
         if ($level <= $this->maxLevel) {

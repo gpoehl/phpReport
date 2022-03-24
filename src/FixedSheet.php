@@ -19,23 +19,22 @@ use OutOfBoundsException;
  * Sheet holds values of a field into one of many cumulators.
  * The cumulator will be selected by a key.
  * Cumulators will be instantiated immediately when this class is instantiated.
- * Cumaltors are clones of class instantiation $cumulator parameter.  
+ * Cumaltors are clones of class instantiation $cumulator parameter.
  */
 class FixedSheet extends AbstractCollector {
 
     /**
-     * 
+     *
      * @param AbstractCaclculator $calculator An instance of a cualculator class which
-     * will be cloned and then assigned to this object to hold values into 
+     * will be cloned and then assigned to this object to hold values into
      * sheet columns.
-     * 
-     * @param string|int $fromKey The first key (name) of sheet columns. 
-     * @param string|int $toKey The last key (name) of sheet columns. When using
-     * strings as keys make sure that incrementing $key will meet $toKey.
-     * @param mixed $name Optional name to identify this object.
+     *
+     * @param $fromKey The first key (name) of sheet columns or iterable list of all possible keys.
+     * @param $toKey The last key (name) of sheet columns. When keys are strings
+     * make sure that incrementing $key will meet $toKey. Null when $fromKey is iterable.
      */
-    public function __construct(AbstractCalculator $calculator, $fromKey, $toKey) {
-        (is_array($fromKey)) ? $this->addArrayItems($calculator, $fromKey) : $this->addItems($calculator, $fromKey, $toKey);
+    public function __construct(AbstractCalculator $calculator, int|string|iterable $fromKey, int|string|null $toKey) {
+        (is_iterable($fromKey)) ? $this->addArrayItems($calculator, $fromKey) : $this->addItems($calculator, $fromKey, $toKey);
     }
 
     // Implementation of arrayAccess interface. Don't allow creating new items
@@ -44,23 +43,7 @@ class FixedSheet extends AbstractCollector {
     }
 
     /**
-     * Returns true when assigned cumulater handles notNull and notZero counters.  
-     * @return boolean
-     */
-    public function hasCounter(): bool {
-        return reset($this->items)->hasCounter();
-    }
-
-    /**
-     * Returns true when assigned cumulator handles min and max values. 
-     * @return boolean
-     */
-    public function hasMinMax(): bool {
-        return reset($this->items)->hasMinMax();
-    }
-
-    /**
-     * Add items by range fromKey to toKey by cloning the calculator. 
+     * Add items by range fromKey to toKey by cloning the calculator.
      * @param @see __construct
      */
     private function addItems(AbstractCalculator $calculator, $fromKey, $toKey) {
@@ -71,7 +54,7 @@ class FixedSheet extends AbstractCollector {
     }
 
     /**
-     * Add items by given keys. 
+     * Add items by given keys.
      * Clone given calculator for each key.
      * @param @see __construct
      */
@@ -87,7 +70,7 @@ class FixedSheet extends AbstractCollector {
      * calling the add method of calculator class.
      * The calculator must already exist.
      * @param iterable $values The iterator key represents the sheet item
-     * while the value will to be added. 
+     * while the value will to be added.
      */
      public function add(iterable $values) :void {
          foreach ($values as $key => $value) {
@@ -97,5 +80,5 @@ class FixedSheet extends AbstractCollector {
             $this->items[$key]->add($value);
          }
     }
- 
+
 }

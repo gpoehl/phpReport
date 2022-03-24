@@ -44,8 +44,8 @@ class GetterFactoryForArrayTest extends TestCase
         $getter = $this->stack->getGetter('x x x', []);
         $getter->getValue($this->row);
     }
-    
-    // Suppress warning by setting isJoin in getter factory 
+
+    // Suppress warning by setting isJoin in getter factory
     public function testSuppressWarning() {
         $this->stack->isJoin = true;
         $getter = $this->stack->getGetter('x x x', []);

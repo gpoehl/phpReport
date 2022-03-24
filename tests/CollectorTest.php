@@ -23,7 +23,6 @@ class CollectorTest extends TestCase {
 
     /**
      * @dataProvider addItemKeyProvider
-     * @dataProvider addCastedItemKeyProvider
      */
     public function testAddItem($expected, $key) {
         $this->stack->addItem($this->calculator, $key);
@@ -32,7 +31,6 @@ class CollectorTest extends TestCase {
 
     /**
      * @dataProvider addItemKeyProvider
-     * @dataProvider addCastedItemKeyProvider
      */
     public function testAddItemByArrayNotation($expected, $key) {
         $this->stack[$key] = $this->calculator;
@@ -45,12 +43,6 @@ class CollectorTest extends TestCase {
             ['a', 'a'],
             ['a b', 'a b'],
             [0, null],
-        ];
-    }
-
-    public function addCastedItemKeyProvider() {
-        return [
-            [1, 1.2],
         ];
     }
 
@@ -95,7 +87,7 @@ class CollectorTest extends TestCase {
     /**
      * Assign multiple calculator objects to the collecter object.
      * Used to test between and range methods.
-     * Items with key 0 - 2, 4, and x will be assigned. 
+     * Items with key 0 - 2, 4, and x will be assigned.
      * AltKeys are from a to e.
     */
     public function setMultipleItemsAndAltKeys() {

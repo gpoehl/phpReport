@@ -20,13 +20,13 @@ class Collector extends AbstractCollector {
 
     /**
      * Add an item to this collector.
-     * @param AbstactCollector|AbstractCalulator The item to be added
-     * @param int|string|null The unique item key. When the key is empty the item
+     * @param $item The item to be added
+     * @param $key The unique item key. When the key is empty the item
      * will be added at the end of the $items array. When the key is not empty
-     * it must be unique. 
+     * it must be unique.
      * @throws \InvalidArgumentException when the key already exists.
      */
-    public function addItem($item, $key = null): void {
+    public function addItem(AbstractCollector|AbstractCalculator $item, int|string|null $key = null): void {
         if ($key === null) {
             $this->items[] = $item;
         } else {

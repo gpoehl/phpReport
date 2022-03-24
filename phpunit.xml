@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit 
-    bootstrap="vendor/autoload.php"
-    colors="true"
-    >
-	<testsuites>
+<phpunit
+    bootstrap                       = "vendor/autoload.php"
+    colors                          = "true"
+    convertDeprecationsToExceptions = "true"
+>
+    <testsuites>
         <testsuite name="phpReport Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    <php>
+        <ini name = "error_reporting"        value = "E_ALL" />
+        <ini name = "display_errors"         value = "On" />
+        <ini name = "display_startup_errors" value = "On" />
+    </php>
 </phpunit>

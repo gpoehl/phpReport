@@ -20,43 +20,34 @@ abstract class AbstractCalculator
 {
 
     protected $total = []; // Array which keeps cumulated values per level
-
+    protected report $rep;
     /**
-     * @param MajorPropertiesService $mp Object of major properties  
-     * @param int $maxLevel The maximum (group) level 
+     * @param MajorPropertiesService $mp Object of major properties
+     * @param int $maxLevel The maximum (group) level
      * @param mixed|null $objID Optioal referece of this object.
      */
     public function __construct(protected MajorProperties $mp, public int $maxLevel) {
-        
+
     }
 
     /**
-     * Initialiizes the calculator with the given value.
-     * The notNull and notZero counters will not be incremented. The initial
-     * value has also no influence on min and max values.
-     * Note: Without initializing the initial value will always be zero. 
-     * @param numeric $value The inital value.
-     * @param mixed $level The level on which the value will be cumulated. This 
-     * is usually the lowest level of the current dimension.
-     * @return void
-     * @throws \OutOfBoundsException
+     * Initialize the calculator on the current level with the given value.
+     * Call this method in group headers to set an other value than zero.
+     * @param $value The inital value.
      */
-    public function setInitialValue($value, $level = null): void {
-        $level = ($level) ?? $this->mp->level;
-        if ($level > $this->maxLevel) {
-            throw new \OutOfBoundsException("Level $level must above maxLevel ($this->maxLevel)");
-        }
-        $this->initializeValue($value, $level);
+    public function setInitialValue(int|float|string $value): void {
+//        if ($this->rep->currentAction->key !== 'groupHeader'){
+//            throw new Exception('Initial values can only be set in group headers');
+//        }
+        $this->total[$this->mp->level] = $value;
     }
 
-    abstract protected function initializeValue($value, int $level): void;
-
     /**
-     * Cumulates values and counters to the next higher level 
+     * Cumulates values and counters to the next higher level
      */
     abstract public function cumulateToNextLevel(int $level): void;
 
-    abstract public function add($value): void;
+    abstract public function add(int|float|string|null $value): void;
 
     abstract public function sum(int $level = null);
 }

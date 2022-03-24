@@ -26,8 +26,8 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
     protected $nz = [];
 
     /**
-     * @param MajorPropertiesService $mp Object of major properties  
-     * @param int $maxLevel The maximum (group) level 
+     * @param MajorPropertiesService $mp Object of major properties
+     * @param int $maxLevel The maximum (group) level
      * Initialize all levels with 0 values
      */
     public function __construct(protected MajorProperties $mp, public int $maxLevel) {
@@ -36,26 +36,22 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
 
     /**
      * Add given $value to $maxLevel and increment counters.
-     * @param numeric|null $value The numeric data value which will be added
+     * @param $value The data value which will be added
      */
-    public function add($value): void {
+    public function add(int|float|string|null $value): void {
         if ($value !== null) {
             $this->nn[$this->maxLevel]++;
             if ($value !== 0) {
                 $this->nz[$this->maxLevel]++;              // increase non zero counter
-                $this->total[$this->maxLevel] += $value;   // add value 
+                $this->total[$this->maxLevel] += $value;   // add value
             }
         }
-    }
-
-    protected function initializeValue($value, int $level): void {
-        $this->total[$level] = $value;
     }
 
     /**
      * Cumulate attribute values to higher level.
      * Add values from the current level to the next higher level (which is 1 less
-     * then the current level. Values on current level will be reset to zero. 
+     * then the current level. Values on current level will be reset to zero.
      */
     public function cumulateToNextLevel(int $level): void {
         if ($level <= $this->maxLevel) {
@@ -73,16 +69,16 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
      * @return numeric The running total of added values from the requested level down
      * to the lowest level
      */
-    public function sum(int $level = null) {
+    public function sum(int|string|null $level = null) {
         return array_sum(array_slice($this->total, $this->mp->getLevel($level)));
     }
 
     /**
      * Get the number of added values beeing not null.
-     * @param int|null $level The requested level. Defaults to the current level.
-     * @return int The total number of added not null values for the requested level.
+     * @param $level The requested level. Defaults to the current level.
+     * @return The total number of added not null values for the requested level.
      */
-    public function nn(int $level = null): int {
+    public function nn(int|string|null $level = null): int {
         // To calculate the total number all values from requested level down
         // to lowest level must be included.
         return array_sum(array_slice($this->nn, $this->mp->getLevel($level)));
@@ -90,11 +86,11 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
 
     /**
      * Get the number of added values beeing not zero and not null.
-     * @param int|null $level The requested level. Defaults to the current level.
-     * @return int The total number of added not null and not zero values for 
+     * @param $level The requested level. Defaults to the current level.
+     * @return The total number of added not null and not zero values for
      * the requested level.
      */
-    public function nz(int $level = null): int {
+    public function nz(int|string|null $level = null): int {
         // To calculate the total number all values from requested level down
         // to lowest level must be included.
         return array_sum(array_slice($this->nz, $this->mp->getLevel($level)));
