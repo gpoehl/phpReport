@@ -18,7 +18,8 @@ use InvalidArgumentException;
 /**
  * Collector class for groups.
  */
-class Groups {
+class Groups
+{
 
     /** @var Group[] Group object indexed by group level. */
     public array $items = [];
@@ -27,7 +28,7 @@ class Groups {
     public array $groupLevel = [];
 
     /**
-     * @param string $grandTotalName Name for grand total group (Level = 0)
+     * @param $grandTotalName Name for grand total group (Level = 0)
      */
     public function __construct(public string $grandTotalName) {
         $this->groupLevel[$grandTotalName] = 0;
@@ -42,15 +43,15 @@ class Groups {
         if (isset($this->groupLevel[$group->name])) {
             throw new \InvalidArgumentException("Group $group->name has already been defined");
         }
-        
-        // Check group level just checks that report class did it well. 
-        if (empty($this->items) && $group->level !== 1) {  
-            throw new \InvalidArgumentException("First grouplevel must be 1. '$group->level' given"); 
-        } 
-        if (!empty($this->items) &&  $group->level <> end($this->items)->level + 1 ){
-            throw new \InvalidArgumentException("Grouplevel '$group->level' must be 1 greater than the previous level"); 
-        } 
-        
+
+        // Check group level just checks that report class did it well.
+        if (empty($this->items) && $group->level !== 1) {
+            throw new \InvalidArgumentException("First grouplevel must be 1. '$group->level' given");
+        }
+        if (!empty($this->items) && $group->level <> end($this->items)->level + 1) {
+            throw new \InvalidArgumentException("Grouplevel '$group->level' must be 1 greater than the previous level");
+        }
+
         $this->items[$group->level] = $group;
         $this->groupLevel[$group->name] = $group->level;
     }

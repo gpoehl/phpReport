@@ -6,19 +6,22 @@ declare(strict_types=1);
  * Unit test of Collector class
  */
 use gpoehl\phpReport\Factory;
+use gpoehl\phpReport\CalculatorXS;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
-class CollectorTest extends TestCase {
+class CollectorTest extends TestCase
+{
 
     public $stack;
     public $calculator;
-    public $mp;
 
     public function setUp(): void {
-        $this->mp = Factory::properties();
         $this->stack = Factory::collector();
-        $this->calculator = Factory::calculator($this->mp, 0, Report::XS);
+        $rep = $this->createStub(Report::class);
+        $rep->method('getLevel')
+                ->will($this->returnCallback(fn($val) => $val ??= 0));
+        $this->calculator = new CalculatorXS($rep, 0);
     }
 
     /**
@@ -89,13 +92,13 @@ class CollectorTest extends TestCase {
      * Used to test between and range methods.
      * Items with key 0 - 2, 4, and x will be assigned.
      * AltKeys are from a to e.
-    */
+     */
     public function setMultipleItemsAndAltKeys() {
-        $item1 = Factory::calculator($this->mp, 0, Report::XS);
-        $item2 = Factory::calculator($this->mp, 0, Report::XS);
-        $item3 = Factory::calculator($this->mp, 0, Report::XS);
-        $item4 = Factory::calculator($this->mp, 0, Report::XS);
-        $item5 = Factory::calculator($this->mp, 0, Report::XS);
+        $item1 = $this->calculator;
+        $item2 = clone ($item1);
+        $item3 = clone ($item1);
+        $item4 = clone ($item1);
+        $item5 = clone ($item1);
         $this->stack->addItem($item1);
         $this->stack->addItem($item2);
         $this->stack->addItem($item3);
@@ -154,17 +157,17 @@ class CollectorTest extends TestCase {
     }
 
     public function testCollectorInCollector() {
-        $item1 = Factory::calculator($this->mp, 0, Report::XS);
-        $item2 = Factory::calculator($this->mp, 0, Report::XS);
+        $item1 = clone ($this->calculator);
+        $item2 = clone ($item1);
         $this->stack->addItem($item1);
         $this->stack->addItem($item2);
         $item1->add(3);
         $item2->add(4);
         $multi = Factory::collector();
         $this->stack->addItem($multi, 'multi');
-        $s1 = Factory::calculator($this->mp, 0, Report::XS);
-        $s2 = Factory::calculator($this->mp, 0, Report::XS);
-        $s3 = Factory::calculator($this->mp, 0, Report::XS);
+        $s1 = clone ($this->calculator);
+        $s2 = clone ($this->calculator);
+        $s3 = clone ($this->calculator);
         $multi->addItem($s1);
         $multi->addItem($s2);
         $multi->addItem($s3);
@@ -177,7 +180,6 @@ class CollectorTest extends TestCase {
         $this->assertSame([5, 7], $multi->between([0, 1])->sum(null, true), "between from collector multi key between 0 and 1 as array");
         $this->assertSame([3, 4, 'multi' => 21], $this->stack->between([0, 1], 'multi')->sum(null, true), "between from collector key between 0 and 1 plus 'multi' as array");
     }
-
 
     /**
      * @dataProvider rangeParamsProvider

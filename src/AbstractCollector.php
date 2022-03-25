@@ -13,15 +13,12 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
-use ArrayAccess;
-use InvalidArgumentException;
-
 /**
  * Base class of Collector and sheet classes.
  * Class is declared as abstract to avoid instantiation. It has no abstract
  * methods.
  */
-abstract class AbstractCollector implements ArrayAccess
+abstract class AbstractCollector implements \ArrayAccess
 {
 
     /** @var Array of calculator or collector objects. */
@@ -47,7 +44,7 @@ abstract class AbstractCollector implements ArrayAccess
      */
     public function setAltKey(int|string $key, int|string $itemKey): void {
         if (isset($this->items[$key]) || isset($this->altKeys[$key])) {
-            throw new InvalidArgumentException("Key '$key' already exists.");
+            throw new \InvalidArgumentException("Key '$key' already exists.");
         }
         $this->altKeys[$key] = $itemKey;
     }
@@ -109,10 +106,10 @@ abstract class AbstractCollector implements ArrayAccess
 
     /**
      * Returns the item at specified key.
-     * @param int|string $key The item key or an alternate key.
+     * @param $key The item key or an alternate key.
      * @return AbstractCollector|AbstractCalculator Returns the required item
      */
-    public function getItem($key): object {
+    public function getItem(int|string $key): object {
         $foundKey = $this->findItemKey($key);
         if ($foundKey !== false) {
             return $this->items[$foundKey];
@@ -122,8 +119,8 @@ abstract class AbstractCollector implements ArrayAccess
 
     /**
      * Adds values to related calculators or to other collectors.
-     * @param array $values Key represents the collector item or alternate key.
-     * Value is the value to be added or another array for recursive item strucures.
+     * @param $values Key represents the collector item or alternate key.
+     * Value is the value to be added or another array for recursive item structures.
      * When item doesn't exist php raises a notice.
      */
     public function add(array $values): void {
@@ -191,29 +188,29 @@ abstract class AbstractCollector implements ArrayAccess
 
     /**
      * Get the offest of an item by a given key.
-     * @param int|string $key The item or alternate key
+     * @param $key The item or alternate key
      * @param array $keyOffsets Array of integer offsets indexed by item keys.
      * @return int The offset of an item
      * @throws InvalidArgumentException
      */
-    private function getOffset($key, array $keyOffsets): int {
+    private function getOffset(int|string $key, array $keyOffsets): int {
         if (isset($keyOffsets[$key])) {
             return $keyOffsets[$key];
         }
         if (isset($this->altKeys[$key], $this->items[$this->altKeys[$key]])) {
             return $keyOffsets[$this->altKeys[$key]];
         }
-        throw new InvalidArgumentException("Key '$key' doesn't exist.");
+        throw new \InvalidArgumentException("Key '$key' doesn't exist.");
     }
 
     /**
      * Find an item by key or alternate key.
      * When item is found by the given key this key will be returned. When the item
      * is found via the value of the alternate key will returned.
-     * @param int|string $key The item or alternate key
+     * @param $key The item or alternate key
      * @return int|string|false The item key when an item exists. Else False.
      */
-    private function findItemKey($key) {
+    private function findItemKey(int|string $key) {
         If (isset($this->items[$key])) {
             return $key;
         }

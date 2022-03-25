@@ -41,9 +41,6 @@ class Report
     /** Object which collects output. */
     public AbstractOutput $out;
 
-    /** @var Major properties to be passed to calculator objects. */
-    public MajorProperties $mp;
-
     /** @var Collection of row counters. One counter per dimension. */
     public Collector $rc;
 
@@ -56,8 +53,7 @@ class Report
     /** @var The currently executed action. */
     public Action $currentAction;
 
-    /** @var array[] Array of arrays with possible actions loaded from config file
-     * indexed by the action key. */
+    /** @var Action[] Possible actions loaded from config file indexed by the action key. */
     private array $actions = [];
 
     /** @var The runTimeAction for 'detail' event. */
@@ -74,7 +70,7 @@ class Report
     /** @var The current group level. */
     public int $currentLevel = 0;
 
-    /** @var The last group level. */
+    /** @var The last declared group level. */
     public int $maxLevel = 0;
 
     /** @var Highest level of changed group. Null when no group change detected. */
@@ -112,35 +108,27 @@ class Report
 
     /**
      * @param $target Default object or class name where action methods will be called.
-     * @param array|null $config Dynamic configuration to replace defaults set in config.php file.
+     * @param $config Dynamic configuration to replace defaults set in config.php file.
      * @param $params Optional parameters not used by this library itself.
      * Might be used as a data transfer vehicle.
      */
     public function __construct(private object|string|null $target = null,
             array $config = null,
-            ?AbstractOutput $outputHandler = null,
+            AbstractOutput $outputHandler = null,
             public mixed $params = null) {
         $conf = new Configurator($config);
         $this->groups = new Groups($conf->grandTotalName);
         $this->buildMethodsByGroupName = $conf->buildMethodsByGroupName;
         $this->actions = $conf->actions;
-        $this->mp = Factory::properties();
-        $this->toCumulate[] = $this->mp->rc = $this->rc = Factory::collector();
-        $this->toCumulate[] = $this->mp->gc = $this->gc = Factory::collector();
-        $this->toCumulate[] = $this->mp->total = $this->total = Factory::collector();
+        $this->toCumulate[] = $this->rc = Factory::collector();
+        $this->toCumulate[] = $this->gc = Factory::collector();
+        $this->toCumulate[] = $this->total = Factory::collector();
         $this->dims[] = $this->dim = new Dimension(0, 0, $target);
         $this->out = ($outputHandler) ? $outputHandler : new $conf->outputHandler();
         if ($this->out InstanceOf CumulateIF) {
-            $this->registerToCumulate($this->out);
+        $this->toCumulate[] = $this->out;
         }
         return $this;
-    }
-
-    /**
-     * Register object which has CumulateIF implemented.
-     */
-    public function registerToCumulate(CumulateIF $obj): void {
-        $this->toCumulate[] = $obj;
     }
 
     /**
@@ -188,9 +176,6 @@ class Report
         $source ??= $name;
         GetterFactory::verifySource($source, $params);
         $group = new Group($name, ++$this->maxLevel, $this->dim->id, $source, $params);
-
-        $this->mp->maxLevel = $this->maxLevel;
-
         $group->beforeAction = $this->makeAction('beforeGroup', $beforeAction, $group->level, $name);
         $group->headerAction = $this->makeAction('groupHeader', $headerAction, $group->level, $name);
         $group->footerAction = $this->makeAction('groupFooter', $footerAction, $group->level, $name);
@@ -198,7 +183,7 @@ class Report
         $this->groups->addGroup($group);
         $this->dim->groups[] = $group;
         $this->dim->lastLevel = $group->level;
-        $this->gc->addItem(Factory::calculator($this->mp, $group->level - 1, self::XS), $group->level);
+        $this->gc->addItem(Factory::calculator($this, $group->level - 1, self::XS), $group->level);
         $this->gc->setAltKey($name, $group->level);
         return $this;
     }
@@ -226,7 +211,7 @@ class Report
         $typ ??= self::XS;
         $source ??= $name;
         $maxLevel = $this->checkMaxLevel($maxLevel);
-        $this->total->addItem(Factory::calculator($this->mp, $maxLevel, $typ), $name);
+        $this->total->addItem(Factory::calculator($this, $maxLevel, $typ), $name);
         if ($source !== false) {
             GetterFactory::verifySource($source, $params);
             $this->dim->setCalcSource($name, $source, $params);
@@ -274,7 +259,7 @@ class Report
     ): self {
         $typ ??= self::XS;
         $maxLevel = $this->checkMaxLevel($maxLevel);
-        $this->total->addItem(Factory::sheet($this->mp, $maxLevel, $typ, $fromKey, $toKey), $name);
+        $this->total->addItem(Factory::sheet($this, $maxLevel, $typ, $fromKey, $toKey), $name);
         if ($keySource !== false) {
             // Don't pass params to prevent raising warning. The might be use for keySource an source.
             GetterFactory::verifySource($keySource, $keyParams);
@@ -305,11 +290,11 @@ class Report
     /**
      * Create and return a new action object.
      * Action objects are used to execute actions mapped to events.
-     * @param string $actionKey The event name.
+     * @param $actionKey The event name.
      * @param array|null|false $actionParam
-     * @param int $level the group level.
-     * @param string | null $name Group or Totalx name which replaces the % sign in $actionParam
-     * @return Action The new action object.
+     * @param $level the group level.
+     * @param $name Group or Totalx name which replaces the % sign in $actionParam
+     * @return The new action object.
      */
     private function makeAction(string $actionKey, $actionParam, int $level, ?string $name = null): Action {
         if ($name === null) {
@@ -334,12 +319,12 @@ class Report
      */
     private function finalInitializion(): void {
         foreach ($this->dims as $dim) {
-            $this->rc->addItem(Factory::calculator($this->mp, $dim->lastLevel, self::XS));
+            $this->rc->addItem(Factory::calculator($this, $dim->lastLevel, self::XS));
         }
         reset($this->dims);
         $this->dim = current($this->dims);
 
-        $this->mp->groupLevel = $this->groups->groupLevel;
+//        $this->mp->groupLevel = $this->groups->groupLevel;
 
         $this->executeAction('init');
         $this->executeAction('totalHeader');
@@ -532,9 +517,6 @@ class Report
         for ($i = $this->changedLevel; $i <= $this->dim->lastLevel; $i++) {
             $group = $this->groups->items[$i];
             $this->currentLevel = $group->level;
-
-            $this->mp->level = $group->level;
-
             $this->gc->items[$group->level]->inc();
             if ($this->execute($group->beforeAction, $groupValues[$group->level], $this->dim->row, $this->dim->rowKey) === false) {
                 $this->skipLevel = $group->level;
@@ -554,8 +536,6 @@ class Report
      */
     private function handleFooters(): void {
         for ($this->currentLevel = $this->lowestHeader; $this->currentLevel >= $this->changedLevel; $this->currentLevel--) {
-            $this->mp->level = $this->currentLevel;
-
             if ($this->skipLevel === false || $this->currentLevel >= $this->skipLevel) {
                 $group = $this->groups->items[$this->currentLevel];
                 $this->dim = $this->dims[$group->dimID];
@@ -572,7 +552,6 @@ class Report
                 $obj->cumulateToNextLevel($this->currentLevel);
             }
         }
-         $this->mp->level = $this->currentLevel;
     }
 
     /**

@@ -1,25 +1,25 @@
 Group counter
 =============
 
-As soon as you declare groups |project_name| counts how often a group occurs
-in the higher level group.
-In other words we cout how many different values of a certain group has been processed.
+As soon as you declare a group |project_name| counts how often this group occurs
+in the higher goup level.
+In other words we count how many different values of a certain group has been processed.
 
 For each group one CalculatorXS object will be instantiated as an item
 within an collector named **gc**.
 
-Group counters are, like any other aggregation methods, available at each group level. 
+Group counters are, like any other aggregation methods, available at each group level.
 
-.. attention:: 
+.. attention::
     Make sure you access the correct gc item. To get the counter of
     the current group use the item of the previous group.
 
-.. tip:: 
+.. tip::
     Use a negative value for the group level. -1 means the level above
     the current level.
 
 
-.. code-block:: 
+.. code-block::
 
     $this->rep = new Report();
     //
@@ -29,7 +29,7 @@ Group counters are, like any other aggregation methods, available at each group 
 
 Example:
 
-.. code-block:: 
+.. code-block::
 
     $this->rep = new Report();
     $gc = $this->rep->gc;
@@ -44,4 +44,3 @@ Example:
     $rep->rc->{1}->sum(2);
     $rep->rc->items[1]->sum(2);     // That's the same
  
-

@@ -5,71 +5,20 @@ declare(strict_types=1);
 /**
  * Unit test of CumulatorXL class
  */
-
-use gpoehl\phpReport\Factory;
+use gpoehl\phpReport\CalculatorXL;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
-class CalculatorTestXL extends TestCase {
+class CalculatorTestXL extends TestCase
+{
 
-    public $mp;
-    public $stack;
+    private $stack;
 
     public function setUp(): void {
-        $mp = Factory::properties();
-        $mp->level = 2;
-        $mp->maxLevel = 2;
-        $this->mp = $mp;
-        $this->stack = Factory::calculator($mp, 2, Report::XL);
-    }
-
-    public function testAddValues() {
-        $arr = $arr = [
-            [2, 2],
-            [10, 12],
-            [4, 16],
-        ];
-        foreach ($arr as $parm) {
-            list($val, $sum) = $parm;
-            $this->stack->add($val);
-            $this->assertSame($sum, $this->stack->sum());
-            // higer level has same value
-            $this->assertSame($sum, $this->stack->sum($this->mp->level - 1));
-        }
-    }
-
-    public function testCumulate() {
-        $amount = 10;
-        $this->stack->add($amount);
-        $this->assertSame($amount, $this->stack->sum());
-        $this->assertSame($amount, $this->stack->sum(2));
-
-        $this->stack->cumulateToNextLevel($this->mp->level);
-        $this->assertSame(0, $this->stack->sum());
-
-        $this->assertSame($amount, $this->stack->sum($this->mp->level - 1));
-        $this->stack->add($amount);
-        $this->stack->cumulateToNextLevel($this->mp->level);
-        $this->assertSame($amount * 2, $this->stack->sum($this->mp->level - 1));
-    }
-
-    public function testCumulateNotExistingLevel() {
-        $amount = 10;
-        $this->stack->add($amount);
-        $this->assertSame($amount, $this->stack->sum());
-        $this->mp->level = 10;
-        $this->stack->cumulateToNextLevel($this->mp->level);
-        $this->assertSame($amount, $this->stack->sum(2));
-    }
-
-    public function testSumOnNotExistingLevel() {
-        $this->stack->add(10);
-        $this->assertSame(0, $this->stack->sum(99));
-    }
-
-    public function testCounter() {
-        $this->assertSame(0, $this->stack->nn());
-        $this->assertSame(0, $this->stack->nz());
+        $rep = $this->createStub(Report::class);
+        $rep->method('getLevel')
+                ->will($this->returnCallback(fn($val) => $val ??= 0));
+        $this->stack = new CalculatorXL($rep, 2);
     }
 
     public function testMinMax() {
@@ -81,19 +30,18 @@ class CalculatorTestXL extends TestCase {
         $this->stack->add(2);
         $this->stack->add(10);
         $this->stack->add(4);
-        $this->assertSame(16, $this->stack->sum());
-        $this->assertSame(3, $this->stack->nn());
-        $this->assertSame(3, $this->stack->nz());
-        $this->mp->level = 2;
-        $this->stack->cumulateToNextLevel($this->mp->level);
+        $this->assertSame(16, $this->stack->sum(2));
+        $this->assertSame(3, $this->stack->nn(2));
+        $this->assertSame(3, $this->stack->nz(2));
+        $this->stack->cumulateToNextLevel(2);
         // Values set to 0 / null on level 2 after cumulation to next level
-        $this->assertSame(0, $this->stack->sum());
-        $this->assertSame(0, $this->stack->nn());
-        $this->mp->level = 1;
-        // Values must be same on level 1 as on level 2 before cumulation 
-        $this->assertSame(16, $this->stack->sum());
-        $this->assertSame(3, $this->stack->nn());
-        $this->assertSame(3, $this->stack->nz());
+        $this->assertSame(0, $this->stack->sum(2));
+        $this->assertSame(0, $this->stack->nn(2));
+        $this->assertSame(0, $this->stack->nz(2));
+        // Values must be same on level 1 as on level 2 before cumulation
+        $this->assertSame(16, $this->stack->sum(1));
+        $this->assertSame(3, $this->stack->nn(1));
+        $this->assertSame(3, $this->stack->nz(1));
     }
 
     public function testZeroAndNullValues() {
@@ -103,31 +51,28 @@ class CalculatorTestXL extends TestCase {
         $this->assertSame(2, $this->stack->sum());
         $this->assertSame(2, $this->stack->nn());
         $this->assertSame(1, $this->stack->nz());
-        $this->mp->level = 2;
-        $this->stack->cumulateToNextLevel($this->mp->level);
     }
 
     public function testMinMaxValues() {
         $this->stack->add(2);
         $this->stack->add(1);
         $this->stack->add(10);
-        $this->assertSame(13, $this->stack->sum());
-        $this->assertSame(1, $this->stack->min());
-        $this->assertSame(10, $this->stack->max());
-        $this->mp->level = 2;
-        $this->stack->cumulateToNextLevel($this->mp->level);
+        $this->assertSame(13, $this->stack->sum(2));
+        $this->assertSame(1, $this->stack->min(2));
+        $this->assertSame(10, $this->stack->max(2));
+        $this->stack->cumulateToNextLevel(2);
         $this->stack->add(2);
         $this->stack->add(0);
         $this->stack->add(null);
-        $this->assertSame(2, $this->stack->sum());
-        $this->assertSame(0, $this->stack->min());
-        $this->assertSame(2, $this->stack->max());
-        $this->stack->cumulateToNextLevel($this->mp->level);
+        $this->assertSame(2, $this->stack->sum(2));
+        $this->assertSame(0, $this->stack->min(2));
+        $this->assertSame(2, $this->stack->max(2));
+        $this->stack->cumulateToNextLevel(2);
         $this->stack->add(null);
-        $this->assertSame(0, $this->stack->sum());
-        $this->assertSame(null, $this->stack->min());
-        $this->assertSame(null, $this->stack->max());
-        $this->stack->cumulateToNextLevel($this->mp->level);
+        $this->assertSame(0, $this->stack->sum(2));
+        $this->assertSame(null, $this->stack->min(2));
+        $this->assertSame(null, $this->stack->max(2));
+        $this->stack->cumulateToNextLevel(2);
         $this->assertSame(15, $this->stack->sum(1));
         $this->assertSame(0, $this->stack->min(1));
         $this->assertSame(10, $this->stack->max(1));

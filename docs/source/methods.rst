@@ -11,7 +11,7 @@ Methods to instantiate report class
 :php:meth:`aggregate` Declare variable to provide aggregate functons (sum, count, min, max)
 
 :php:meth:`sheet` Declare variable to be aggregated horizontally (having key and value)
- 
+
 
 Methods for data handling
 -------------------------
@@ -28,15 +28,15 @@ Methods for data handling
 Action methods called from report class
 ---------------------------------------
 
-:php:meth:`init` First called method to initiialize application 
+:php:meth:`init` First called method to initiialize application
 
-:php:meth:`close` Last called method to clean up the dishes independent from __destruct method. 
+:php:meth:`close` Last called method to clean up the dishes independent from __destruct method.
 
-:php:meth:`totalHeader` Called once after init() to build the total header page of the report. 
+:php:meth:`totalHeader` Called once after init() to build the total header page of the report.
 
-:php:meth:`totalFooter` Called once before close() to build the total footer page of the report. 
+:php:meth:`totalFooter` Called once before close() to build the total footer page of the report.
 
-:php:meth:`groupHeader` Called for each new group value(s) 
+:php:meth:`groupHeader` Called for each new group value(s)
 
 :php:meth:`groupFooter` Called after detail() but before activating new group value(s).
 
@@ -78,7 +78,7 @@ Methods returning information
 Public Properties
 -----------------
 
-:$output:  String with concatenated return values from actions 
+:$out:  Output object holding the output
 :$gc:  Group count collector
 :$rc:  Row count collector
 :$total:  Collector for calculators, sheets and collectors

@@ -12,16 +12,14 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
-use Exception;
-use OutOfBoundsException;
-
 /**
  * Sheet holds values of a field into one of many cumulators.
  * The cumulator will be selected by a key.
  * Cumulators will be instantiated immediately when this class is instantiated.
  * Cumaltors are clones of class instantiation $cumulator parameter.
  */
-class FixedSheet extends AbstractCollector {
+class FixedSheet extends AbstractCollector
+{
 
     /**
      *
@@ -38,8 +36,8 @@ class FixedSheet extends AbstractCollector {
     }
 
     // Implementation of arrayAccess interface. Don't allow creating new items
-    public function offsetSet($offset, $value) :void {
-        throw new Exception("To create new item $offset the add method must be called");
+    public function offsetSet($offset, $value): void {
+        throw new \Exception("To create new item $offset the add method must be called");
     }
 
     /**
@@ -72,13 +70,13 @@ class FixedSheet extends AbstractCollector {
      * @param iterable $values The iterator key represents the sheet item
      * while the value will to be added.
      */
-     public function add(iterable $values) :void {
-         foreach ($values as $key => $value) {
+    public function add(iterable $values): void {
+        foreach ($values as $key => $value) {
             if (!isset($this->items[$key])) {
-                throw new OutOfBoundsException("Key $key is not part of fixed sheet");
+                throw new \OutOfBoundsException("Key $key is not part of fixed sheet");
             }
             $this->items[$key]->add($value);
-         }
+        }
     }
 
 }

@@ -2,7 +2,7 @@ Named events
 ............
 
 Each named event is mapped to an action.
-Below all events are listed. Parameters passed to the action object are shown
+Below are all events listed. Parameters passed to the action object are shown
 in parenthesis.
 
 .. note: Not all actions make use of the parameters.

@@ -5,7 +5,6 @@ declare(strict_types=1);
 /**
  * Unit test of Comfort output class
  */
-
 use gpoehl\phpReport\output\BandOutput;
 use PHPUnit\Framework\TestCase;
 
@@ -75,8 +74,8 @@ class BandOutputTest extends TestCase
         $out->delete(0);
         $this->assertEquals('', $out->get());
     }
-    
-     public function testDeleteOtherLevel() {
+
+    public function testDeleteOtherLevel() {
         $this->testWrite();
         $out = $this->mock;
         $out->delete(1);

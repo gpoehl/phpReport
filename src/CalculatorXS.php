@@ -20,12 +20,10 @@ namespace gpoehl\phpReport;
 class CalculatorXS extends AbstractCalculator {
 
     /**
-     * @param MajorPropertiesService $mp Object of major properties
-     * @param int $maxLevel The maximum (group) level
      * Initialize all levels with 0 values
      */
-    public function __construct(protected MajorProperties $mp, public int $maxLevel) {
-        $this->total = array_fill(0, $maxLevel + 1, 0);
+     protected function initialize(){
+ $this->total = array_fill(0, $this->maxLevel + 1, 0);
     }
 
     /**
@@ -64,8 +62,8 @@ class CalculatorXS extends AbstractCalculator {
      * @return numeric The running total of added values from the requested level down
      * to the lowest level
      */
-    public function sum($level = null) {
-        return array_sum(array_slice($this->total, $this->mp->getLevel($level)));
+    public function sum($level = null):int|float {
+        return array_sum(array_slice($this->total, $this->rep->getLevel($level)));
     }
 
 }

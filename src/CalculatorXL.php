@@ -26,14 +26,11 @@ class CalculatorXL extends Calculator implements MinMaxIF{
     /** @var mixed[] Maximum value per level. Key is level */
     protected $max = [];
 
-    /**
-     * @param MajorPropertiesService $mp Object of major properties
-     * @param int $maxLevel The maximum (group) level
-     * Initialize min / max with null values
-     */
-    public function __construct(protected MajorProperties $mp, public int $maxLevel) {
-        parent::__construct($mp, $maxLevel);
-        $this->min = $this->max = array_fill(0, $maxLevel + 1, null);
+
+
+    protected function initialize(){
+        parent::initialize($this->rep, $this->maxLevel);
+        $this->min = $this->max = array_fill(0, $this->maxLevel + 1, null);
     }
 
     /**
@@ -90,7 +87,7 @@ class CalculatorXL extends Calculator implements MinMaxIF{
         // level down to level above lowest level. This reduced the number of
         // iterations by 1.
         $min = $this->min[$this->maxLevel];
-        for ($i = $this->mp->getLevel($level); $i < $this->maxLevel; $i++) {
+        for ($i = $this->rep->getLevel($level); $i < $this->maxLevel; $i++) {
             if ($this->min[$i] < $min || $min === null) {
                 $min = $this->min[$i];
             }
@@ -108,7 +105,7 @@ class CalculatorXL extends Calculator implements MinMaxIF{
     public function max(int $level = null) {
         // Same logic as for min().
         $max = $this->max[$this->maxLevel];
-        for ($i = $this->mp->getLevel($level); $i < $this->maxLevel; $i++) {
+        for ($i = $this->rep->getLevel($level); $i < $this->maxLevel; $i++) {
             if ($this->max[$i] > $max) {
                 $max = $this->max[$i];
             }

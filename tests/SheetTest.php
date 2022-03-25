@@ -9,13 +9,16 @@ use gpoehl\phpReport\Factory;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
-class SheetTest extends TestCase {
+class SheetTest extends TestCase
+{
 
     public $b;
 
     public function setUp(): void {
-        $mp = Factory::properties();
-        $this->b = Factory::sheet($mp, 3, Report::XL);
+        $rep = $this->createStub(Report::class);
+        $rep->method('getLevel')
+                ->will($this->returnCallback(fn($val) => $val ??= 0));
+        $this->b = Factory::sheet($rep, 3, Report::XL);
     }
 
     public function testSum() {

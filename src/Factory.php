@@ -12,30 +12,30 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
-use const Report;
 use InvalidArgumentException;
 
 /**
  * Instantiate objects for phpReport
  */
-class Factory {
+class Factory
+{
 
     /**
      * Instantiate a calculator object based on $typ parameter
-     * @param MajorProperties $mp The majorProperies object
+     * @param $rep The current report object
      * @param int $maxLevel The maximum group level for the cumulator
      * @param int $typ Depending on $typ one the cumulator classes will be selected.
-     * Report::XS for the CalculatorXS class 
-     * Report::REGULAR for the Calculator class 
-     * Report::XL for th CalculatorXL class 
+     * Report::XS for the CalculatorXS class
+     * Report::REGULAR for the Calculator class
+     * Report::XL for th CalculatorXL class
      * @return Calculator|CalculatorXS|CalculatorXL
      * @throws InvalidArgumentException
      */
-    public static function calculator(MajorProperties $mp, int $maxLevel, int $typ = Report::REGULAR): AbstractCalculator {
-          return match ($typ) {
-            Report::REGULAR => new Calculator($mp, $maxLevel),
-            Report::XS => new CalculatorXS($mp, $maxLevel),
-            Report::XL => new CalculatorXL($mp, $maxLevel),
+    public static function calculator(Report $rep, int $maxLevel, int $typ = Report::REGULAR): AbstractCalculator {
+        return match ($typ) {
+            Report::REGULAR => new Calculator($rep, $maxLevel),
+            Report::XS => new CalculatorXS($rep, $maxLevel),
+            Report::XL => new CalculatorXL($rep, $maxLevel),
             default => throw new InvalidArgumentException("Invalid typ ($typ) on cumulator request."),
         };
     }
@@ -44,7 +44,7 @@ class Factory {
      * Instantiate a sheet object
      * Sheet object might be normal or with fixed number of items (columns).
      * Each sheet element is represented by an calculator object of the same typ.
-     * @param MajorProperties $mp The majorProperies object
+     * @param $rep The current report object
      * @param int $maxLevel The maximum group level for all cumulators within the sheet
      * @param int $typ The calculator object typ. @see $this->calculator()
      * @param mixed $fromKey When $fromKey is null a normal sheet will be instantiatd.
@@ -55,13 +55,13 @@ class Factory {
      * @return Sheet|FixedSheet
      */
     public static function sheet(
-            MajorProperties $mp,
+            Report $rep,
             int $maxLevel,
             int $typ = Report::XS,
             $fromKey = null,
             $toKey = null
     ): AbstractCollector {
-        $calculator = self::calculator($mp, $maxLevel, $typ);
+        $calculator = self::calculator($rep, $maxLevel, $typ);
         if ($fromKey === null) {
             return new Sheet($calculator);
         }
@@ -70,19 +70,10 @@ class Factory {
 
     /**
      * Instantiate a new collector object
-     * allow string access on numeric item keys
      * @return Collector
      */
-    public static function collector() {
+    public static function collector(): Collector {
         return new Collector();
-    }
-
-    /**
-     * Instantiate a new major properties object
-     * @return MajorProperties
-     */
-    public static function properties() {
-        return new MajorProperties();
     }
 
 }

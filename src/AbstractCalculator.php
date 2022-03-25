@@ -20,26 +20,24 @@ abstract class AbstractCalculator
 {
 
     protected $total = []; // Array which keeps cumulated values per level
-    protected report $rep;
-    /**
-     * @param MajorPropertiesService $mp Object of major properties
-     * @param int $maxLevel The maximum (group) level
-     * @param mixed|null $objID Optioal referece of this object.
-     */
-    public function __construct(protected MajorProperties $mp, public int $maxLevel) {
 
+    /**
+     * @param $rep The report object where this calculator belongs to
+     * @param $maxLevel The maximum (group) level
+     */
+    public function __construct(protected Report $rep, public int $maxLevel) {
+        $this->initialize();
     }
 
     /**
      * Initialize the calculator on the current level with the given value.
-     * Call this method in group headers to set an other value than zero.
+     * Call this method (usually within group headers) to set an other value than
+     * zero.
+     * Counters, min or max values will not be influenced by calling this method.
      * @param $value The inital value.
      */
     public function setInitialValue(int|float|string $value): void {
-//        if ($this->rep->currentAction->key !== 'groupHeader'){
-//            throw new Exception('Initial values can only be set in group headers');
-//        }
-        $this->total[$this->mp->level] = $value;
+        $this->total[$this->rep->currentLevel] = $value;
     }
 
     /**

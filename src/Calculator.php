@@ -26,12 +26,10 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
     protected $nz = [];
 
     /**
-     * @param MajorPropertiesService $mp Object of major properties
-     * @param int $maxLevel The maximum (group) level
      * Initialize all levels with 0 values
      */
-    public function __construct(protected MajorProperties $mp, public int $maxLevel) {
-        $this->total = $this->nz = $this->nn = array_fill(0, $maxLevel + 1, 0);
+    protected function initialize() {
+        $this->total = $this->nz = $this->nn = array_fill(0, $this->maxLevel + 1, 0);
     }
 
     /**
@@ -65,12 +63,13 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
 
     /**
      * Calculate the running sum up to the requested level.
-     * @param int|null $level The requested level. Defaults to the current level
-     * @return numeric The running total of added values from the requested level down
-     * to the lowest level
+     * @param $level The requested level. Defaults to the current level.
+     * When level is higher then $maxLevel 0 will be returned without any notice.
+     * @return The running total of added values.
      */
-    public function sum(int|string|null $level = null) {
-        return array_sum(array_slice($this->total, $this->mp->getLevel($level)));
+    public function sum(int|string|null $level = null): int|float {
+        // All values from the current level down to the lowest level needs to be summarized
+        return array_sum(array_slice($this->total, $this->rep->getLevel($level)));
     }
 
     /**
@@ -81,7 +80,7 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
     public function nn(int|string|null $level = null): int {
         // To calculate the total number all values from requested level down
         // to lowest level must be included.
-        return array_sum(array_slice($this->nn, $this->mp->getLevel($level)));
+        return array_sum(array_slice($this->nn, $this->rep->getLevel($level)));
     }
 
     /**
@@ -93,7 +92,7 @@ class Calculator extends AbstractCalculator implements NnAndNzCounterIF
     public function nz(int|string|null $level = null): int {
         // To calculate the total number all values from requested level down
         // to lowest level must be included.
-        return array_sum(array_slice($this->nz, $this->mp->getLevel($level)));
+        return array_sum(array_slice($this->nz, $this->rep->getLevel($level)));
     }
 
 }

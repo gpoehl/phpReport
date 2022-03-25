@@ -8,7 +8,6 @@ declare(strict_types=1);
  */
 use gpoehl\phpReport\CalculatorXS;
 use gpoehl\phpReport\Collector;
-use gpoehl\phpReport\MajorProperties;
 use gpoehl\phpReport\output\AbstractOutput;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
@@ -18,7 +17,6 @@ class ReportTest extends TestCase
 
     public function testBasics() {
         $rep = (new Report());
-        $this->assertInstanceOf(MajorProperties::class, $rep->mp);
         $this->assertInstanceOf(Collector::class, $rep->rc);
         $this->assertInstanceOf(Collector::class, $rep->gc);
         $this->assertInstanceOf(Collector::class, $rep->total);
@@ -50,8 +48,7 @@ class ReportTest extends TestCase
                 ->setCallOption(Report::CALL_ALWAYS);
         $rep->run($data);
         $this->assertInstanceOf(CalculatorXS::class, $rep->rc[0]);
-        $this->assertSame(['total' => 0], $rep->mp->groupLevel);
-        $this->assertSame(0, $rep->mp->maxLevel);
+        $this->assertSame(0, $rep->maxLevel);
         $this->assertSame('init, totalHeader, ' . $expected . 'totalFooter, close, ', $rep->out->get());
     }
 
@@ -114,7 +111,7 @@ class ReportTest extends TestCase
                 ->group('b', 'secondGroup')
                 ->setCallOption(Report::CALL_ALWAYS)
                 ->run([['firstGroup' => 'A', 'secondGroup' => 'X']]);
-        $this->assertSame('init, totalHeader, aHeader, bHeader, ' . 
+        $this->assertSame('init, totalHeader, aHeader, bHeader, ' .
                 'detailHeader, detail, detailFooter, bFooter, aFooter, totalFooter, close, ', $rep);
     }
 
@@ -162,7 +159,7 @@ class ReportTest extends TestCase
     }
 
     /**
-     * Make sure that no group method is called. One detail() method call per row. 
+     * Make sure that no group method is called. One detail() method call per row.
      */
     public function testNoGroups() {
         $rep = (new Report($this->getBase()))
@@ -187,7 +184,7 @@ class ReportTest extends TestCase
         $this->assertSame(1, $rep->gc->a->sum(0));
         $this->assertSame(1, $rep->gc->items[1]->sum('total'));
 
-        // Next row change on gc executes only cFooter and cHeader 
+        // Next row change on gc executes only cFooter and cHeader
         $rep->next(['ga' => 11, 'gb' => 21, 'gc' => 32, 'a1' => 'a', 'a2' => 2]);
         $this->assertSame('detailFooter, cFooter, cHeader, detailHeader, detail, ', $rep->out->pop());
 
@@ -195,7 +192,7 @@ class ReportTest extends TestCase
         $rep->next(['ga' => 12, 'gb' => 21, 'gc' => 3, 'a1' => 'a', 'a2' => 2]);
         $this->assertSame('detailFooter, cFooter, bFooter, aFooter, aHeader, bHeader, cHeader, detailHeader, detail, ', $rep->out->pop());
 
-        // Next row change on gc executes only cFooter and cHeader 
+        // Next row change on gc executes only cFooter and cHeader
         $rep->next(['ga' => 12, 'gb' => 21, 'gc' => 32, 'a1' => 'a', 'a2' => 2]);
         $this->assertSame('detailFooter, cFooter, cHeader, detailHeader, detail, ', $rep->out->pop());
 
@@ -314,7 +311,7 @@ class ReportTest extends TestCase
     }
 
     /**
-     * Test class to call prototyp method in report object. 
+     * Test class to call prototyp method in report object.
      */
     public function getPrototype() {
         return new class() {

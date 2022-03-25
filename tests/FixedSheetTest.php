@@ -10,13 +10,16 @@ use gpoehl\phpReport\Factory;
 use gpoehl\phpReport\Report;
 use PHPUnit\Framework\TestCase;
 
-class FixedSheetTest extends TestCase {
+class FixedSheetTest extends TestCase
+{
 
     public $b;
 
     public function setUp(): void {
-        $mp = Factory::properties();
-        $this->b = Factory::sheet($mp, 3, Report::XS, 1, 6);
+        $rep = $this->createStub(Report::class);
+        $rep->method('getLevel')
+                ->will($this->returnCallback(fn($val) => $val ??= 0));
+        $this->b = Factory::sheet($rep, 3, Report::XS, 1, 6);
     }
 
     public function testInstantiate() {

@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 class GetterFactoryForArrayTest extends TestCase
 {
+
     public $row = ['a', 'b', 'name' => 'nobody', 'x y' => 'key has blank'];
     public $stack;
 

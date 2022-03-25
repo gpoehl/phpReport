@@ -16,7 +16,8 @@ namespace gpoehl\phpReport;
 /**
  * Collector to hold AbstactCollectors and or AbstractCalulators
  */
-class Collector extends AbstractCollector {
+class Collector extends AbstractCollector
+{
 
     /**
      * Add an item to this collector.
