@@ -6,7 +6,6 @@ declare(strict_types=1);
  * Unit test of Report class.
  * For tests with multiple dimensions see ReportMultipleDimensionTest file
  */
-use gpoehl\phpReport\CalculatorXS;
 use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\output\AbstractOutput;
 use gpoehl\phpReport\Report;
@@ -47,8 +46,6 @@ class ReportTest extends TestCase
         $rep = (new Report($this->getBase(), ['actions' => ['noData' => 'nodata']]))
                 ->setCallOption(Report::CALL_ALWAYS);
         $rep->run($data);
-        $this->assertInstanceOf(CalculatorXS::class, $rep->rc[0]);
-        $this->assertSame(0, $rep->maxLevel);
         $this->assertSame('init, totalHeader, ' . $expected . 'totalFooter, close, ', $rep->out->get());
     }
 

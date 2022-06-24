@@ -13,8 +13,11 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
-use gpoehl\phpReport\getter\GetterFactory;
-use gpoehl\phpReport\output\AbstractOutput;
+use gpoehl\phpReport\Calculator\AbstractCalculator;
+use gpoehl\phpReport\Calculator\CalculatorXS;
+use gpoehl\phpReport\Getter\GetterFactory;
+use gpoehl\phpReport\Output\AbstractOutput;
+use gpoehl\phpReport\Collector;
 use InvalidArgumentException;
 
 /**
@@ -33,10 +36,6 @@ class Report
     const CALL_PROTOTYPE = 2;         // Call prototype for methods not implemented in owner class.
     const CALL_ALWAYS_PROTOTYPE = 3;  // Call always prototype even when method exists in owner class.
     const CALL_ALL_PROTOTYPE = 4;     // Call prototype for all actions which are not callables and action is not false.
-    // Calculator class selection
-    const XS = 1;                       // CalculatorXS class (default)
-    const REGULAR = 2;                  // Calculator class (has not null and not zero counters)
-    const XL = 3;                       // CalculatorXL class (has also min and max values)
 
     /** Object which collects output. */
     public AbstractOutput $out;
@@ -69,9 +68,6 @@ class Report
 
     /** @var The current group level. */
     public int $currentLevel = 0;
-
-    /** @var The last declared group level. */
-    public int $maxLevel = 0;
 
     /** @var Highest level of changed group. Null when no group change detected. */
     private ?int $changedLevel;
@@ -120,14 +116,11 @@ class Report
         $this->groups = new Groups($conf->grandTotalName);
         $this->buildMethodsByGroupName = $conf->buildMethodsByGroupName;
         $this->actions = $conf->actions;
-        $this->toCumulate[] = $this->rc = Factory::collector();
-        $this->toCumulate[] = $this->gc = Factory::collector();
-        $this->toCumulate[] = $this->total = Factory::collector();
+        $this->toCumulate[] = $this->rc = new Collector();
+        $this->toCumulate[] = $this->gc = new Collector();
+        $this->toCumulate[] = $this->total = new Collector();
         $this->dims[] = $this->dim = new Dimension(0, 0, $target);
         $this->out = ($outputHandler) ? $outputHandler : new $conf->outputHandler();
-        if ($this->out InstanceOf CumulateIF) {
-        $this->toCumulate[] = $this->out;
-        }
         return $this;
     }
 
@@ -175,7 +168,7 @@ class Report
     public function group($name, $source = null, $beforeAction = null, $headerAction = null, $footerAction = null, $afterAction = null, ...$params): self {
         $source ??= $name;
         GetterFactory::verifySource($source, $params);
-        $group = new Group($name, ++$this->maxLevel, $this->dim->id, $source, $params);
+        $group = new Group($name, ++$this->currentLevel, $this->dim->id, $source, $params);
         $group->beforeAction = $this->makeAction('beforeGroup', $beforeAction, $group->level, $name);
         $group->headerAction = $this->makeAction('groupHeader', $headerAction, $group->level, $name);
         $group->footerAction = $this->makeAction('groupFooter', $footerAction, $group->level, $name);
@@ -183,7 +176,9 @@ class Report
         $this->groups->addGroup($group);
         $this->dim->groups[] = $group;
         $this->dim->lastLevel = $group->level;
-        $this->gc->addItem(Factory::calculator($this, $group->level - 1, self::XS), $group->level);
+        $calculator = new CalculatorXS;
+        $calculator->initialize($this->getLevel(...), $group->level);
+        $this->gc->addItem($calculator, $group->level);
         $this->gc->setAltKey($name, $group->level);
         return $this;
     }
@@ -193,25 +188,28 @@ class Report
      * Instantiates an calulator object to provide aggregate functions. The calculator
      * is linked to the total collector.
      * Aggregate functions are available at each group level at any time.
-     * @param string $name Unique name to reference a calculator object.
-     * @param mixed $source Source of the value to be computed.
+     * @param $name Unique name to reference a calculator object.
+     * @param $source Source of the value to be computed.
      * When the $value parameter is null it defaults to the content of $name parameter.
      * Use False when the value should not be computed automaticly. In this case
      * only the referece to the calculator object will be established. Use the
      * calculators add() method to compute values.
-     * @param int|null $typ The calculator type.
-     * Typ is used to choose between a calculator class. Options are XS, REGULAR
-     * and XL. Defaults to XS.
-     * @param int|null $maxLevel The group level at which the value will be
-     * added. Defaults to the maximum level of the current dimension. Might be less when
+     * @param $calculator Calculator object. Defaults to the CalculatorXS object.
+     * @param $maxLevel The group level at which the value will be added.
+     * Defaults to the maximum level of the current dimension. Might be less when
      * aggregated data are only needed on higher levels.
      * @param mixed[] $params Optional parameters passed to callables getting the value.
      */
-    public function compute(string $name, $source = null, ?int $typ = self::XS, ?int $maxLevel = null, ...$params): self {
-        $typ ??= self::XS;
+    public function compute(
+            string $name
+            , $source = null
+            , AbstractCalculator $calculator = new CalculatorXS
+            , int|string|null $maxLevel = null
+            , ...$params): self {
         $source ??= $name;
-        $maxLevel = $this->checkMaxLevel($maxLevel);
-        $this->total->addItem(Factory::calculator($this, $maxLevel, $typ), $name);
+        $calculator ??= new CalculatorXS;
+        $this->initializeCalculator($calculator, $maxLevel);
+        $this->total->addItem($calculator, $name);
         if ($source !== false) {
             GetterFactory::verifySource($source, $params);
             $this->dim->setCalcSource($name, $source, $params);
@@ -222,44 +220,67 @@ class Report
     /**
      * Compute values in a sheet.
      * Sheet is a collection of calculators for a horizontal representation of a value.
-     * Call this method once for each sheet.
-     * @param string $name Unique name to reference the sheet object. The
-     * reference will be hold in $this->total.
+     * @param $name Unique name to reference the sheet object. The sheet
+     * is linked to the total collector.
      *
-     * @param mixed $keySource Source of the key value. If $keySource is an array
+     * @param $keySource Source of the key value. If $keySource is an array
      * the key is treated as $keySource and the value as $source.
      * Use False when the value should not be computed automaticly. In this case
      * only the referece to the sheet object will be established. Use the
      * sheet add() method to compute values.
      *
-     * @param mixed $source Source of the value to be aggregated. Use Null when
+     * @param $source Source of the value to be aggregated. Use Null when
      * the $keySource returns key and data in an array [key => value]
      *
-     * @param int|null $typ The calculator type.
-     * Typ is used to choose between a calculator class. Options are XS, REGULAR
-     * and XL. Defaults to XS. Typ belongs to all sheet items.
+     * @param $calculator Calculator object. Defaults to the CalculatorXS object.
      * @param mixed $fromKey To use a fixed sheet declare the first
      * calculator name. Pass an array when sheet names are not in an sequence.
      * Example ['young', 'mid-aged', 'old'l
      * Null for sheets where calculators are instantiated for each key value.
      * @param mixed $toKey The last calculator name for fixed sheet. FromKey
      * will be icremented until $toKey is reached.
-     * @param int|null $maxLevel The group level at which the value will be
+     * @param $maxLevel The group level at which the value will be
      * added. Defaults to the maximum level of the dimension. Might be less when
      * aggregated data are only needed on higher levels.
      * @param mixed ...$params Optional list of parameters passed `unpacked`
      * to anonymous functions and callables getting the sheet key =>value pair.
      */
-    public function sheet(string $name, $keySource, $source, ?int $typ = self::XS,
-            $fromKey = null,
-            $toKey = null,
-            ?int $maxLevel = null,
-            ?array $keyParams = [],
-            ...$params
+    public function sheet(
+            string $name
+            , $keySource
+            , $source
+            , AbstractCalculator $calculator = new CalculatorXS
+            , int|string|null $maxLevel = null
+            , ?array $keyParams = []
+            , ...$params
     ): self {
-        $typ ??= self::XS;
-        $maxLevel = $this->checkMaxLevel($maxLevel);
-        $this->total->addItem(Factory::sheet($this, $maxLevel, $typ, $fromKey, $toKey), $name);
+        $calculator ??= new CalculatorXS;
+        $this->initializeCalculator($calculator, $maxLevel);
+        $this->total->addItem(new Sheet($calculator), $name);
+        if ($keySource !== false) {
+            // Don't pass params to prevent raising warning. The might be use for keySource an source.
+            GetterFactory::verifySource($keySource, $keyParams);
+            if ($source !== null) {
+                GetterFactory::verifySource($source, $params);
+            }
+            $this->dim->setSheetSource($name, $keySource, $source, $keyParams, $params);
+        }
+        return $this;
+    }
+    public function fixedSheet(
+            string $name
+            , $keySource
+            , $source
+            , int|string|iterable $fromKey
+            , int|string|null $toKey = null
+            , AbstractCalculator $calculator = new CalculatorXS
+            , int|string|null $maxLevel = null
+            , ?array $keyParams = []
+            , ...$params
+    ): self {
+        $calculator ??= new CalculatorXS;
+        $this->initializeCalculator($calculator, $maxLevel);
+        $this->total->addItem(new FixedSheet($calculator, $fromKey, $toKey), $name);
         if ($keySource !== false) {
             // Don't pass params to prevent raising warning. The might be use for keySource an source.
             GetterFactory::verifySource($keySource, $keyParams);
@@ -272,19 +293,18 @@ class Report
     }
 
     /**
+     * Call the calculator initialize() method.
      * Verify that given maxlevel is not above current maxLevel
      * @param $maxLevel to be checked. Defaults to the current maxLevel.
-     * @return maxLevel
      * @throws InvalidArgumentException
      */
-    private function checkMaxLevel(?int $maxLevel): int {
-        if ($maxLevel === null) {
-            return $this->maxLevel;
-        }
-        if ($maxLevel > $this->maxLevel) {
+    private function initializeCalculator(AbstractCalculator $calculator, int|string|null $maxLevel): void {
+        $maxLevel = $this->getLevel($maxLevel);
+
+        if ($maxLevel > $this->currentLevel) {
             throw new InvalidArgumentException("MaxLevel $maxLevel must be equal or less maxLevel of dim({$this->maxLevel}).");
         }
-        return $maxLevel;
+        $calculator->initialize($this->getLevel(...), $maxLevel);
     }
 
     /**
@@ -318,19 +338,19 @@ class Report
      * Set runTimeActions and call init and totalHeader methods.
      */
     private function finalInitializion(): void {
+        // instantiate row counter
         foreach ($this->dims as $dim) {
-            $this->rc->addItem(Factory::calculator($this, $dim->lastLevel, self::XS));
+            $calculator = new CalculatorXS;
+            $calculator->initialize($this->getLevel(...), $dim->lastLevel);
+            $this->rc->addItem($calculator);
         }
         reset($this->dims);
         $this->dim = current($this->dims);
-
-//        $this->mp->groupLevel = $this->groups->groupLevel;
-
         $this->executeAction('init');
         $this->executeAction('totalHeader');
-        $this->detailHeaderAction = new Action('detailHeader', $this->out->actionKeyMapper['detailHeader'], $this->maxLevel, $this->actions['detailHeader']);
-        $this->detailAction = new Action('detail', $this->out->actionKeyMapper['detail'], $this->maxLevel, $this->actions['detail']);
-        $this->detailFooterAction = new Action('detailFooter', $this->out->actionKeyMapper['detailFooter'], $this->maxLevel, $this->actions['detailFooter']);
+        $this->detailHeaderAction = new Action('detailHeader', $this->out->actionKeyMapper['detailHeader'], $this->currentLevel, $this->actions['detailHeader']);
+        $this->detailAction = new Action('detail', $this->out->actionKeyMapper['detail'], $this->currentLevel, $this->actions['detail']);
+        $this->detailFooterAction = new Action('detailFooter', $this->out->actionKeyMapper['detailFooter'], $this->currentLevel, $this->actions['detailFooter']);
         unset($this->actions['init'], $this->actions['totalHeader'], $this->actions['groupHeader'], $this->actions['groupFooter'],
                 $this->actions['noData_n'], $this->actions['data_n'], $this->actions['noGroupChange_n'], $this->actions['detail']);
         $this->setRunTimeActions();
@@ -544,6 +564,7 @@ class Report
                 }
                 $this->execute($group->footerAction, $this->dim->groupValues[$this->currentLevel],
                         $this->dim->row, $this->dim->rowKey);
+
                 $this->execute($group->afterAction, $this->dim->groupValues[$this->currentLevel],
                         $this->dim->row, $this->dim->rowKey);
             }
@@ -631,28 +652,22 @@ class Report
 
     /**
      * Get the current group level or the level associated with the group name.
-     * @param $level Null will return the current group level. A string represents
-     * the group name and the related group level will be returned.
+     * @param $level Null will return the current group level.
+     * Note that detail() is always the last group level.
      * A negative value will be subtracted from the current group level.
-     * Any other numeric value will be returned as it is. So methods accepting
-     * any type of $level can call this method to get the numeric representation
-     * of the requested level.
+     * Any other numeric value will be returned as it is.
+     * A string represents the group name and the related group level will be returned.
      * @return The requested group level.
      */
     public function getLevel(int|string|null $level = null): int {
-        if ($level === null) {
-            return ($this->currentLevel < $this->maxLevel) ? $this->currentLevel : $this->maxLevel;
-        }
-        // Substract level when negative else return given level
-        if (is_numeric($level)) {
-            return ($level < 0) ? $this->currentLevel + $level : $level;
-        }
-        // Should be group name
-        if (isset($this->groups->groupLevel[$level])) {
-            return $this->groups->groupLevel[$level];
-        }
-
-        trigger_error("Group '$level' does not exist.", E_USER_NOTICE);
+        return match (true) {
+            $level === null => $this->currentLevel,
+            // Substract level when negative else return given level
+            is_numeric($level) => $level >= 0 ? $level : $this->currentLevel + $level,
+            // Should be group name
+            isset($this->groups->groupLevel[$level]) => $this->groups->groupLevel[$level],
+            default => trigger_error("Group '$level' does not exist.", E_USER_NOTICE),
+        };
     }
 
     /**

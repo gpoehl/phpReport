@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Unit test of Group class
  */
 use gpoehl\phpReport\Dimension;
-use gpoehl\phpReport\Factory;
+use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +17,7 @@ class DimensionTest extends TestCase
     public $total;
 
     public function setUp(): void {
-        $this->total = Factory::collector();
+        $this->total = new Collector();
         $this->stack = new Dimension(1, 4, 'DefaultTarget');
     }
 

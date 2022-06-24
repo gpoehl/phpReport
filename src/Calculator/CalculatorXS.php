@@ -10,20 +10,24 @@
  */
 declare(strict_types=1);
 
-namespace gpoehl\phpReport;
+namespace gpoehl\phpReport\Calculator;
 
 /**
- * Calculator to summarize or increment an attribute
- * This calculator offers only a minimum functionality while using minimum ressources.
- * Use class Calculator or CulculatorXL if you want additional counters or methods.
+ * Calculator with minimum functionality
+ * Add, sub or increment value on the last level ($maxlevel).
+ * Results are saved at $maxLevel levels to provide totals and subtotals.
+ * @see Calculator or CalculatorXL classes for enhanced functionality.
  */
-class CalculatorXS extends AbstractCalculator {
+class CalculatorXS extends AbstractCalculator
+{
 
     /**
      * Initialize all levels with 0 values
+     * Don't call this method yourself. The report class takes care for calling.
      */
-     protected function initialize(){
- $this->total = array_fill(0, $this->maxLevel + 1, 0);
+    public function initialize(\Closure $getLevel, int $maxLevel) {
+        parent::initialize($getLevel, $maxLevel);
+        $this->total = array_fill(0, $this->maxLevel + 1, 0);
     }
 
     /**
@@ -35,19 +39,24 @@ class CalculatorXS extends AbstractCalculator {
     }
 
     /**
-     * Increment value
-     * The value is incremented on the lowest level of this calculator ($maxLevel).
+     * Subtract given $value from $maxLevel
+     * @param numeric|null $value The value to be subtracted
+     */
+    public function sub(int|float|string|null $value): void {
+        $this->total[$this->maxLevel] -= $value;
+    }
+
+     /**
+     * Increment value at the lowest level of this calculator ($maxLevel).
      * This is a shortcut of add(1) and best used for counters.
-     * @return void
      */
     public function inc(): void {
         $this->total[$this->maxLevel]++;
     }
 
-     /**
+    /**
+     * Don't call this method yourself. The report class takes care for calling.
      * Cumulate attribute values to higher level.
-     * Add values from the current level to the next higher level (which is 1 less
-     * then the current level). Values on current level will be reset to zero.
      */
     public function cumulateToNextLevel(int $level): void {
         if ($level <= $this->maxLevel) {
@@ -59,11 +68,11 @@ class CalculatorXS extends AbstractCalculator {
     /**
      * Calculate the running sum up to the requested level.
      * @param int|string|null $level The requested level. @see MajorProperties->getLevel()
-     * @return numeric The running total of added values from the requested level down
+     * @return int|float The running total of added values from the requested level down
      * to the lowest level
      */
-    public function sum($level = null):int|float {
-        return array_sum(array_slice($this->total, $this->rep->getLevel($level)));
+    public function sum(int|string|null $level = null) {
+        return array_sum(array_slice($this->total, ($this->getLevel)($level)));
     }
 
 }

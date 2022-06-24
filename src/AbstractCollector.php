@@ -13,13 +13,20 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use ArrayAccess;
+use gpoehl\phpReport\Calculator\AbstractCalculator;
+use gpoehl\phpReport\Calculator\PrecisionTrait;
+use InvalidArgumentException;
+
 /**
  * Base class of Collector and sheet classes.
  * Class is declared as abstract to avoid instantiation. It has no abstract
  * methods.
  */
-abstract class AbstractCollector implements \ArrayAccess
+abstract class AbstractCollector implements ArrayAccess
 {
+
+    use PrecisionTrait;
 
     /** @var Array of calculator or collector objects. */
     public array $items = [];
@@ -44,7 +51,7 @@ abstract class AbstractCollector implements \ArrayAccess
      */
     public function setAltKey(int|string $key, int|string $itemKey): void {
         if (isset($this->items[$key]) || isset($this->altKeys[$key])) {
-            throw new \InvalidArgumentException("Key '$key' already exists.");
+            throw new InvalidArgumentException("Key '$key' already exists.");
         }
         $this->altKeys[$key] = $itemKey;
     }
@@ -64,12 +71,11 @@ abstract class AbstractCollector implements \ArrayAccess
      * Implementation of the arrayAccess interface
      * ---------------------------------------------------------------------- */
 
-    /*
+    /**
      * Add new item to items array via array notation
      * @param int|string $offset The item key
      * @param AbstractCollector|AbstractCalculator $value The item
      */
-
     public function offsetSet($offset, $value): void {
         $this->addItem($value, $offset);
     }
@@ -82,12 +88,11 @@ abstract class AbstractCollector implements \ArrayAccess
         trigger_error("Unset of collector item $offset is not supported.", E_USER_NOTICE);
     }
 
-    /*
+    /**
      * Get item via array notation
      * @param int|string $offset The item or alternate key
      * @see getItem()
      */
-
     public function offsetGet($offset): object {
         return $this->getItem($offset);
     }
@@ -105,11 +110,10 @@ abstract class AbstractCollector implements \ArrayAccess
     }
 
     /**
-     * Returns the item at specified key.
+     * Get the item at specified key.
      * @param $key The item key or an alternate key.
-     * @return AbstractCollector|AbstractCalculator Returns the required item
      */
-    public function getItem(int|string $key): object {
+    public function getItem(int|string $key): AbstractCollector|AbstractCalculator {
         $foundKey = $this->findItemKey($key);
         if ($foundKey !== false) {
             return $this->items[$foundKey];
@@ -134,6 +138,7 @@ abstract class AbstractCollector implements \ArrayAccess
     }
 
     /**
+     * Don't call this method yourself. The report class takes care for calling.
      * Cumulate computed values to next higher group level.
      * Values of the current group level will be initialized with default values.
      */
@@ -187,7 +192,7 @@ abstract class AbstractCollector implements \ArrayAccess
     }
 
     /**
-     * Get the offest of an item by a given key.
+     * Get the offset of an item by a given key.
      * @param $key The item or alternate key
      * @param array $keyOffsets Array of integer offsets indexed by item keys.
      * @return int The offset of an item
@@ -200,7 +205,7 @@ abstract class AbstractCollector implements \ArrayAccess
         if (isset($this->altKeys[$key], $this->items[$this->altKeys[$key]])) {
             return $keyOffsets[$this->altKeys[$key]];
         }
-        throw new \InvalidArgumentException("Key '$key' doesn't exist.");
+        throw new InvalidArgumentException("Key '$key' doesn't exist.");
     }
 
     /**
@@ -291,45 +296,145 @@ abstract class AbstractCollector implements \ArrayAccess
     }
 
     /* -------------------------------------------------------------------------
-     * Aggregate functions
+     * Aggregate methods
+     * Note: All related calculators must implement the the requested methods.
      * ---------------------------------------------------------------------- */
 
-    public function sum($level = null, bool $asArray = false) {
-        $result = $this->total('sum', $level);
-        return ($asArray) ? $result : array_sum($result);
+    public function sum($level = null, int $depth = 0) {
+        return $this->getTotal('sum', $depth, 0, $level);
     }
 
-    public function nn($level = null, bool $asArray = false) {
-        $result = $this->total('nn', $level);
-        return ($asArray) ? $result : array_sum($result);
+    public function count($level = null, int $depth = 0) {
+        return $this->getTotal('count', $depth, 0, $level);
     }
 
-    public function nz($level = null, bool $asArray = false) {
-        $result = $this->total('nz', $level);
-        return ($asArray) ? $result : array_sum($result);
+    public function countNN($level = null, int $depth = 0) {
+        return $this->getTotal('countNN', $depth, 0, $level);
     }
 
-    public function min($level = null, bool $asArray = false) {
-        $result = $this->total('min', $level);
-        if ($asArray) {
-            return $result;
+    public function countNZ($level = null, int $depth = 0) {
+        return $this->getTotal('countNZ', $depth, 0, $level);
+    }
+
+    /**
+     *
+     * Averages are not yet correctly implemented.
+     */
+    public function avg($level = null, int $depth = 0) {
+        return $this->getAvg('avg', $depth, 0, $level);
+    }
+
+    public function avgNN($level = null, int $depth = 0) {
+        return $this->getAvg('avgNN', $depth, 0, $level);
+    }
+
+    public function avgNZ($level = null, int $depth = 0) {
+        return $this->getAvg('avgNZ', $depth, 0, $level);
+    }
+
+    /**
+     * Min and max are not yet tested!
+     * @param type $level
+     * @param bool $asArray
+     * @return type
+     */
+    public function min($level = null, int $depth = 0): array|int|float|string|null {
+        return $this->getMinMax('min', $depth, 0, $level, min(...));
+    }
+
+    public function max($level = null, int $depth = 0): array|int|float|string|null {
+        return $this->getMinMax('max', $depth, 0, $level, max(...));
+    }
+
+    public function getMinMax(string $typ, int $depth, int $currentDepth, $level, $func, $sum = null,): array|int|float|string|null {
+        if ($depth > 0) {
+            $currentDepth++;
+            $sum ??= [];
+            foreach ($this->items as $key => $item) {
+                if ($currentDepth < $depth && ($item instanceof AbstractCollector)) {
+                    $sum[$key] = $item->getMinMax($typ, $depth, $currentDepth, $level, $func, $sum,);
+                } else {
+                    $sum[$key] = $item->$typ($level);
+                }
+            }
+            return $sum;
         }
-        // Remove null values before calling min();
-        $wrk = array_filter($result);
-        return (empty($wrk)) ? null : min($wrk);
-    }
-
-    public function max($level = null, bool $asArray = false) {
-        $result = $this->total('max', $level);
-        return ($asArray) ? $result : (empty($result) ? null : max($result));
-    }
-
-    protected function total(string $typ, $level = null): array {
-        $sum = [];
+        // Prepare scalar result. Values will be compares as they are.
+        // No conversion from bcm string to float or vice versa.
+        $wrk = [];
         foreach ($this->items as $key => $item) {
-            $sum[$key] = $item->$typ($level);
+            $res = $item->$typ($level);
+            if ($res !== null) {
+                $wrk[] = $res;
+            }
+        }
+        return (empty($wrk)) ? null : $func($wrk);
+    }
+
+    /**
+     * Calculate the total of sum or counters.
+     * @param string $typ Method name to be called on items.
+     * @param bool $asArray Build result as array or as scalar value
+     * @param $level The group level
+     * @param ?int $scale Set scale only for 'sum' to keep counters as integers.
+     * @return array|int|float|string The calculated value.
+     */
+    public function getTotal(string $typ, int $depth, int $currentDepth, $level, $sum = null): array|int|float|string {
+        if ($depth > 0) {
+            $currentDepth++;
+            $sum ??= [];
+            foreach ($this->items as $key => $item) {
+                if ($currentDepth < $depth && ($item instanceof AbstractCollector)) {
+                    $sum[$key] = $item->getTotal($typ, $depth, $currentDepth, $level, $sum);
+                } else {
+                    $sum[$key] = $item->$typ($level);
+                }
+            }
+            return $sum;
+        }
+        // Prepare scalar result. Counters will not use BCMath funcitons.
+        if ($this->scale === null || $typ !== 'sum') {
+            $sum = 0;
+            foreach ($this->items as $key => $item) {
+                $sum += $item->$typ($level);
+            }
+            return $sum;
+        }
+        // Scalar BCMath result for sum().
+        $sum = $this->zero;
+        foreach ($this->items as $key => $item) {
+            // cast param2 to string. Collector might not return string
+            $sum = bcadd($sum, (string) $item->$typ($level), $this->scale);
         }
         return $sum;
+    }
+
+    /**
+     * Get the average of calculated values.
+     * @param $level The requested level. Defaults to the current level.
+     * @param $counter The requested counter to calculate the requested average.
+     * @return The average of calculated values at the requested level.
+     */
+    protected function getAvg(string $typ, int $depth, int $currentDepth, $level, $sum = null): array|int|float|string {
+        if ($depth > 0) {
+            $currentDepth++;
+            $sum ??= [];
+            foreach ($this->items as $key => $item) {
+                if ($currentDepth < $depth && ($item instanceof AbstractCollector)) {
+                    $sum[$key] = $item->getAvg($typ, $depth, $currentDepth, $level, $sum);
+                } else {
+                    $sum[$key] = $item->$typ($level);
+                }
+            }
+            return $sum;
+        }
+        // Prepare scalar result. Null when divisor is 0.
+        $divisor = $this->getTotal('count' . substr($typ, 3), $depth, $currentDepth, $level);
+
+        return ($divisor == 0) ? null : ($this->scale === null ?
+                $this->getTotal('sum', $depth, $currentDepth, $level) / $divisor
+                // BCMath
+                : bcdiv($this->getTotal('sum', $depth, $currentDepth, $level, $this->scale), (string) $divisor, $this->scale));
     }
 
 }

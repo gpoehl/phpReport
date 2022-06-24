@@ -429,7 +429,7 @@ TABLE1;
         } else {
             $out = "Group $level has ";
             $numberOfGroups = $maxLevel;
-            $wrk = $this->rep->gc->range([$level + 1])->sum($level, true);
+            $wrk = $this->rep->gc->range([$level + 1])->sum($level, 1);
             foreach ($wrk as $key => $sum) {
                 $out .= "$sum times group $key, ";
             }

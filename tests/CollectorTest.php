@@ -5,9 +5,8 @@ declare(strict_types=1);
 /**
  * Unit test of Collector class
  */
-use gpoehl\phpReport\Factory;
-use gpoehl\phpReport\CalculatorXS;
-use gpoehl\phpReport\Report;
+use gpoehl\phpReport\Collector;
+use gpoehl\phpReport\Calculator\CalculatorXS;
 use PHPUnit\Framework\TestCase;
 
 class CollectorTest extends TestCase
@@ -17,11 +16,9 @@ class CollectorTest extends TestCase
     public $calculator;
 
     public function setUp(): void {
-        $this->stack = Factory::collector();
-        $rep = $this->createStub(Report::class);
-        $rep->method('getLevel')
-                ->will($this->returnCallback(fn($val) => $val ??= 0));
-        $this->calculator = new CalculatorXS($rep, 0);
+        $this->stack = new Collector();
+        $this->calculator = new CalculatorXS();
+        $this->calculator->initialize(fn($val) => $val ??= 0, 0);
     }
 
     /**
@@ -46,12 +43,6 @@ class CollectorTest extends TestCase
             ['a', 'a'],
             ['a b', 'a b'],
             [0, null],
-        ];
-    }
-
-    public function addMagicItemKeyProvider() {
-        return [
-            ['1.2', 1.2],
         ];
     }
 
@@ -163,7 +154,7 @@ class CollectorTest extends TestCase
         $this->stack->addItem($item2);
         $item1->add(3);
         $item2->add(4);
-        $multi = Factory::collector();
+        $multi = new Collector;
         $this->stack->addItem($multi, 'multi');
         $s1 = clone ($this->calculator);
         $s2 = clone ($this->calculator);
@@ -176,9 +167,9 @@ class CollectorTest extends TestCase
         $s3->add(9);
         $this->assertSame(21, $multi->sum());
         $this->assertSame(28, $this->stack->sum(), "Sum incl sub collector");
-        $this->assertSame([5, 7], $multi->range([0, 1])->sum(null, true), "range from collector multi key 1 to 2 as array");
-        $this->assertSame([5, 7], $multi->between([0, 1])->sum(null, true), "between from collector multi key between 0 and 1 as array");
-        $this->assertSame([3, 4, 'multi' => 21], $this->stack->between([0, 1], 'multi')->sum(null, true), "between from collector key between 0 and 1 plus 'multi' as array");
+        $this->assertSame([5, 7], $multi->range([0, 1])->sum(null, 1), "range from collector multi key 1 to 2 as array");
+        $this->assertSame([5, 7], $multi->between([0, 1])->sum(null, 1), "between from collector multi key between 0 and 1 as array");
+        $this->assertSame([3, 4, 'multi' => 21], $this->stack->between([0, 1], 'multi')->sum(null, 1), "between from collector key between 0 and 1 plus 'multi' as array");
     }
 
     /**
@@ -212,7 +203,7 @@ class CollectorTest extends TestCase
     public function testSliceMissingRangeKeys($expected, ... $params) {
         $this->setMultipleItemsAndAltKeys();
         $this->expectExceptionMessage("Key '$expected' doesn't exist.");
-        $range = $this->stack->range(... $params);
+        $this->stack->range(... $params);
     }
 
     public function missingRangeParamsProvider() {

@@ -5,36 +5,34 @@ declare(strict_types=1);
 /**
  * Unit test of FixedSheet class
  */
-use gpoehl\phpReport\CalculatorXS;
-use gpoehl\phpReport\Factory;
-use gpoehl\phpReport\Report;
+use gpoehl\phpReport\Calculator\CalculatorXS;
+use gpoehl\phpReport\FixedSheet;
 use PHPUnit\Framework\TestCase;
 
 class FixedSheetTest extends TestCase
 {
 
-    public $b;
+    public $stack;
 
     public function setUp(): void {
-        $rep = $this->createStub(Report::class);
-        $rep->method('getLevel')
-                ->will($this->returnCallback(fn($val) => $val ??= 0));
-        $this->b = Factory::sheet($rep, 3, Report::XS, 1, 6);
+        $calc = new CalculatorXS();
+        $calc->initialize(fn($val) => $val ??= 0, 2);
+        $this->stack = new FixedSheet($calc, 1, 6);
     }
 
     public function testInstantiate() {
-        $this->assertSame(6, count($this->b->getItems()));
-        $this->assertInstanceOf(CalculatorXS::class, $this->b->getItem(1));
+        $this->assertSame(6, count($this->stack->getItems()));
+        $this->assertInstanceOf(CalculatorXS::class, $this->stack->getItem(1));
     }
 
     public function testAddItemViaArrayAccessThrowsException() {
         $this->expectException(Exception::class);
-        $this->b[10] = 55;
+        $this->stack[10] = 55;
     }
 
     public function testAddThrowsException() {
         $this->expectException(Exception::class);
-        $this->b->add(['NewItem1' => 1]);
+        $this->stack->add(['NewItem1' => 1]);
     }
 
 }

@@ -12,20 +12,25 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use gpoehl\phpReport\Calculator\AbstractCalculator;
+
 /**
- * Sheet holds values of a field into one of many cumulators.
- * The cumulator will be selected by a key.
- * Cumulators will be instantiated during add() method and are clones
- * of class instantiation $cumulator parameter.
+ * Sheet is a specialized collector to handle key => value pairs in multiple calculators.
+ * Each key will be represented by an own calculator which can accessed by the key.
+ * Calculators will be instantiated during add() method and are clones of the
+ * calculator given at instantiation.
  */
 class Sheet extends AbstractCollector
 {
 
+
     /**
-     * @param AbstractCalculator $calculator Calculator used to create new column on demand
+     * @param AbstractCalculator $calculator Calculator used for each sheet item
      */
     public function __construct(private AbstractCalculator $calculator) {
-
+        if (method_exists($calculator, 'getScale')){
+             $this->setScale($calculator->getScale());
+        }
     }
 
     private function addItem($key) {
@@ -38,8 +43,7 @@ class Sheet extends AbstractCollector
      * Values will be added to sheet items by
      * calling the add method of calculator class.
      * The calculator will be instantiated when he doesn't already exists.
-     * @param iterable $values The iterator key represents the sheet item
-     * while the value will to be added.
+     * @param iterable $values indexed by the sheet item to be added.
      */
     public function add(iterable $values): void {
         foreach ($values as $key => $value) {

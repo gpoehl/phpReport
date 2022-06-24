@@ -12,27 +12,32 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use gpoehl\phpReport\Calculator\AbstractCalculator;
+
 /**
- * Sheet holds values of a field into one of many cumulators.
- * The cumulator will be selected by a key.
- * Cumulators will be instantiated immediately when this class is instantiated.
- * Cumaltors are clones of class instantiation $cumulator parameter.
+ * FixedSheet is a specialized collector to handle key => value pairs in multiple calculators.
+ * Each key will be represented by an own calculator which can accessed by the key.
+ * All calculators will be instantiated immediately when this class is instantiated.
+ * Calculators are clones of the calculator given at instantiation.
  */
 class FixedSheet extends AbstractCollector
 {
 
     /**
-     *
-     * @param AbstractCaclculator $calculator An instance of a cualculator class which
-     * will be cloned and then assigned to this object to hold values into
-     * sheet columns.
-     *
+     * @param AbstractCaclculator $calculator An instance of a calculator class.
      * @param $fromKey The first key (name) of sheet columns or iterable list of all possible keys.
      * @param $toKey The last key (name) of sheet columns. When keys are strings
      * make sure that incrementing $key will meet $toKey. Null when $fromKey is iterable.
      */
     public function __construct(AbstractCalculator $calculator, int|string|iterable $fromKey, int|string|null $toKey) {
-        (is_iterable($fromKey)) ? $this->addArrayItems($calculator, $fromKey) : $this->addItems($calculator, $fromKey, $toKey);
+        if (method_exists($calculator, 'getScale')) {
+            $this->setScale($calculator->getScale());
+        }
+        if (is_iterable($fromKey)) {
+            $this->addArrayItems($calculator, $fromKey);
+        } else {
+            $this->addItems($calculator, $fromKey, $toKey);
+        }
     }
 
     // Implementation of arrayAccess interface. Don't allow creating new items

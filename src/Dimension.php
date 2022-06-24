@@ -19,7 +19,7 @@ use gpoehl\phpReport\getter\GetterFactory;
 /**
  * Dimension holds related data per data dimension.
  * Each report has at least one dimension. Addional ones are instantiated
- * for every joined data. 
+ * for every joined data.
  */
 class Dimension
 {
@@ -62,7 +62,7 @@ class Dimension
     /** @var Object to get joined values. */
     private BaseGetter $joinGetter;
 
-    // Source values will be unset after instantiating of getter objects. 
+    // Source values will be unset after instantiating of getter objects.
 
     /** @var array[] Parameter for compute items indexed by name. */
     private array $calcSources = [];
@@ -76,13 +76,13 @@ class Dimension
     /**
      * Instantiate a new dimension object
      * @param int $id The dimension id. First dimension has id = 0.
-     * @param int $lastLevel  Level of last group assigned to this dimension. 
-     * Same as $lastLevel from previous dimension when no group is assigned. 
+     * @param int $lastLevel  Level of last group assigned to this dimension.
+     * Same as $lastLevel from previous dimension when no group is assigned.
      * @param object|className $defaultTarget Object or name of a class in which the
      * methods will be called when $source is not specified.
      */
     public function __construct(public int $id, public int $lastLevel, private $defaultTarget) {
-        
+
     }
 
     /**
@@ -145,8 +145,8 @@ class Dimension
     }
 
     /**
-     * Save given parameters to make them active. 
-     * Call method when footer actions are done and new row is active. 
+     * Save given parameters to make them active.
+     * Call method when footer actions are done and new row is active.
      * @param type $row
      * @param type $rowKey
      * @param array $groupValues
@@ -158,7 +158,7 @@ class Dimension
     }
 
     /**
-     * Set getter objects on first request for group values 
+     * Set getter objects on first request for group values
      * Detect row type and let GetterFactory instantiate all required getter objects
      */
     private function instantiateGetters($row): void {

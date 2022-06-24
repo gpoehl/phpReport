@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport;
 
+use gpoehl\phpReport\Calculator\AbstractCalculator;
+
 /**
  * Collector to hold AbstactCollectors and or AbstractCalulators
  */
@@ -25,7 +27,7 @@ class Collector extends AbstractCollector
      * @param $key The unique item key. When the key is empty the item
      * will be added at the end of the $items array. When the key is not empty
      * it must be unique.
-     * @throws \InvalidArgumentException when the key already exists.
+     * @throws InvalidArgumentException when the key already exists.
      */
     public function addItem(AbstractCollector|AbstractCalculator $item, int|string|null $key = null): void {
         if ($key === null) {
