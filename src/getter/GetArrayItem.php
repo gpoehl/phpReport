@@ -21,7 +21,7 @@ class GetArrayItem extends BaseGetter
 
     /**
      * @see getValue()
-     * @return Array item declared in $source. 
+     * @return Array item declared in $source.
      */
     public function getValue($row, $rowKey = null) {
         return $row[$this->source];

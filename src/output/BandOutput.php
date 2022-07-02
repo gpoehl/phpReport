@@ -22,9 +22,9 @@ use gpoehl\phpReport\CumulateIF;
  * Instead of creating a new array dimension for each group a flat array will be used.
  * This allows easy access to the latest output value of any group.
  *
- * Use this class when you want to manipulate the output, get parts of the output
- * or to write output directly into any of the bands (e.g. write into the header
- * from a footer group or create summaries).
+ * Use this class to manipulate the output, get parts of the output or to write
+ * output directly into any of the bands (e.g. write into the header from a footer
+ * group or create summaries).
  *
  * Each group level can have it's own set of bands.
  *
@@ -33,11 +33,13 @@ use gpoehl\phpReport\CumulateIF;
  */
 class BandOutput extends AbstractOutput implements CumulateIF
 {
-
-    // @var $output[][][]. $values saved via write() are stored indexed by
-    // group level, band key. Last key is a non associated array key for added elements.
+/**
+ * @var $output[][][]. $values saved via write() are stored indexed by
+ * group level, band key. Last key is a non associated array key for added elements.
+ */
     private array $output = [];
     // Map action keys to numeric keys. Output will be sorted by this keys.
+
     public array $actionKeyMapper = [
         'init' => self::HEADER,
         'totalHeader' => self::HEADER,
@@ -133,7 +135,7 @@ class BandOutput extends AbstractOutput implements CumulateIF
             }
             return null;
         }
-        // Iterate over group level and return anything equals or lower of the given $level
+        // Iterate over group level and return anything equal or lower of the given $level
         foreach (array_keys($this->output) as $key => $value) {
             if ($value >= $level) {
                 $wrk = array_slice($this->output, $key, null, true);
@@ -145,11 +147,11 @@ class BandOutput extends AbstractOutput implements CumulateIF
         }
 
         // Cumulate lover levels up to requested level
-        // The call is also required when for empty levels
+        // The call is also required for empty levels
         for ($i = array_key_last($wrk); $i >= $level; $i--) {
             $this->cumulateToNextLevel($i, $wrk);
         }
-        // returns the build string. Notice 3 times current.
+        // returns the build string. Note: 3 times current().
         return current(current(current($wrk)));
     }
 

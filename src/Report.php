@@ -121,6 +121,9 @@ class Report
         $this->toCumulate[] = $this->total = new Collector();
         $this->dims[] = $this->dim = new Dimension(0, 0, $target);
         $this->out = ($outputHandler) ? $outputHandler : new $conf->outputHandler();
+        if ($this->out InstanceOf CumulateIF) {
+            $this->toCumulate[] = $this->out;
+        }
         return $this;
     }
 
@@ -203,7 +206,7 @@ class Report
     public function compute(
             string $name
             , $source = null
-            , AbstractCalculator $calculator = new CalculatorXS
+            , ?AbstractCalculator $calculator = new CalculatorXS
             , int|string|null $maxLevel = null
             , ...$params): self {
         $source ??= $name;
@@ -249,7 +252,7 @@ class Report
             string $name
             , $keySource
             , $source
-            , AbstractCalculator $calculator = new CalculatorXS
+            , ?AbstractCalculator $calculator = new CalculatorXS
             , int|string|null $maxLevel = null
             , ?array $keyParams = []
             , ...$params
@@ -267,6 +270,7 @@ class Report
         }
         return $this;
     }
+
     public function fixedSheet(
             string $name
             , $keySource
@@ -424,21 +428,34 @@ class Report
         $this->execute($action);
     }
 
+    /**
+     * Execute all non detail actions.
+     * Level will be always appendend to $params
+     * @param Action $action The action to be executed.
+     * @param mixed $params List of paramters to be passed to methods.
+     * @return void or false False as return of before actions will prevent
+     * normal action to be executed.
+     */
     private function execute(Action $action, ... $params) {
-        if ($action->runtimeTarget) {
+        if (!$action->runtimeTarget) {
+            return;
+        }
+        if ($action->targetKey === Action::STRING) {
+            $output = $action->target;
+        } else {
             $this->currentAction = $action;
             $params[] = $action->level;
-            $output = ($action->targetKey === Action::STRING) ? $action->target :
-                    ($action->runtimeTarget)(... $params);
-            if ($output !== null) {
-                if ($output === false && $action->key === 'beforeGroup') {
-                    return false;
-                }
-                if ($action->kind === Action::OUTPUT) {
-                    $this->out->write($output, $action->level, $action->outputKey);
-                } else {
-                    trigger_error($output, $action->kind);
-                }
+            $output = ($action->runtimeTarget)(... $params);
+        }
+
+        if ($output !== null) {
+            if ($output === false && $action->key === 'beforeGroup') {
+                return false;
+            }
+            if ($action->kind === Action::OUTPUT) {
+                $this->out->write($output, $action->level, $action->outputKey);
+            } else {
+                trigger_error($output, $action->kind);
             }
         }
     }
@@ -496,10 +513,10 @@ class Report
         } elseif ($this->detailAction->runtimeTarget) {
             $output = ($this->detailAction->targetKey === Action::STRING) ?
                     $this->detailAction->target :
-                    ($this->detailAction->runtimeTarget)($row, $rowKey, $this->detailAction->level);
+                    ($this->detailAction->runtimeTarget)($row, $rowKey, $this->currentLevel);
             if ($output !== null) {
                 // trigger_error() for details makes no sense. Condition not checked.
-                $this->out->write($output, $this->detailAction->level, $this->detailAction->outputKey);
+                $this->out->write($output, $this->currentLevel, $this->detailAction->outputKey);
             }
         }
     }

@@ -16,12 +16,14 @@ namespace gpoehl\phpReport\getter;
 /**
  * Gets value from an object property where the data row is the object.
  */
-class GetRowProperty extends BaseGetter{
-   
+class GetRowProperty extends BaseGetter
+{
+
     /**
      * @see BaseGetter::getValue
      */
     public function getValue($row, $rowKey = null) {
         return $row->{$this->source};
     }
+
 }

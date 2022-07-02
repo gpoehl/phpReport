@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace gpoehl\phpReport\output;
 
 /**
- * Basic writer class
+ * Basic output class
  * Output is managed as plain string.
- * Parameter for level and 8sub)key are ignored.
+ * Parameter for level and subkey are ignored.
  */
 class StringOutput extends AbstractOutput
 {

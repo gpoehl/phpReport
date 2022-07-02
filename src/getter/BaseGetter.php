@@ -27,7 +27,7 @@ abstract class BaseGetter implements GetValueInterface
      * @var array $params Optional parameters passed unpacked to closures and methods.
      */
     public function __construct(protected $source, protected ?array $params = null) {
-        
+
     }
 
 }

@@ -21,27 +21,20 @@ namespace gpoehl\phpReport\Calculator;
 class CalculatorXS extends AbstractCalculator
 {
 
-    /**
-     * Initialize all levels with 0 values
-     * Don't call this method yourself. The report class takes care for calling.
-     */
-    public function initialize(\Closure $getLevel, int $maxLevel) {
+    public function initialize(\Closure $getLevel, int $maxLevel):void {
         parent::initialize($getLevel, $maxLevel);
         $this->total = array_fill(0, $this->maxLevel + 1, 0);
     }
 
-    /**
-     * Add given $value to $maxLevel
-     * @param numeric|null $value The value to be added
-     */
+     public function setInitialValue(int|float|string $value): void {
+        $this->total[($this->getLevel)()] = $value;
+    }
+
+
     public function add(int|float|string|null $value): void {
         $this->total[$this->maxLevel] += $value;
     }
 
-    /**
-     * Subtract given $value from $maxLevel
-     * @param numeric|null $value The value to be subtracted
-     */
     public function sub(int|float|string|null $value): void {
         $this->total[$this->maxLevel] -= $value;
     }
@@ -54,10 +47,6 @@ class CalculatorXS extends AbstractCalculator
         $this->total[$this->maxLevel]++;
     }
 
-    /**
-     * Don't call this method yourself. The report class takes care for calling.
-     * Cumulate attribute values to higher level.
-     */
     public function cumulateToNextLevel(int $level): void {
         if ($level <= $this->maxLevel) {
             $this->total[$level - 1] += $this->total[$level];
@@ -65,13 +54,7 @@ class CalculatorXS extends AbstractCalculator
         }
     }
 
-    /**
-     * Calculate the running sum up to the requested level.
-     * @param int|string|null $level The requested level. @see MajorProperties->getLevel()
-     * @return int|float The running total of added values from the requested level down
-     * to the lowest level
-     */
-    public function sum(int|string|null $level = null) {
+    public function sum(int|string|null $level = null) :int|float {
         return array_sum(array_slice($this->total, ($this->getLevel)($level)));
     }
 

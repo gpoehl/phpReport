@@ -39,8 +39,8 @@ class ReportMultiDimensionTest extends TestCase {
 
     /**
      * Parmeter to test all possible action methods when no data are given for dimension > 0.
-     * @return array Array with arrays. They have a description as key. Data is the 
-     * value for the $noData parameter of the data() method and the expected result. 
+     * @return array Array with arrays. They have a description as key. Data is the
+     * value for the $noData parameter of the data() method and the expected result.
      */
     public function noDataParamProvider(): array {
         return [
@@ -127,7 +127,7 @@ class ReportMultiDimensionTest extends TestCase {
         ];
     }
 
-   
+
     public function testNoGroupChangeTriggersWarning() {
         $this->expectWarning();
         $this->getBase()
@@ -251,7 +251,7 @@ class ReportMultiDimensionTest extends TestCase {
         return new class($printArguments) {
 
             // Make sure to have a defined set of actions not influenced by defaults
-            // of confic class 
+            // of confic class
             public $config = ['actions' => [
                     'init' => 'init',
                     'totalHeader' => '%Header',

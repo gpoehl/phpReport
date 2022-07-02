@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Unit test of Basic output class
+ * Unit test of Stringoutput class
  */
 use PHPUnit\Framework\TestCase;
 

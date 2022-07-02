@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace gpoehl\phpReport\output;
 
 /**
- *
- * @author Günter
+ * Abstract class for output handlers
  */
 abstract class AbstractOutput
 {
 
+     /* @var $actionKeyMapper indexed by action name to map action with band. */
     public array $actionKeyMapper = [
         'init' => 0,
         'totalHeader' => 0,
@@ -39,7 +39,7 @@ abstract class AbstractOutput
     ];
 
     public function __construct(public string $separator = '') {
-        
+
     }
 
     public function setSeparator(string $separator) {

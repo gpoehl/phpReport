@@ -17,8 +17,9 @@ namespace gpoehl\phpReport\getter;
  * Gets value from an static property. Not related to a data row.
  * Class can be a class name or an object.
  */
-class GetStaticProperty extends BaseGetter{
-   
+class GetStaticProperty extends BaseGetter
+{
+
     /**
      * @see BaseGetter::getValue
      */
@@ -26,4 +27,5 @@ class GetStaticProperty extends BaseGetter{
         // Note the ${$name[1]} syntax!
         return $this->source[0]::${$this->source[1]};
     }
+
 }

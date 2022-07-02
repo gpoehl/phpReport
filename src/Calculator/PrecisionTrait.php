@@ -20,7 +20,7 @@ Trait PrecisionTrait
 {
 
    /** @var $zero Zero value string to represent arbitrary precision numbers */
-    private string $zero;
+    protected string $zero;
     /** @var $scale Null indicates that collectors don't use BCMath methods. */
     protected ?int $scale = null;
 

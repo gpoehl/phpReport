@@ -23,7 +23,7 @@
         "exclude": ["/docs",  "/docs/build"]
     },
     "require": {
-        "php": ">=8.0"
+        "php": ">=8.1"
     },
     "autoload": {
 		 "psr-4": {"gpoehl\\phpReport\\": "src/"}

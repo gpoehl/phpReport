@@ -16,12 +16,14 @@ namespace gpoehl\phpReport\getter;
 /**
  * Gets value from a data row using a callable
  */
-class GetFromCallable extends BaseGetter{
-   
+class GetFromCallable extends BaseGetter
+{
+
     /**
      * @see BaseGetter::getValue
      */
     public function getValue($row, $rowKey = null) {
         return ($this->source)($row, $rowKey, ...$this->params);
     }
+
 }

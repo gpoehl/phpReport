@@ -18,28 +18,28 @@ namespace gpoehl\phpReport\getter;
  */
 class GetterFactory
 {
-
     /* @var $isJoin True for join method. Will select getter which suppresses warnings when array item is missing. */
+
     public bool $isJoin = false;
 
     /**
      * @param $isObject True when data row is an object.
      * @param Object | Classname | null $defaultTarget Default target when
      * target element in source equals true. Usually the same as in report class.
-     * @param className The name of the row class. Used to access the row class 
+     * @param className The name of the row class. Used to access the row class
      * members static properies, constants and static methods expeting $row and
-     * $rowKey parameters. 
+     * $rowKey parameters.
      */
     public function __construct(private bool $isObject, private $defaultTarget = null,
             private ?string $className = '') {
-        
+
     }
 
     /**
      * Choose and instantiate an getter object to retrieve a value specified by $source.
      * @param mixed $source The source from which the value should be get from.
      * When $source is an array the elements might be named as name, target and selector.
-     * Hint: Call verifySource before to check that it is properly set.  
+     * Hint: Call verifySource before to check that it is properly set.
      * @param array $params Parameters to be passed unpacked to closures and methods
      * @return GetValueInterface Object which implements the GetValueInterface.
      * @throws InvalidArgumentException
@@ -80,7 +80,7 @@ class GetterFactory
             return match (true) {
             // Object or row method getting $row and $rowKey.
             // Requesting $row and $rowKey on row class methods is handled
-            // as static method. Regular methods don't need $row. 
+            // as static method. Regular methods don't need $row.
                 $selector === true => new GetFromCallable([$target, $name], $params),
                 // Object property
                 $selector === null => new GetProperty([$target, $name]),
@@ -99,7 +99,7 @@ class GetterFactory
     /**
      * Instantiate an getter object to retrieve a key and data value for sheets.
      * When only the key is given the getter class must return an associated array
-     * in the form [$key => $value]. 
+     * in the form [$key => $value].
      * @param mixed $keySource The source for the sheet key.
      * @param mixed $valueSource The source for the sheet value. Null when
      * $keySource returns a [$key => $value] array.
@@ -117,12 +117,12 @@ class GetterFactory
 
     /**
      * Verify sources before knowing which data type the data row will be.
-     * The verification is not integrated in the getGetter methods to raise the 
+     * The verification is not integrated in the getGetter methods to raise the
      * error or warning as soon as possible. Final decision can be made only
      * after reading first row per dimension.
      * @param mixed $source The source of data value.
      * @param array $params Parameters to be passed to callables. When source
-     * is not a callable $params should be an empty array. 
+     * is not a callable $params should be an empty array.
      * To verify sources for sheets always pass empty params as they will be used
      * for key and value of the sheet.
      * @return bool Always true when no warning or error has been encountered.

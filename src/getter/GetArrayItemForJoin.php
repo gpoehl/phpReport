@@ -21,9 +21,9 @@ class GetArrayItemForJoin extends BaseGetter
 
     /**
      * @see getValue()
-     * @return Array item declared in $source. 
+     * @return Array item declared in $source.
      * Warning for non existing items will be suppressed. Required for joins.
-     * There it will end with a no data action. 
+     * There it will end with a no data action.
      */
     public function getValue($row, $rowKey = null) {
         return @$row[$this->source];

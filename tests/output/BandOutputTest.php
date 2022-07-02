@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Unit test of Comfort output class
+ * Unit test of Bandoutput class
  */
 use gpoehl\phpReport\output\BandOutput;
 use PHPUnit\Framework\TestCase;

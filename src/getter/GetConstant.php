@@ -14,15 +14,17 @@ declare(strict_types=1);
 namespace gpoehl\phpReport\getter;
 
 /**
- * Gets value from an constant. 
+ * Gets value from an constant.
  * Source is build from className .. and property name.
  */
-class GetConstant extends BaseGetter{
-   
+class GetConstant extends BaseGetter
+{
+
     /**
      * @see BaseGetter::getValue
      */
     public function getValue($row, $rowKey = null) {
         return constant($this->source);
     }
+
 }

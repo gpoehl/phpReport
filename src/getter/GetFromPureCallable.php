@@ -16,10 +16,11 @@ namespace gpoehl\phpReport\getter;
 /**
  * $sour
  * Gets value from a callable without passing row and rowkey.
- * That allows calling methods independend from a data row. 
+ * That allows calling methods independend from a data row.
  */
-class GetFromPureCallable extends BaseGetter{
-   
+class GetFromPureCallable extends BaseGetter
+{
+
     /**
      * @see BaseGetter::getValue
      * @var mixed $source Closure or array with object and object member name
@@ -27,4 +28,5 @@ class GetFromPureCallable extends BaseGetter{
     public function getValue($row, $rowKey = null) {
         return ($this->source)(...$this->params);
     }
+
 }
