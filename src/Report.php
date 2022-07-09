@@ -100,7 +100,7 @@ class Report
     private int|bool $skipLevel = false;
 
     /* @var $toCumulate Holds objects which has 'cumulateToNextLevel' method */
-    private array $toCumulate;
+    private \SplObjectStorage $cumulateMap;
 
     /**
      * @param $target Default object or class name where action methods will be called.
@@ -116,14 +116,12 @@ class Report
         $this->groups = new Groups($conf->grandTotalName);
         $this->buildMethodsByGroupName = $conf->buildMethodsByGroupName;
         $this->actions = $conf->actions;
-        $this->toCumulate[] = $this->rc = new Collector();
-        $this->toCumulate[] = $this->gc = new Collector();
-        $this->toCumulate[] = $this->total = new Collector();
+        $this->rc = new Collector();
+        $this->gc = new Collector();
+        $this->total = new Collector();
         $this->dims[] = $this->dim = new Dimension(0, 0, $target);
         $this->out = ($outputHandler) ? $outputHandler : new $conf->outputHandler();
-        if ($this->out InstanceOf CumulateIF) {
-            $this->toCumulate[] = $this->out;
-        }
+        $this->cumulateMap = new \SplObjectStorage();
         return $this;
     }
 
@@ -183,6 +181,7 @@ class Report
         $calculator->initialize($this->getLevel(...), $group->level);
         $this->gc->addItem($calculator, $group->level);
         $this->gc->setAltKey($name, $group->level);
+        $this->cumulateMap[$calculator] = $group->level;
         return $this;
     }
 
@@ -211,7 +210,8 @@ class Report
             , ...$params): self {
         $source ??= $name;
         $calculator ??= new CalculatorXS;
-        $this->initializeCalculator($calculator, $maxLevel);
+        $maxLevel = $this->initializeCalculator($calculator, $maxLevel);
+        $this->cumulateMap[$calculator] = $maxLevel;
         $this->total->addItem($calculator, $name);
         if ($source !== false) {
             GetterFactory::verifySource($source, $params);
@@ -258,8 +258,10 @@ class Report
             , ...$params
     ): self {
         $calculator ??= new CalculatorXS;
-        $this->initializeCalculator($calculator, $maxLevel);
-        $this->total->addItem(new Sheet($calculator), $name);
+        $maxLevel = $this->initializeCalculator($calculator, $maxLevel);
+        $sheet = new Sheet($calculator);
+        $this->cumulateMap[$sheet] = $maxLevel;
+        $this->total->addItem($sheet, $name);
         if ($keySource !== false) {
             // Don't pass params to prevent raising warning. The might be use for keySource an source.
             GetterFactory::verifySource($keySource, $keyParams);
@@ -283,8 +285,10 @@ class Report
             , ...$params
     ): self {
         $calculator ??= new CalculatorXS;
-        $this->initializeCalculator($calculator, $maxLevel);
-        $this->total->addItem(new FixedSheet($calculator, $fromKey, $toKey), $name);
+        $maxLevel = $this->initializeCalculator($calculator, $maxLevel);
+        $sheet = new FixedSheet($calculator, $fromKey, $toKey);
+        $this->cumulateMap[$sheet] = $maxLevel;
+        $this->total->addItem($sheet, $name);
         if ($keySource !== false) {
             // Don't pass params to prevent raising warning. The might be use for keySource an source.
             GetterFactory::verifySource($keySource, $keyParams);
@@ -300,15 +304,17 @@ class Report
      * Call the calculator initialize() method.
      * Verify that given maxlevel is not above current maxLevel
      * @param $maxLevel to be checked. Defaults to the current maxLevel.
+     * @return The integer of maxLevel.
      * @throws InvalidArgumentException
      */
-    private function initializeCalculator(AbstractCalculator $calculator, int|string|null $maxLevel): void {
+    private function initializeCalculator(AbstractCalculator $calculator, int|string|null $maxLevel): int {
         $maxLevel = $this->getLevel($maxLevel);
 
         if ($maxLevel > $this->currentLevel) {
             throw new InvalidArgumentException("MaxLevel $maxLevel must be equal or less maxLevel of dim({$this->maxLevel}).");
         }
         $calculator->initialize($this->getLevel(...), $maxLevel);
+        return $maxLevel;
     }
 
     /**
@@ -347,7 +353,9 @@ class Report
             $calculator = new CalculatorXS;
             $calculator->initialize($this->getLevel(...), $dim->lastLevel);
             $this->rc->addItem($calculator);
+            $this->cumulateMap[$calculator] = $dim->lastLevel;
         }
+
         reset($this->dims);
         $this->dim = current($this->dims);
         $this->executeAction('init');
@@ -586,8 +594,13 @@ class Report
                         $this->dim->row, $this->dim->rowKey);
             }
             // Cumulation is required even for skipped levels.
-            foreach ($this->toCumulate as $obj) {
-                $obj->cumulateToNextLevel($this->currentLevel);
+            foreach ($this->cumulateMap as $value) {
+                if ($this->currentLevel <= $this->cumulateMap->getInfo()) {
+                    $this->cumulateMap->current()->cumulateToNextLevel($this->currentLevel);
+                }
+            }
+            if ($this->out InstanceOf CumulateIF) {
+                $this->out->cumulateToNextLevel($this->currentLevel);
             }
         }
     }

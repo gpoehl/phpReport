@@ -138,17 +138,6 @@ abstract class AbstractCollector implements ArrayAccess
     }
 
     /**
-     * Don't call this method yourself. The report class takes care for calling.
-     * Cumulate computed values to next higher group level.
-     * Values of the current group level will be initialized with default values.
-     */
-    public function cumulateToNextLevel(int $level): void {
-        foreach ($this->items as $item) {
-            $item->cumulateToNextLevel($level);
-        }
-    }
-
-    /**
      * Extract ranges of items.
      *
      * Returns ranges of items located between start and end keys.

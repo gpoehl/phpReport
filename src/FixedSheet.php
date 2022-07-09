@@ -33,11 +33,21 @@ class FixedSheet extends AbstractCollector
         if (method_exists($calculator, 'getScale')) {
             $this->setScale($calculator->getScale());
         }
+        $this->maxLevel = $calculator->maxLevel;
         if (is_iterable($fromKey)) {
             $this->addArrayItems($calculator, $fromKey);
         } else {
             $this->addItems($calculator, $fromKey, $toKey);
         }
+    }
+
+      /**
+     * Cumulate computed values to next higher group level.
+     */
+    public function cumulateToNextLevel(int $level): void {
+            foreach ($this->items as $item) {
+                $item->cumulateToNextLevel($level);
+            }
     }
 
     // Implementation of arrayAccess interface. Don't allow creating new items

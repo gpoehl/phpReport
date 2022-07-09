@@ -23,14 +23,22 @@ use gpoehl\phpReport\Calculator\AbstractCalculator;
 class Sheet extends AbstractCollector
 {
 
-
     /**
      * @param AbstractCalculator $calculator Calculator used for each sheet item
      */
     public function __construct(private AbstractCalculator $calculator) {
-        if (method_exists($calculator, 'getScale')){
-             $this->setScale($calculator->getScale());
+        if (method_exists($calculator, 'getScale')) {
+            $this->setScale($calculator->getScale());
         }
+    }
+
+     /**
+     * Cumulate computed values to next higher group level.
+     */
+    public function cumulateToNextLevel(int $level): void {
+            foreach ($this->items as $item) {
+                $item->cumulateToNextLevel($level);
+            }
     }
 
     private function addItem($key) {
