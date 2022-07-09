@@ -102,7 +102,7 @@ class ReportTest extends TestCase
         $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep->out->get());
     }
 
-    public function testGroupsOnOneRow() {
+    public function testGroupsWithOneDataRow() {
         $rep = (new Report($this->getBase()))
                 ->group('a', 'firstGroup')
                 ->group('b', 'secondGroup')

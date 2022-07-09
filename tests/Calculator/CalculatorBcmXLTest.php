@@ -12,7 +12,7 @@ class CalculatorBcmXLTest extends TestCase
 {
 
     private $stack;
-    private $values = [70, 10/3, 4.5, '5.5', 0, null];
+    private $values = [70, 10 / 3, 4.5, '5.5', 0, null];
 
     public function setUp(): void {
         $this->stack = new CalculatorBcmXL(2);
@@ -36,15 +36,15 @@ class CalculatorBcmXLTest extends TestCase
         $this->assertSame(0, $this->stack->count(2));
         $this->assertSame(0, $this->stack->countNN(2));
         $this->assertSame(0, $this->stack->countNZ(2));
-         $this->assertSame(null, $this->stack->min(2));
+        $this->assertSame(null, $this->stack->min(2));
         $this->assertSame(null, $this->stack->max(2));
 
         // bcMath truncates decimals instead of rounding.
         $this->stack->add(2 * 10 / 3);
         $this->assertEquals('6.66', $this->stack->sum(2));
-
     }
-     public function testSub() {
+
+    public function testSub() {
         foreach ($this->values as $value) {
             $this->stack->sub($value);
         }
@@ -61,18 +61,6 @@ class CalculatorBcmXLTest extends TestCase
         $this->assertSame('0.00', $this->stack->max());
     }
 
-      // Cumulation only till maxLevel
-    public function testCumulateNotExistingLevel() {
-        $amount = 10 / 3;
-        $this->stack->add($amount);
-        $this->assertSame('3.33', $this->stack->sum(2));
-        // Level far above maxLevel.
-        $this->stack->cumulateToNextLevel(10);
-        $this->assertSame('3.33', $this->stack->sum(2));
-        $this->assertSame('0.00', $this->stack->sum(9));
-    }
-
-
     /**
      * Value is zero when level doesn't exist.
      */
@@ -81,7 +69,5 @@ class CalculatorBcmXLTest extends TestCase
         $this->assertEquals(null, $this->stack->min(99));
         $this->assertEquals(null, $this->stack->max(99));
     }
-
-
 
 }

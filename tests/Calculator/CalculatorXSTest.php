@@ -26,6 +26,7 @@ class CalculatorXSTest extends TestCase
         $this->stack->cumulateToNextLevel(2);
         $this->assertEquals(120, $this->stack->sum(1));
         $this->assertEquals(0, $this->stack->sum(2));
+         $this->assertEquals(0, $this->stack->sum(99));
     }
 
     public function testSub() {
@@ -41,17 +42,6 @@ class CalculatorXSTest extends TestCase
         $this->assertSame(2, $this->stack->sum(2));
         $this->assertSame(2, $this->stack->sum(1));
         $this->assertSame(2, $this->stack->sum(0));
-    }
-
-    // Cumulation only till maxLevel
-    public function testCumulateNotExistingLevel() {
-        $amount = 10;
-        $this->stack->add($amount);
-        $this->assertSame($amount, $this->stack->sum(2));
-        // Level far above maxLevel.
-        $this->stack->cumulateToNextLevel(10);
-        $this->assertSame($amount, $this->stack->sum(2));
-        $this->assertSame(0, $this->stack->sum(9));
     }
 
 }

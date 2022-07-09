@@ -38,17 +38,6 @@ class CalculatorBcmXSTest extends TestCase
         $this->assertEquals('-83.33', $this->stack->sum(2));
     }
 
-    // Cumulation only till maxLevel
-    public function testCumulateNotExistingLevel() {
-        $amount = 10 / 3;
-        $this->stack->add($amount);
-        $this->assertSame('3.33', $this->stack->sum(2));
-        // Level far above maxLevel.
-        $this->stack->cumulateToNextLevel(10);
-        $this->assertSame('3.33', $this->stack->sum(2));
-        $this->assertSame('0.00', $this->stack->sum(9));
-    }
-
     public function testNullScale() {
         $calc = new CalculatorBcmXS(null);
         $calc->initialize(fn($val) => $val ??= 0, 0);

@@ -34,9 +34,9 @@ class CalculatorTest extends TestCase
         $this->assertSame(0, $this->stack->count(2));
         $this->assertSame(0, $this->stack->countNN(2));
         $this->assertSame(0, $this->stack->countNZ(2));
-
     }
-     public function testSub() {
+
+    public function testSub() {
         foreach ($this->values as $value) {
             $this->stack->sub($value);
         }
@@ -48,18 +48,6 @@ class CalculatorTest extends TestCase
         $this->assertEquals(-24, $this->stack->avgNN());
         $this->assertEquals(-30, $this->stack->avgNZ());
     }
-
-    // Cumulation only till maxLevel
-    public function testCumulateNotExistingLevel() {
-        $amount = 10;
-        $this->stack->add($amount);
-        $this->assertSame($amount, $this->stack->sum());
-        // Level far above maxLevel.
-        $this->stack->cumulateToNextLevel(10);
-        $this->assertSame($amount, $this->stack->sum(2));
-        $this->assertSame(0, $this->stack->sum(9));
-    }
-
 
     /**
      * Value is zero when level doesn't exist.
@@ -74,7 +62,5 @@ class CalculatorTest extends TestCase
         $this->assertEquals(null, $this->stack->avgNN(99));
         $this->assertEquals(null, $this->stack->avgNZ(99));
     }
-
-
 
 }
