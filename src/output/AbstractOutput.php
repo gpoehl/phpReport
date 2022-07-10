@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace gpoehl\phpReport\output;
+namespace gpoehl\phpReport\Output;
 
 /**
  * Abstract class for output handlers

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace gpoehl\phpReport\getter;
+namespace gpoehl\phpReport\Getter;
 
 /**
  * Choose and instantiate a getter object which gets value.

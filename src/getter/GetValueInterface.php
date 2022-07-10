@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace gpoehl\phpReport\getter;
+namespace gpoehl\phpReport\Getter;
 
 /**
  * Interface to get value(s) related to a data row.

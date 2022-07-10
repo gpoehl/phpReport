@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @author    Günter Pöhl  <phpReport@gmx.net>
  */
 
-namespace gpoehl\phpReport\output;
+namespace gpoehl\phpReport\Output;
 
 /**
  * This class is experimental and not yet ready for use.

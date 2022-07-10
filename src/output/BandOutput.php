@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace gpoehl\phpReport\output;
+namespace gpoehl\phpReport\Output;
 
 use gpoehl\phpReport\CumulateIF;
 
@@ -33,10 +33,11 @@ use gpoehl\phpReport\CumulateIF;
  */
 class BandOutput extends AbstractOutput implements CumulateIF
 {
-/**
- * @var $output[][][]. $values saved via write() are stored indexed by
- * group level, band key. Last key is a non associated array key for added elements.
- */
+
+    /**
+     * @var $output[][][]. $values saved via write() are stored indexed by
+     * group level, band key. Last key is a non associated array key for added elements.
+     */
     private array $output = [];
     // Map action keys to numeric keys. Output will be sorted by this keys.
 

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace gpoehl\phpReport\getter;
+namespace gpoehl\phpReport\Getter;
 
 /**
  * Gets value from an object property where the data row is the object.
