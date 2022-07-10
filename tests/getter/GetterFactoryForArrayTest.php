@@ -7,8 +7,8 @@ declare(strict_types=1);
  */
 require_once __DIR__ . '/../Foo.php';
 
-use gpoehl\phpReport\getter\GetArrayItem;
-use gpoehl\phpReport\getter\GetterFactory;
+use gpoehl\phpReport\Getter\GetArrayItem;
+use gpoehl\phpReport\Getter\GetterFactory;
 use PHPUnit\Framework\TestCase;
 
 class GetterFactoryForArrayTest extends TestCase

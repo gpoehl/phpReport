@@ -7,9 +7,9 @@ declare(strict_types=1);
  */
 require_once __DIR__ . '/../Foo.php';
 
-use gpoehl\phpReport\getter\GetProperty;
-use gpoehl\phpReport\getter\GetRowProperty;
-use gpoehl\phpReport\getter\GetterFactory;
+use gpoehl\phpReport\Getter\GetProperty;
+use gpoehl\phpReport\Getter\GetRowProperty;
+use gpoehl\phpReport\Getter\GetterFactory;
 use PHPUnit\Framework\TestCase;
 
 class GetterFactoryTest extends TestCase
@@ -21,7 +21,7 @@ class GetterFactoryTest extends TestCase
     public function testVerifySource($expected, $source, ... $params) {
         $this->assertTrue(GetterFactory::verifySource($source, $params));
     }
-    
+
     /**
      * @dataProvider sourceProvider
      */
@@ -37,28 +37,28 @@ class GetterFactoryTest extends TestCase
             'base getter' => ['nobody', new GetRowProperty('name')],
             'closure' => ['nobody rowKey', fn($row, $rowKey) => ($row->name . ' ' . $rowKey)],
             'closure and param' => ['nobody is perfect', fn($row, $rowKey, $param) => ($row->name . ' ' . $param), 'is perfect'],
-            
-            'closure explicit with row' => ['nobody is perfect', [fn($row, $rowkey, ... $param) => ($row->name . ' ' . implode(' ', $param)), null, true], 'is', 'perfect'],   
+
+            'closure explicit with row' => ['nobody is perfect', [fn($row, $rowkey, ... $param) => ($row->name . ' ' . implode(' ', $param)), null, true], 'is', 'perfect'],
             'closure no row' => [10, [fn(... $param) => (array_sum($param))], 2,3,5],
             'closure no row long' => [10, [fn(... $param) => (array_sum($param)), null, false], 2,3,5],
-          
+
             'row obj property' => ['nobody', 'name'],
             'row obj method' => ['NOBODY', ['getUName']],
             'row obj method medium' => ['NOBODY', ['getUName', null]],
             'row obj method long' => ['NOBODY', ['getUName', null, null]],
             'row obj method param' => ['pubProp', ['getProperty'], 'pubProp'],
             'row obj method params' => ['nobody is perfect', ['say'], 'is', 'perfect'],
-            
-            'row static method' => [10, ['staticAdd'],2, 3, 5], 
-            'row static method with source[1]' => [10, ['staticAdd', null],2, 3, 5], 
-            'row static method with full' => [10, ['staticAdd', null, null], 2, 3, 5],  
+
+            'row static method' => [10, ['staticAdd'],2, 3, 5],
+            'row static method with source[1]' => [10, ['staticAdd', null],2, 3, 5],
+            'row static method with full' => [10, ['staticAdd', null, null], 2, 3, 5],
             'row static method with row' => ['Hello nobody', ['sayHello', null, true]],
-            
+
             'row constant' => ['pubConst', ['PUBCONST', null, 'const']],
-            
+
             'row static property same name as const' => ['pubStat', ['pubStat', null, 'stat']],
             'row const same name as static prop' => ['constPubStat', ['pubStat', null, 'const']],
-            
+
             'row property same name as const and stat' => ['pubProp', 'pubProp'],
             'row constant same name as property' => ['constPubProp', ['pubProp', null, 'const']],
 
@@ -66,7 +66,7 @@ class GetterFactoryTest extends TestCase
             'row method same name as property' => ['funcFoo', ['foo']],
         ];
     }
-    
+
       /**
      * @dataProvider externalSourceProvider
      */
@@ -76,23 +76,23 @@ class GetterFactoryTest extends TestCase
         $getter = $objFactory->getGetter($source, $params);
         $this->assertSame($expected, $getter->getValue($bar, 'rowKey'));
     }
-    
+
       public function externalSourceProvider() {
         $foo = new Foo();
         return [
             'base getter' => ['nobody', new GetProperty([$foo, 'name'])],
-          
+
             'row obj property' => ['nobody', ['name', $foo]],
             'row obj method' => ['NOBODY', ['getUName', $foo, false]],
             'row obj method param' => ['pubProp', ['getProperty', $foo, false], 'pubProp'],
-            
-            'row static method' => [10, ['staticAdd', $foo, false],2, 3, 5], 
+
+            'row static method' => [10, ['staticAdd', $foo, false],2, 3, 5],
             'row static method with row' => ['Hello anonymous', ['sayHello', $foo, true]],
-            
+
             'row constant' => ['pubConst', ['PUBCONST', $foo, 'const']],
         ];
     }
-    
+
     public function testDefaultTarget() {
         $bar = new class(){public $name = 'anonymous';};
         $objFactory = new GetterFactory(true, new foo('target'), null);
@@ -101,7 +101,7 @@ class GetterFactoryTest extends TestCase
         $getter = $objFactory->getGetter(['say', true, false], ['is', 'default']);
         $this->assertSame('target is default', $getter->getValue($bar, 'rowKey'));
     }
-    
+
      /**
      * @dataProvider InvalidSourceExceptionProvider
      */
@@ -111,7 +111,7 @@ class GetterFactoryTest extends TestCase
         $this->expectErrorMessageMatches($expected);
         $getter = $objFactory->getGetter($source, $params);
     }
-    
+
     public function InvalidSourceExceptionProvider() {
         return [
             'Class member (no property) is not const or stat' => ['/^Invalid source selector.*ABC/', ['ABC',null,'xx']],
@@ -126,19 +126,19 @@ class GetterFactoryTest extends TestCase
         $this->expectErrorMessageMatches($expected);
         GetterFactory::verifySource($source, $params);
     }
-    
+
     public function SourceExceptionProvider() {
         return [
             'Object not a GetValueInterface' =>['/^Source object must implement the GetValueInterface/', new class(){}, 1, 2],
             'Invalid scalar source' =>['/^Scalar source is not/', 3.7, 1, 2],
-            'empty array' => ['/empty array/i', [], [1, 2]], 
+            'empty array' => ['/empty array/i', [], [1, 2]],
             'Name element is Null' =>['/^Source name element is null/', [null, 'ABC', false]],
             'Source with more than 3 elements' => ['/4 elements given, max. 3 expected/', ['a',2,3,4]],
-            'Closure with 4 source elements' =>['/4 elements given, max. 3 expected/', [fn() => (null),'x', 'y', 'z'], 1, 2],     
+            'Closure with 4 source elements' =>['/4 elements given, max. 3 expected/', [fn() => (null),'x', 'y', 'z'], 1, 2],
             'Class member (no property) is not const or stat' => ['/^Invalid source param/', ['ABC',null,'xx']],
             ];
     }
-    
+
       /**
      * @dataProvider SourceWarningProvider
      */
@@ -147,20 +147,20 @@ class GetterFactoryTest extends TestCase
         $this->expectWarningMessageMatches($expected);
         GetterFactory::verifySource($source, $params);
     }
-    
-    
+
+
     public function SourceWarningProvider() {
        return [
            'Row field has parameters' =>['/^Parameters will be ignored.*ABC\'\.$/', 'ABC', 1, 2],
            'Closure with 2 source elements' =>['/^Second .* will be ignored/', [fn() => (null),'x'], [1, 2]],
-          
+
            'Object or class property has parameter null' =>['/^Parameters will be ignored.*object property.*ABC\'\.$/', ['ABC', 'className', null], null],
            'Object or class property has parameter' =>['/^Parameters will be ignored.*object property.*ABC\'\.$/', ['ABC', 'className', null], 1],
            'Const has param' => ['/^Parameters will be ignored.*constant.*ABC\'\.$/', ['ABC',null,'const'], 1],
             'Const has param' => ['/^Parameters will be ignored.*static.*ABC\'\.$/', ['ABC',null,'stat'], 1],
            ];
     }
-    
+
 
     /**
      * @dataProvider sheetProvider
@@ -178,5 +178,5 @@ class GetterFactoryTest extends TestCase
             'With sourceParams' => [['nobody' => 789], 'name', ['getProperty'], [], 'value'],
         ];
     }
-    
+
 }

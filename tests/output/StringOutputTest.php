@@ -11,7 +11,7 @@ class StringOutputTest extends TestCase
 {
 
     public function setup(): void {
-        $this->mock = new \gpoehl\phpReport\output\StringOutput();
+        $this->mock = new \gpoehl\phpReport\Output\StringOutput();
     }
 
     public function testWrite() {
