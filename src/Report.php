@@ -26,10 +26,9 @@ use InvalidArgumentException;
  * Handles group changes, computes values and joins multiple data sources.
  * Actions will be invoked on defined events.
  */
-class Report
-{
+class Report {
 
-    const VERSION = '3.1.0';
+    const VERSION = '3.1.1';
     // Rules to execute actions
     const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
     const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
@@ -411,8 +410,10 @@ class Report
         $this->detailAction->setRunTimeTarget(...$params);
         $this->detailFooterAction->setRunTimeTarget(...$params);
         foreach ($this->groups->items as $group) {
+            $group->afterAction->setRunTimeTarget(...$params);
             $group->headerAction->setRunTimeTarget(...$params);
             $group->footerAction->setRunTimeTarget(...$params);
+            $group->afterAction->setRunTimeTarget(...$params);
         }
         // Exclude last dimension. Has no data from data() method.
         foreach ($this->dims as $dim) {
@@ -589,7 +590,6 @@ class Report
                 }
                 $this->execute($group->footerAction, $this->dim->groupValues[$this->currentLevel],
                         $this->dim->row, $this->dim->rowKey);
-
                 $this->execute($group->afterAction, $this->dim->groupValues[$this->currentLevel],
                         $this->dim->row, $this->dim->rowKey);
             }
@@ -851,5 +851,4 @@ class Report
         $groupLevel ??= $this->currentLevel;
         return $this->groups->items[$groupLevel]->name;
     }
-
 }

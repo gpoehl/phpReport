@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 class BandOutputTest extends TestCase
 {
 
+    private BandOutput $mock;
+    
     public function setup(): void {
         $this->mock = new BandOutput();
     }

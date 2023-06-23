@@ -5,13 +5,17 @@ declare(strict_types=1);
 /**
  * Unit test of Stringoutput class
  */
+
+use gpoehl\phpReport\Output\StringOutput;
 use PHPUnit\Framework\TestCase;
 
 class StringOutputTest extends TestCase
 {
 
+    private StringOutput $mock;
+    
     public function setup(): void {
-        $this->mock = new \gpoehl\phpReport\Output\StringOutput();
+        $this->mock = new StringOutput();
     }
 
     public function testWrite() {

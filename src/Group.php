@@ -16,15 +16,15 @@ namespace gpoehl\phpReport;
  * Group class to handle group changes
  */
 class Group {
- 
+
     // @var The group header action to be executed before the headerAction
-    public Action $beforeAction;  
+    public Action $beforeAction;
     // @var The group header action to be executed on begin of a group change
-    public Action $headerAction;  
+    public Action $headerAction;
     // @var The group footer action to be executed after all group members are handled.
     public Action $footerAction;
     // @var The group header action to be executed after the footerAction
-    public Action $afterAction;  
+    public Action $afterAction;
 
     /**
      * 
@@ -36,12 +36,13 @@ class Group {
      * @param array $params Parameters passed unpacked when $valueSource is a callable.
      * Will be unset when dimension instatiates getter class
      */
-    public function __construct(public string $name, public int $level, public int $dimID, public $valueSource,  public array $params) {
-      if ($level < 1) {
+    public function __construct(public string $name, public int $level, public int $dimID, public $valueSource, public array $params) {
+        if ($level < 1) {
             throw new \InvalidArgumentException("Grouplevel '$level' must not be less one");
         }
         if ($dimID < 0) {
             throw new \InvalidArgumentException("DimID '$dimID' must not be less zero");
         }
     }
+
 }

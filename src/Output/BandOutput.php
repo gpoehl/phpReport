@@ -29,18 +29,18 @@ use gpoehl\phpReport\CumulateIF;
  * Each group level can have it's own set of bands.
  *
  * This class runs at nearly the same speed as the StringOutput class but needs
- * more peak memory when strings are build from array elements.
+ * more peak memory while strings are build from array elements.
  */
 class BandOutput extends AbstractOutput implements CumulateIF
 {
 
     /**
      * @var $output[][][]. $values saved via write() are stored indexed by
-     * group level, band key. Last key is a non associated array key for added elements.
+     * group level, band key. Last key is a non associated key for added output.
      */
     private array $output = [];
+    
     // Map action keys to numeric keys. Output will be sorted by this keys.
-
     public array $actionKeyMapper = [
         'init' => self::HEADER,
         'totalHeader' => self::HEADER,
@@ -73,9 +73,9 @@ class BandOutput extends AbstractOutput implements CumulateIF
     /**
      * Write (append) a value to output
      * @param mixed $value The value to be written.
-     * Anything that can be used by the implode command.
+     * Anything that is accepted by the php implode command.
      * @param int $level The group level.
-     * @param $bandKey The band key within a group.
+     * @param $bandKey The band key within a group. Defalults to the DATA band.
      */
     public function write($value, int $level, int $bandKey = self::DATA) {
         $this->output[$level][$bandKey][] = $value;
@@ -119,15 +119,15 @@ class BandOutput extends AbstractOutput implements CumulateIF
     /**
      * Get the output value as string
      * @param int|null $level The requested group level. All data belonging
-     * to this level (having a level > the requested level) will also be returned
+     * to this level (having a level > the requested level) will be returned
      * when the $bandKey is null.
+     * If $bandKey is not null only the given $level with the given $bandkey
+     * will be returned.
      * @param $bandKey The band key for which the output will be selected.
-     * When given only the level which equals the given level will be returned.
+     * The bandKey belongs only to the $level.
      * @return string|null The prepared output string
      */
     public function get(int $level = 0, ?int $bandKey = null): ?string {
-        $level ??= 0;
-
         // When key is set only the specified array element will be returned
         if ($bandKey !== null) {
 //            $bandKey = $this->actionKeyMapper[$bandKey] ?? $bandKey;

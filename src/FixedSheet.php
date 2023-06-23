@@ -21,7 +21,10 @@ use gpoehl\phpReport\Calculator\AbstractCalculator;
  * Calculators are clones of the calculator given at instantiation.
  */
 class FixedSheet extends AbstractCollector
+
 {
+
+//private readonly int $maxLevel;
 
     /**
      * @param AbstractCaclculator $calculator An instance of a calculator class.
@@ -33,7 +36,7 @@ class FixedSheet extends AbstractCollector
         if (method_exists($calculator, 'getScale')) {
             $this->setScale($calculator->getScale());
         }
-        $this->maxLevel = $calculator->maxLevel;
+//        $this->maxLevel = $calculator->maxLevel;
         if (is_iterable($fromKey)) {
             $this->addArrayItems($calculator, $fromKey);
         } else {

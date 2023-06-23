@@ -17,11 +17,12 @@ declare(strict_types=1);
  */
 class Foo
 {
+    public $value;
 
     public $pubProp = 'pubProp';
     protected $protProp = 'protProp';
     private $privProp = 'privProp';
-    
+
     public static $pubStat = 'pubStat';
     protected static $protStat = 'protStat';
     private static $privStat = 'privStat';
@@ -29,20 +30,19 @@ class Foo
     public const PUBCONST = 'pubConst';
     protected const PROTCONST = 'protConst';
     private const PRIVCONST = 'privConst';
-    
+
     // Const with same name as properties / static properties
     public const pubProp = 'constPubProp';
     public const pubStat = 'constPubStat';
-    
+
     public string $closure;
-    
+
     // Property and method have the same name
     public $foo = 'foo';
     public function foo() {
         return 'funcFoo';
     }
 
-    // Declare new property on the fly
     public function __construct(public string $name = 'nobody', $value = 'dear') {
         $this->value = $value;
     }
@@ -51,17 +51,17 @@ class Foo
     public function getUName() {
         return strtoupper($this->name);
     }
-    
+
     // Method with one parameter
     public function getProperty($propertyName) {
         return $this->$propertyName;
     }
-    
+
      // Method with more parameters
     public function say(... $values) {
          return $this->name . ' ' . implode (' ', $values);
     }
-    
+
     // method expecting $row and $rowKey
     public function withRow(array|object $row, string $rowKey) {
         $row = (object) $row;
@@ -72,7 +72,7 @@ class Foo
         $row = (object) $row;
         return $word . ' ' . $this->name . ' and ' . $row->name;
     }
-    
+
     /**
      * Static methods
      */
@@ -80,11 +80,11 @@ class Foo
     public static function staticNoParm() {
         return 'stat method';
     }
-    
+
     public static function staticAdd(... $values) {
         return array_sum($values);
     }
-    
+
     public static function sayHello(array|object $row, $rowKey) {
         $row = (object) $row;
         return 'Hello ' . $row->name;
