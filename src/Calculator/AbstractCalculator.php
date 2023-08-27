@@ -20,6 +20,7 @@ abstract class AbstractCalculator
 
     public readonly int $maxLevel;
     protected readonly \Closure $getLevel;
+//      public readonly \Closure $getLevel;
     /* @var $total[] Cumulatd values indexed by level */
     protected $total = [];
 
@@ -64,7 +65,8 @@ abstract class AbstractCalculator
     /**
      * Get the sum of calculated values.
      * @param $level The requested level. Defaults to the current level.
-     * When level is higher then $maxLevel 0 will be returned without any notice.
+     * Note: When calculator isn't instantiated from Report class make sure that $level 
+     * is <= $maxLevel or the returned value will be zero. 
      * @return  The running total of calculated values at given level.
      */
     abstract public function sum(int|string|null $level = null) : int|float|string;

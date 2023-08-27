@@ -30,6 +30,7 @@ class CalculatorBcm extends CalculatorBcmXS
      * @param $scale Number of digits after the decimal place for math functions.
      * Defalults to 2 (instead of 0 php defalult of null).
      * See php bcmath documentation for details.
+     * Note: scale truncates the value. It does not round the value!
      */
     public function __construct(int|null $scale = 2) {
         $this->setScale($scale);

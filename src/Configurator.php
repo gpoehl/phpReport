@@ -35,13 +35,13 @@ class Configurator
     public array $actions = [
         'init' => 'init',
         'totalHeader' => '%Header',
-        'beforeGroup' => '%BeforeGroup',
+        'beforeGroup' => '%Before',
         'groupHeader' => '%Header',
         'detailHeader' => 'detailHeader',
         'detail' => 'detail',
         'detailFooter' => 'detailFooter',
         'groupFooter' => '%Footer',
-        'afterGroup' => '%AfterGroup',
+        'afterGroup' => '%After',
         'totalFooter' => '%Footer',
         'close' => 'close',
         'noData' => '<br><strong>No data found</strong><br>', // Dimension = 0
@@ -151,7 +151,7 @@ class Configurator
         foreach ($actions as $key => $baseAction) {
             // Make sure method key is valid
             if (!isset($this->actions[$key])) {
-                throw new InvalidArgumentException("Action key '$key' is invalid");
+                throw new \InvalidArgumentException("Action key '$key' is invalid");
             }
             $this->actions[$key] = $baseAction;
         }

@@ -45,8 +45,10 @@ TABLE1;
         'close' => '#ccff33',
         'totalHeader' => '#b4faa3',
         'totalFooter' => '#b4faa3',
+        'beforeGroup' => '#93db00',
         'groupHeader' => '#93db00',
         'groupFooter' => '#93db00',
+        'afterGroup' => '#93db00',
         'detailHeader' => '#ffb76f',
         'detail' => '#ffb76f',
         'detailFooter' => '#ffb76f',
@@ -110,7 +112,7 @@ TABLE1;
     public function magic(): string {
         $method = $this->rep->currentAction->key;
         return match ($method) {
-            'groupHeader', 'groupFooter' =>
+           'beforeGroup', 'afterGroup', 'groupHeader', 'groupFooter' =>
             $this->$method(
                     $this->rep->getGroupValue(),
                     $this->rep->getRow(),

@@ -406,21 +406,24 @@ class Report {
      */
     private function setRunTimeActions(): void {
         $params = [$this->target, $this->prototype, $this->callOption];
-        $this->detailHeaderAction->setRunTimeTarget(...$params);
-        $this->detailAction->setRunTimeTarget(...$params);
-        $this->detailFooterAction->setRunTimeTarget(...$params);
+       
+        // Group actions
         foreach ($this->groups->items as $group) {
-            $group->afterAction->setRunTimeTarget(...$params);
+            $group->beforeAction->setRunTimeTarget(...$params);
             $group->headerAction->setRunTimeTarget(...$params);
             $group->footerAction->setRunTimeTarget(...$params);
             $group->afterAction->setRunTimeTarget(...$params);
         }
-        // Exclude last dimension. Has no data from data() method.
+        // Dim actions. Actions for last dimension are set in main class.
         foreach ($this->dims as $dim) {
             if (!$dim->isLastDim) {
                 $dim->noDataAction->setRunTimeTarget(...$params);
                 $dim->noGroupChangeAction->setRunTimeTarget(...$params);
                 $dim->detailAction->setRunTimeTarget(...$params);
+            } else {
+                $this->detailHeaderAction->setRunTimeTarget(...$params);
+                $this->detailAction->setRunTimeTarget(...$params);
+                $this->detailFooterAction->setRunTimeTarget(...$params);
             }
         }
     }
@@ -449,6 +452,7 @@ class Report {
         if (!$action->runtimeTarget) {
             return;
         }
+        // execute action
         if ($action->targetKey === Action::STRING) {
             $output = $action->target;
         } else {
@@ -456,7 +460,7 @@ class Report {
             $params[] = $action->level;
             $output = ($action->runtimeTarget)(... $params);
         }
-
+        // Cancel execution when output equals false or write output to output object 
         if ($output !== null) {
             if ($output === false && $action->key === 'beforeGroup') {
                 return false;
@@ -524,7 +528,7 @@ class Report {
                     $this->detailAction->target :
                     ($this->detailAction->runtimeTarget)($row, $rowKey, $this->currentLevel);
             if ($output !== null) {
-                // trigger_error() for details makes no sense. Condition not checked.
+                // Action 'trigger_error()' for details makes no sense. Condition not checked.
                 $this->out->write($output, $this->currentLevel, $this->detailAction->outputKey);
             }
         }
@@ -753,8 +757,8 @@ class Report {
      * or asked for group levels not higher than the current one.
      */
     public function isLast(int|string|null $level = null): bool {
-        if ($this->currentAction->key !== 'groupFooter') {
-            throw new InvalidArgumentException('isLast() can only be answered in groupFooters');
+        if ($this->currentAction->key !== 'groupFooter' && $this->currentAction->key !== 'afterGroup') {
+            throw new InvalidArgumentException('isLast() can only be answered in groupFooter or afterGroup methods. Called from ' . $this->currentAction->key);
         }
         if ($level === null) {
             $level = $this->currentLevel - 1;

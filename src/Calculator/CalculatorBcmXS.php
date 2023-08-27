@@ -18,25 +18,26 @@ namespace gpoehl\phpReport\Calculator;
  * Results are saved at $maxLevel levels to provide totals and subtotals.
  * @see CalculatorBcm or CalculatorBcmXL classes for enhanced functionality.
  */
-class CalculatorBcmXS extends AbstractCalculator
-{
-use PrecisionTrait;
+class CalculatorBcmXS extends AbstractCalculator {
+
+    use PrecisionTrait;
+
     /**
      * @param $scale Number of digits after the decimal place in the result.
      * Default to 2 (instead of 0 php defalult of null).
      * See php bcmath documentation for details.
      */
     public function __construct(int|null $scale = 2) {
-         $this->setScale($scale);
+        $this->setScale($scale);
     }
 
-    public function initialize(\Closure $getLevel, int $maxLevel) :void {
+    public function initialize(\Closure $getLevel, int $maxLevel): void {
         parent::initialize($getLevel, $maxLevel);
         $this->total = array_fill(0, $this->maxLevel + 1, $this->zero);
     }
 
     public function setInitialValue(int|float|string $value): void {
-        $this->total[($this->getLevel)()] = bcadd('0', (string)$value, $this->scale);
+        $this->total[($this->getLevel)()] = bcadd('0', (string) $value, $this->scale);
     }
 
     public function add(int|float|string|null $value): void {
@@ -48,19 +49,18 @@ use PrecisionTrait;
     }
 
     public function cumulateToNextLevel(int $level): void {
-            $next = $level - 1;
-            $this->total[$next] = bcadd($this->total[$next], $this->total[$level], $this->scale);
-            $this->total[$level] = $this->zero;
+        $next = $level - 1;
+        $this->total[$next] = bcadd($this->total[$next], $this->total[$level], $this->scale);
+        $this->total[$level] = $this->zero;
     }
 
     public function sum(int|string|null $level = null): string {
-        // All values from the current level down to the lowest level needs to be summarized
-        $wrk = array_slice($this->total, ($this->getLevel)($level));
+        // Add all values from $level down to $maxLevel
         $sum = $this->zero;
-        foreach ($wrk as $value) {
-            $sum = bcadd($sum, $value, $this->scale);
-        }
+        $start =  ($this->getLevel)($level);
+        for ($i = $start; $i<= $this->maxLevel; $i++){
+            $sum = bcadd($sum, $this->total[$i], $this->scale);
+        } 
         return $sum;
     }
-
 }

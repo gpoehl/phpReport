@@ -85,7 +85,7 @@ abstract class AbstractCollector implements ArrayAccess
     }
 
     public function offsetUnset($offset): void {
-        trigger_error("Unset of collector item $offset is not supported.", E_USER_NOTICE);
+        throw new \Exception("Unset of collector item $offset is not supported.");
     }
 
     /**
@@ -118,7 +118,7 @@ abstract class AbstractCollector implements ArrayAccess
         if ($foundKey !== false) {
             return $this->items[$foundKey];
         }
-        trigger_error("Item '$key' does not exist.", E_USER_NOTICE);
+        throw new \InvalidArgumentException("Item '$key' doesn't exist.");
     }
 
     /**
@@ -174,7 +174,7 @@ abstract class AbstractCollector implements ArrayAccess
             } elseif (isset($this->altKeys[$range], $this->items[$this->altKeys[$range]])) {
                 $collector->items[$this->altKeys[$range]] = $this->items[$this->altKeys[$range]];
             } else {
-                trigger_error("Item '$range' doesn't exist.", E_USER_NOTICE);
+                throw new \InvalidArgumentException("Item '$range' doesn't exist.");
             }
         }
         return $collector;
@@ -194,7 +194,7 @@ abstract class AbstractCollector implements ArrayAccess
         if (isset($this->altKeys[$key], $this->items[$this->altKeys[$key]])) {
             return $keyOffsets[$this->altKeys[$key]];
         }
-        throw new InvalidArgumentException("Key '$key' doesn't exist.");
+        throw new InvalidArgumentException("Item '$key' doesn't exist.");
     }
 
     /**
