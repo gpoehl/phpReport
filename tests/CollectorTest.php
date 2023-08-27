@@ -8,9 +8,9 @@ declare(strict_types=1);
 use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\Calculator\CalculatorXS;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-class CollectorTest extends TestCase
-{
+final class CollectorTest extends TestCase {
 
     public $stack;
     public $calculator;
@@ -21,23 +21,19 @@ class CollectorTest extends TestCase
         $this->calculator->initialize(fn($val) => $val ??= 0, 0);
     }
 
-    /**
-     * @dataProvider addItemKeyProvider
-     */
-    public function testAddItem($expected, $key) {
+    #[DataProvider('addItemKeyProvider')]
+    public function testAddItem($expected, $key): void {
         $this->stack->addItem($this->calculator, $key);
         $this->assertSame($expected, \array_key_first($this->stack->items));
     }
 
-    /**
-     * @dataProvider addItemKeyProvider
-     */
-    public function testAddItemByArrayNotation($expected, $key) {
+    #[DataProvider('addItemKeyProvider')]
+    public function testAddItemByArrayNotation($expected, $key): void {
         $this->stack[$key] = $this->calculator;
         $this->assertSame($expected, \array_key_first($this->stack->items));
     }
 
-    public function addItemKeyProvider() {
+    public static function addItemKeyProvider(): array {
         return [
             [1, 1],
             ['a', 'a'],
@@ -46,28 +42,24 @@ class CollectorTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider addDuplicateItemKeyProvider
-     */
-    public function testAddDuplicate($key) {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectErrorMessage("Key '$key' already exists.");
+    #[DataProvider('addDuplicateItemKeyProvider')]
+    public function testAddDuplicate($key): void {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Key '$key' already exists.");
         $this->stack->addItem($this->calculator, 1);
         $this->stack->setAltKey('a', 1);
         $this->stack->addItem($this->calculator, $key);
     }
 
-    public function addDuplicateItemKeyProvider() {
+    public static function addDuplicateItemKeyProvider(): array {
         return [
             'Duplicate item key' => [1],
             'Duplicate alternate key' => ['a'],
         ];
     }
 
-    /**
-     * @dataProvider getItemKeyProvider
-     */
-    public function testGetItem($itemKey, $altKey) {
+    #[DataProvider('getItemKeyProvider')]
+    public function testGetItem($itemKey, $altKey): void {
         $this->setMultipleItemsAndAltKeys();
         $this->stack->getItem($itemKey);
         $this->stack->getItem($altKey);
@@ -84,7 +76,7 @@ class CollectorTest extends TestCase
      * Items with key 0 - 2, 4, and x will be assigned.
      * AltKeys are from a to e.
      */
-    public function setMultipleItemsAndAltKeys() {
+    public function setMultipleItemsAndAltKeys(): void {
         $item1 = $this->calculator;
         $item2 = clone ($item1);
         $item3 = clone ($item1);
@@ -100,7 +92,7 @@ class CollectorTest extends TestCase
         $this->stack->setAltKey('e', 'x');
     }
 
-    public function getItemKeyProvider() {
+    public static function getItemKeyProvider(): array {
         return [
             [0, 'a'],
             [1, 'b'],
@@ -109,37 +101,31 @@ class CollectorTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider getNonExistingItemKeyProvider
-     */
-    public function testGetNotExist($key) {
+    #[DataProvider('getNonExistingItemKeyProvider')]
+    public function testGetNotExist($key): void {
         $this->stack[1] = $this->calculator;
-        $this->expectNotice();
-        $this->expectNoticeMessage("Item '$key' does not exist.");
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Item '$key' doesn't exist.");
         $this->stack->getItem($key);
     }
 
-    /**
-     * @dataProvider getNonExistingItemKeyProvider
-     */
-    public function testGetNotExistByArrayNotation($key) {
+    #[DataProvider('getNonExistingItemKeyProvider')]
+    public function testGetNotExistByArrayNotation($key): void {
         $this->stack[1] = $this->calculator;
-        $this->expectNotice();
-        $this->expectNoticeMessage("Item '$key' does not exist.");
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Item '$key' doesn't exist.");
         $this->stack[$key];
     }
 
-    /**
-     * @dataProvider getNonExistingItemKeyProvider
-     */
-    public function testGetNotExistByMagicMethod($key) {
+    #[DataProvider('getNonExistingItemKeyProvider')]
+    public function testGetNotExistByMagicMethod($key): void {
         $this->stack[1] = $this->calculator;
-        $this->expectNotice();
-        $this->expectNoticeMessage("Item '$key' does not exist.");
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Item '$key' doesn't exist.");
         $this->stack->$key;
     }
 
-    public function getNonExistingItemKeyProvider() {
+    public static function getNonExistingItemKeyProvider(): array {
         return [
             [-1],
             [9],
@@ -147,7 +133,7 @@ class CollectorTest extends TestCase
         ];
     }
 
-    public function testCollectorInCollector() {
+    public function testCollectorInCollector(): void {
         $item1 = clone ($this->calculator);
         $item2 = clone ($item1);
         $this->stack->addItem($item1);
@@ -172,17 +158,15 @@ class CollectorTest extends TestCase
         $this->assertSame([3, 4, 'multi' => 21], $this->stack->between([0, 1], 'multi')->sum(null, 1), "between from collector key between 0 and 1 plus 'multi' as array");
     }
 
-    /**
-     * @dataProvider rangeParamsProvider
-     */
-    public function testRange($expected, ... $params) {
+    #[DataProvider('rangeParamsProvider')]
+    public function testRange($expected, ... $params): void {
         $this->setMultipleItemsAndAltKeys();
         $this->stack->setAltKeys(['A1' => 1, 'A2' => 2, 'A3' => 3, 'A4' => 4, 'A5' => 5]);
         $collector = $this->stack->range(... $params);
         $this->assertSame($expected, array_keys($collector->items));
     }
 
-    public function rangeParamsProvider() {
+    public static function rangeParamsProvider(): array {
         return [
             'Range' => [[0, 1, 2, 4], [0, 4]],
             'Single items' => [[1, 4, 'x'], 1, 4, 'e'],
@@ -197,49 +181,43 @@ class CollectorTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider missingRangeParamsProvider
-     */
-    public function testSliceMissingRangeKeys($expected, ... $params) {
+    #[DataProvider('missingRangeParamsProvider')]
+    public function testSliceMissingRangeKeys($expected, ... $params): void {
         $this->setMultipleItemsAndAltKeys();
-        $this->expectExceptionMessage("Key '$expected' doesn't exist.");
+        $this->expectExceptionMessage("Item '$expected' doesn't exist.");
         $this->stack->range(... $params);
     }
 
-    public function missingRangeParamsProvider() {
+    public static function missingRangeParamsProvider(): array {
         return [
             'Range value1 not found' => [3, [3, 4]],
             'Range value2 not found' => [8, [1, 8]],
         ];
     }
 
-    /**
-     * @dataProvider missingSingleItemsParamsProvider
-     */
-    public function testSliceMissingSingleItems($expected, ... $params) {
+    #[DataProvider('missingSingleItemsParamsProvider')]
+    public function testSliceMissingSingleItems($expected, ... $params): void {
         $this->setMultipleItemsAndAltKeys();
-        $this->expectNotice();
-        $this->expectNoticeMessage("Item '$expected' doesn't exist.");
-        $range = $this->stack->range(... $params);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Item '$expected' doesn't exist.");
+        $this->stack->range(... $params);
     }
 
-    public function missingSingleItemsParamsProvider() {
+    public static function missingSingleItemsParamsProvider(): array {
         return [
             [7, 2, 'd', 7, 'notExist'],
             ['notExist', 2, 'd', 'notExist'],
         ];
     }
 
-    /**
-     * @dataProvider betweenParamsProvider
-     */
-    public function testBetween($expected, ... $params) {
+    #[DataProvider('betweenParamsProvider')]
+    public function testBetween($expected, ... $params): void {
         $this->setMultipleItemsAndAltKeys();
         $collector = $this->stack->between(... $params);
         $this->assertSame($expected, array_keys($collector->items));
     }
 
-    public function betweenParamsProvider() {
+    public static function betweenParamsProvider(): array {
         return [
             'FromTo' => [[1, 2, 4], [1, 4]],
             'Single items' => [[2, 4], 2, 4],
@@ -251,10 +229,8 @@ class CollectorTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider filterParamsProvider
-     */
-    public function testFilter($expected, $param) {
+    #[DataProvider('filterParamsProvider')]
+    public function testFilter($expected, $param): void {
         $this->setMultipleItemsAndAltKeys();
         unset($this->stack->items['x']);
         $this->stack[3] = clone $this->calculator;
@@ -262,7 +238,7 @@ class CollectorTest extends TestCase
         $this->assertSame($expected, array_keys($collector->items));
     }
 
-    public function filterParamsProvider() {
+    public static function filterParamsProvider(): array {
         return [
             'Even Keys' => [[0, 2, 4], fn($key, $item) => !($key % 2)],
             'Odd Keys' => [[1, 3], fn($key, $item) => ($key % 2)],
@@ -270,22 +246,19 @@ class CollectorTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider cmdParamsProvider
-     */
-    public function testCmd($expected, $cmd, ...$params) {
+    #[DataProvider('cmdParamsProvider')]
+    public function testCmd($expected, $cmd, ...$params): void {
         $this->setMultipleItemsAndAltKeys();
         unset($this->stack->items['x']);
         $collector = $this->stack->cmd($cmd, ...$params);
         $this->assertSame($expected, array_keys($collector->items));
     }
 
-    public function cmdParamsProvider() {
+    public static function cmdParamsProvider(): array {
         return [
             'Sort by index' => [[0, 1, 2, 4], 'ksort'],
             'Sort by index desc' => [[4, 2, 1, 0], 'krsort'],
             'Filter even keys' => [[0, 2, 4], 'array_filter', fn($key) => !($key % 2), ARRAY_FILTER_USE_KEY],
         ];
     }
-
 }

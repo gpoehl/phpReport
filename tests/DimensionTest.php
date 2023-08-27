@@ -9,9 +9,9 @@ use gpoehl\phpReport\Dimension;
 use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\Group;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-class DimensionTest extends TestCase
-{
+final class DimensionTest extends TestCase {
 
     public $stack;
     public $total;
@@ -21,10 +21,8 @@ class DimensionTest extends TestCase
         $this->stack = new Dimension(1, 4, 'DefaultTarget');
     }
 
-    /**
-     * @dataProvider rowProvider
-     */
-    public function testGetGroupValues($row) {
+    #[DataProvider('rowProvider')]
+    public function testGetGroupValues($row): void {
         $group1 = new Group('A', 5, 1, 'Attr1', []);
         $this->stack->groups[] = $group1;
         $group2 = new Group('B', 6, 1, 'Attr2', []);
@@ -32,10 +30,8 @@ class DimensionTest extends TestCase
         $this->assertSame([5 => 'a', 'b'], $this->stack->getGroupValues($row, []));
     }
 
-    /**
-     * @dataProvider rowProvider
-     */
-    public function testGetJoinedData($row) {
+    #[DataProvider('rowProvider')]
+    public function testGetJoinedData($row): void {
         $this->stack->setJoinSource('Attr5', []);
         $this->stack->getGroupValues($row);   // Required to setGetters()
 
@@ -43,12 +39,11 @@ class DimensionTest extends TestCase
         $this->assertSame([['x'], ['y'], ['z']], $this->stack->getJoinedData());
     }
 
-    public function rowProvider() {
+    public static function rowProvider(): array {
         $row = ['Attr1' => 'a', 'Attr2' => 'b', 'Attr3' => 3, 'Attr4' => 4, 'Attr5' => [['x'], ['y'], ['z']]];
         return [
             [$row],
             [(object) $row]
         ];
     }
-
 }

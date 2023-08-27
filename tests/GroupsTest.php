@@ -5,12 +5,12 @@ declare(strict_types=1);
 /**
  * Unit test of Groups class
  */
-
 use gpoehl\phpReport\Group;
 use gpoehl\phpReport\Groups;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-class GroupsTest extends TestCase {
+final class GroupsTest extends TestCase {
 
     protected $stack;
 
@@ -35,23 +35,21 @@ class GroupsTest extends TestCase {
         $this->assertSame(2, $groups->groupLevel['groupB']);
     }
 
-    public function testAddGroupNameTwiceWillFail() {
+    public function testAddGroupNameTwiceWillFail(): void {
         $groups = $this->stack;
         $groups->addGroup(new Group('groupA', 1, 0, 1, []));
         $this->expectException(InvalidArgumentException::class);
         $groups->addGroup(new Group('groupA', 2, 0, 1, []));
     }
 
-    public function testFirstGroupLevelIsNotOne() {
+    public function testFirstGroupLevelIsNotOne(): void {
         $groups = $this->stack;
         $this->expectException(InvalidArgumentException::class);
         $groups->addGroup(new Group('groupA', 2, 0, 1, []));
     }
 
-    /**
-     * @dataProvider groupProvider
-     */
-    public function testAddGroupInvalidLevel($group) {
+    #[DataProvider('groupProvider')]
+    public function testAddGroupInvalidLevel($group): void {
         $groups = $this->stack;
         $groups->addGroup(new Group('group1', 1, 0, 1, []));
         $groups->addGroup(new Group('group2', 2, 0, 1, []));
@@ -59,11 +57,10 @@ class GroupsTest extends TestCase {
         $groups->addGroup($group);
     }
 
-    public function groupProvider() {
+    public static function groupProvider(): array {
         return [
-            ['Level is less' => new Group('group3', 1, 1, 1,[])],
-            ['Level is too high' => new Group('group5', 5, 1, 1,[])],
+            ['Level is less' => new Group('group3', 1, 1, 1, [])],
+            ['Level is too high' => new Group('group5', 5, 1, 1, [])],
         ];
     }
-
 }

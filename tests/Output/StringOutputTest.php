@@ -5,20 +5,19 @@ declare(strict_types=1);
 /**
  * Unit test of Stringoutput class
  */
-
 use gpoehl\phpReport\Output\StringOutput;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-class StringOutputTest extends TestCase
-{
+final class StringOutputTest extends TestCase {
 
     private StringOutput $mock;
-    
+
     public function setup(): void {
         $this->mock = new StringOutput();
     }
 
-    public function testWrite() {
+    public function testWrite(): void {
         $out = $this->mock;
         $out->write('a', 1, 9);
         $out->write('b', 1);
@@ -26,7 +25,7 @@ class StringOutputTest extends TestCase
         $this->assertEquals('abc', $out->get());
     }
 
-    public function testPrepend() {
+    public function testPrepend(): void {
         $out = $this->mock;
         $out->prepend('a', 1, 9);
         $out->prepend('b', 1);
@@ -34,7 +33,7 @@ class StringOutputTest extends TestCase
         $this->assertEquals('cba', $out->get());
     }
 
-    public function testGet() {
+    public function testGet(): void {
         $out = $this->mock;
         $out->write('abc');
         $this->assertEquals('abc', $out->get());
@@ -42,7 +41,7 @@ class StringOutputTest extends TestCase
         $this->assertEquals('abc', $out->get(1, 2));
     }
 
-    public function testPop() {
+    public function testPop(): void {
         $out = $this->mock;
         $out->write('abc');
         $this->assertEquals('abc', $out->pop());
@@ -55,7 +54,7 @@ class StringOutputTest extends TestCase
         $this->assertEquals('', $out->get());
     }
 
-    public function testDelete() {
+    public function testDelete(): void {
         $out = $this->mock;
         $out->write('abc');
         $out->delete();
@@ -68,10 +67,8 @@ class StringOutputTest extends TestCase
         $this->assertEquals('', $out->get());
     }
 
-    /**
-     * @dataProvider separatorProvider
-     */
-    public function testSeparator($expect, $glue) {
+    #[DataProvider('separatorProvider')]
+    public function testSeparator($expect, $glue): void {
         $out = $this->mock;
         $out->setSeparator($glue);
         $out->write('v1');
@@ -79,16 +76,15 @@ class StringOutputTest extends TestCase
         $this->assertEquals($expect, $out->get());
     }
 
-    public function separatorProvider() {
+    public static function separatorProvider(): array {
         return [
-          'blank'=>  ['v1 v2', ' '],
-          'dash with blanks' =>  ['v1 - v2', ' - '],
-          'br' =>  ['v1<br>v2', '<br>'],
-          'none' =>  ['v1v2', ''],
-          'nl' =>  ["v1\nv2", "\n"],
-          'nl tab' =>  ["v1\n\tv2", "\n\t"],
-          'special chr' =>  ["v1äöüv2", "äöü"],
+            'blank' => ['v1 v2', ' '],
+            'dash with blanks' => ['v1 - v2', ' - '],
+            'br' => ['v1<br>v2', '<br>'],
+            'none' => ['v1v2', ''],
+            'nl' => ["v1\nv2", "\n"],
+            'nl tab' => ["v1\n\tv2", "\n\t"],
+            'special chr' => ["v1äöüv2", "äöü"],
         ];
     }
-
 }

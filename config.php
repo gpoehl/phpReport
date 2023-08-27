@@ -21,11 +21,11 @@ return [
         'actions' => [
         // 'init' => 'init',
         // 'totalHeader' => '%Header',
-        // 'beforeGroup' => '%BeforeGroup',
+        // 'beforeGroup' => 'before%',
         // 'groupHeader' => '%Header',
         // 'detail' => 'detail',
         // 'groupFooter' => '%Footer',
-        // 'afterGroup' => '%AfterGroup',
+        // 'afterGroup' => 'after%',
         // 'totalFooter' => '%Footer',
         // 'close' => 'close',
         //

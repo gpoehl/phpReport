@@ -10,6 +10,7 @@ use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\Calculator\CalculatorXL;
 use gpoehl\phpReport\Calculator\CalculatorBcmXL;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class CollectorAggregateTest extends TestCase
 {
@@ -35,9 +36,8 @@ class CollectorAggregateTest extends TestCase
         $this->calcBcm->add(20 / 3);
     }
 
-    /**
-     * @dataProvider scaleProvider
-     */
+   
+      #[DataProvider('scaleProvider')]
     public function testScaleSum($calculator, $expected): void {
         $col = new Collector();
         $calculator->initialize(fn($val) => $val ??= 0, 0);
@@ -50,9 +50,7 @@ class CollectorAggregateTest extends TestCase
         $this->assertSame($expected, $col->sum());
     }
 
-    /**
-     * @dataProvider scaleProvider
-     */
+     #[DataProvider('scaleProvider')]
     public function testScaleCounter($calculator, $expected): void {
         $col = new Collector();
         $calculator->initialize(fn($val) => $val ??= 0, 0);
@@ -69,7 +67,7 @@ class CollectorAggregateTest extends TestCase
         $this->assertSame(1, $col->countNZ());
     }
 
-    public function scaleProvider() {
+    public static function scaleProvider() :array {
         return [
             [new CalculatorXL, '3.333'],
             [new CalculatorBcmXL(1), '3.300'],
@@ -77,13 +75,13 @@ class CollectorAggregateTest extends TestCase
         ];
     }
 
-    public function testSetScale() {
+    public function testSetScale() :void{
         $this->assertSame(null, $this->stack->getScale());
         $this->stack->setScale(2);
         $this->assertSame(2, $this->stack->getScale());
     }
 
-    public function testSum() {
+    public function testSum() :void{
         $this->stack->addItem($this->calcBcm, 'bcm');
         $this->assertSame(27.6666, round($this->stack->sum(), 4));
         $this->assertSame(['a' => 8, 'b' => 12, 'bcm' => '7.6666'],
@@ -94,7 +92,7 @@ class CollectorAggregateTest extends TestCase
                 $this->stack->sum(depth: 1));
     }
 
-    public function testCounterAndAvg() {
+    public function testCounterAndAvg() :void{
         $this->assertSame(6, $this->stack->count());
         $this->assertSame(5, $this->stack->countNN());
         $this->assertSame(4, $this->stack->countNZ());
@@ -111,7 +109,7 @@ class CollectorAggregateTest extends TestCase
         $this->assertSame(['a' => 4, 'b' => 6], $this->stack->avgNZ(depth: 1));
     }
 
-    public function testMultiDimension() {
+    public function testMultiDimension() :void {
         // Add second dimension
         $this->stack->addItem(clone $this->stack, 'c');
         // Add third second dimension
@@ -146,7 +144,7 @@ class CollectorAggregateTest extends TestCase
         $this->assertSame(['a' => 5, 'b' => 9, 'c' => ['a' => 5, 'b' => 9, 'd' => ['a' => 5, 'b' => 9]]], $this->stack->max(depth: 99));
     }
 
-    public function testMultiDimensionMixedBcm() {
+    public function testMultiDimensionMixedBcm() :void{
         // Add second dimension
         $wrk = clone $this->stack;
         // set scale to to level collector

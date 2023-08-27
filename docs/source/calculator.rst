@@ -1,21 +1,26 @@
 Calculator
 ----------
 
-phpReport comes with 3 different calculator classes. The reason behind is that
-only nessessarty operations will be performed.
+phpReport comes with 3 different calculator classes for calculation with numeric 
+values and 2 classes for calculation using bcmath functions. 
 
-In most cases you don't need the minimum or maximum value of an attribute.
-Identifying those values is time consuming. The same is true for the number
-of rows having a not null or a not zero value.
+Each set of those calculators offer different functionality while classes which
+names end with 'XS' offers basic functions. Those which names ends with 'XL' offers
+the maximum functions and without and suffix the medium set of functions.
 
 The classes provided are:
  * CalculatorXS (default)
  * Calculator
  * CalculatorXL
 
+or with bcmath
+ * CalculatorBcmXS 
+ * CalculatorBcm
+ * CalculatorBcmXL
+
 The CalculatorXS class has the minimum functionality. It's perfect to cumulate
-any value or to increment any counter. To increment a value
-just call the inc() method. It's the same as calling add(1) method.
+any value or to increment any counter. To increment a value the inc() method
+does the same as calling 'add(1)' method.
 
 The Calculator class don't have the incrememt method but counts the not null
 and not zero values.
@@ -23,6 +28,11 @@ and not zero values.
 The CalculatorXL class extends the Calculator class and detects the minimum
 and maximum values of an attribute. Use the min() and max() methods to get
 these values.
+
+Note:
+The bcm classes are working wiht the scale parameter. Scale works exactly like 
+in the original bcmath functions. So digits after the scale parameter will be 
+truncated (same as the floor function). 
 
 
 The compute() method instantiates a calculator object which provides aggregate functions.
