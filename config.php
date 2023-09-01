@@ -17,7 +17,7 @@ return [
     // Name of grand total group.
     // 'grandTotalName' => 'total',
     //
-    // Actions to be performed when key events occurs
+    // Map action keys to actions
         'actions' => [
         // 'init' => 'init',
         // 'totalHeader' => '%Header',
@@ -37,7 +37,7 @@ return [
         //
         // Action for each row in dimensions < last dimension. Usually not needed.
         // Group haeders and footers should be prefered.
-        // 'detail_n' => 'detai%',
+        // 'detail_n' => 'detail%',
         //
         // Action only for rows not related to the last dimension and when
         // group(s) are declared but current row don't trigger a group change.

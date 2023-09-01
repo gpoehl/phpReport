@@ -452,7 +452,7 @@ class Report {
         if (!$action->runtimeTarget) {
             return;
         }
-        // execute action
+        // Execute action
         if ($action->targetKey === Action::STRING) {
             $output = $action->target;
         } else {
@@ -460,7 +460,7 @@ class Report {
             $params[] = $action->level;
             $output = ($action->runtimeTarget)(... $params);
         }
-        // Cancel execution when output equals false or write output to output object 
+        // Cancel execution when output of action equals false or write output to output object 
         if ($output !== null) {
             if ($output === false && $action->key === 'beforeGroup') {
                 return false;

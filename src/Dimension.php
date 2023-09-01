@@ -86,7 +86,7 @@ class Dimension
     }
 
     /**
-     * Keep parameters for an computed item until getter class is instantiated.
+     * Keep parameters for computed items until getter class is instantiated.
      * @param string $name
      * @param mixed $source Source of the value to be computed
      * @param array $params Parameters passed unpacked when $source is a callable.
@@ -162,10 +162,7 @@ class Dimension
      * Detect row type and let GetterFactory instantiate all required getter objects
      */
     private function instantiateGetters($row): void {
-        $factory = (is_object($row)) ?
-                new GetterFactory(True, $this->defaultTarget, $row::class) :
-                new GetterFactory(false, $this->defaultTarget);
-
+        $factory = new GetterFactory($row, $this->defaultTarget);
         foreach ($this->groups as $group) {
             $this->groupGetters[$group->level] = $factory->getGetter($group->valueSource, $group->params);
             unset($group->valueSource, $group->params);
@@ -177,10 +174,9 @@ class Dimension
             $this->calcGetters[$name] = $factory->getSheetGetter(... $source);
         }
         if (!$this->isLastDim) {
-            $factory->isJoin = true;
             $this->joinGetter = $factory->getGetter(... $this->joinSource);
         }
         unset($this->calcSources, $this->sheetSources, $this->joinSource);
     }
-
+    
 }

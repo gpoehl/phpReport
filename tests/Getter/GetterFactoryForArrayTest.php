@@ -18,7 +18,7 @@ final class GetterFactoryForArrayTest extends TestCase {
     public $stack;
 
     public function setUp(): void {
-        $this->stack = new GetterFactory(false);
+        $this->stack = new GetterFactory($this->row);
     }
 
     #[DataProvider('sourceProvider')]
@@ -37,19 +37,12 @@ final class GetterFactoryForArrayTest extends TestCase {
         ];
     }
 
-    public function testNotFoundWarning(): void {
-      $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('/^Undefined array key .*"x x x"$/');
+    public function testUnknownArrayKeyThrowsException(): void {
+      $this->expectException(gpoehl\phpReport\UnknownPropertyException::class);
+        $this->expectExceptionMessage("Unknown array key 'xxx'.");
 
-        $getter = $this->stack->getGetter('x x x', []);
+        $getter = $this->stack->getGetter('xxx', []);
         $getter->getValue($this->row);
-    }
-
-    // Suppress warning by setting isJoin in getter factory
-    public function testSuppressWarning(): void {
-        $this->stack->isJoin = true;
-        $getter = $this->stack->getGetter('x x x', []);
-        $this->assertSame(Null, $getter->getValue($this->row));
     }
 
     #[DataProvider('stringProvider')]

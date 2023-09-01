@@ -13,26 +13,32 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport\Getter;
 
+use Closure;
+use gpoehl\phpReport\UnknownPropertyException;
+use InvalidArgumentException;
+use UnhandledMatchError;
+
 /**
  * Choose and instantiate a getter object which gets value.
  */
-class GetterFactory
-{
-    /* @var $isJoin True for join method. Will select getter which suppresses warnings when array item is missing. */
-
-    public bool $isJoin = false;
+class GetterFactory {
 
     /**
-     * @param $isObject True when data row is an object.
-     * @param Object | Classname | null $defaultTarget Default target when
-     * target element in source equals true. Usually the same as in report class.
-     * @param className The name of the row class. Used to access the row class
-     * members static properies, constants and static methods expeting $row and
+     * @var $className Classname of the data row. Used to access class members,
+     * static properies, constants and static methods expeting $row and
      * $rowKey parameters.
      */
-    public function __construct(private bool $isObject, private $defaultTarget = null,
-            private ?string $className = '') {
+    private string $className;
 
+    /**
+     * @param $row The data row allows some validaten of existing getter sources.
+     * @param Object | Classname | null $defaultTarget Default target when
+     * target element in source equals true. Usually the same as in report class.
+
+     */
+    public function __construct(private $row, private $defaultTarget = null,
+    ) {
+        $this->className = (is_object($row)) ? $this->row::class : '';
     }
 
     /**
@@ -48,10 +54,9 @@ class GetterFactory
         if (!is_array($source)) {
             return match (true) {
                 $source instanceof GetValueInterface => $source,
-                $source instanceOf \Closure => new GetFromCallable($source, $params),
-                $this->isObject => new GetRowProperty($source),
-                $this->isJoin === false => new GetArrayItem($source),
-                $this->isJoin => new GetArrayItemForJoin($source),
+                $source instanceOf Closure => new GetFromCallable($source, $params),
+                is_Object($this->row) => new GetRowProperty($source),
+                default => $this->getValidatedArrayGetter($source),
             };
         }
 
@@ -59,7 +64,7 @@ class GetterFactory
         $source[2] ??= null;
         [$name, $target, $selector] = $source;
 
-        if ($name instanceOf \Closure) {
+        if ($name instanceOf Closure) {
             return ($selector) ?
                     new GetFromCallable($name, $params) :
                     new GetFromPureCallable($name, $params);
@@ -90,7 +95,7 @@ class GetterFactory
                 // Constant requires classname
                 preg_match('/const/i', $selector) === 1 => new GetConstant(((is_object($target)) ? $target::class : $target) . '::' . $name),
             };
-        } catch (\UnhandledMatchError $e) {
+        } catch (UnhandledMatchError $e) {
             $name = print_r($name, true);
             self::handleError("Invalid source selector for '$name'.");
         }
@@ -130,7 +135,7 @@ class GetterFactory
     public static function verifySource($source, array $params): bool {
 
         if (!is_array($source)) {
-            if ($source instanceOf \Closure) {
+            if ($source instanceOf Closure) {
                 return true;
             }
             // When soruce is object it must be a BaseGetter
@@ -172,7 +177,7 @@ class GetterFactory
             return true;
         }
 
-        if ($source[0] instanceOf \Closure) {
+        if ($source[0] instanceOf Closure) {
             if ($source[1] !== null) {
                 self::handleError("Second source element for closure will be ignored.", true);
             }
@@ -222,6 +227,13 @@ class GetterFactory
         return true;
     }
 
+    private function getValidatedArrayGetter($source) {
+        if (array_key_exists($source, $this->row)) {
+            return new GetArrayItem($source);
+        }
+        throw new UnknownPropertyException("Unknown array key '$source'.");
+    }
+
     /**
      * Throw error or raise a warning.
      * @param string $message The error or warning message.
@@ -232,8 +244,7 @@ class GetterFactory
         if ($isWarning) {
             trigger_error($message, E_USER_WARNING);
         } else {
-            throw new \InvalidArgumentException($message);
+            throw new InvalidArgumentException($message);
         }
     }
-
 }

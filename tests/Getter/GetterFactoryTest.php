@@ -15,21 +15,16 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class GetterFactoryTest extends TestCase {
 
-    /**
-     * ataProvider SourceProvider
-     * ataProvider externalSourceProvider
-     */
-    //[DataProvider('SourceProvider', 'externalSourceProvider')]
-    #[DataProvider('SourceProvider')]
-    #[DataProvider('externalSourceProvider')]
+   #[DataProvider('sourceProvider')]
+   #[DataProvider('externalSourceProvider')]
     public function testVerifySource($expected, $source, ... $params) {
         $this->assertTrue(GetterFactory::verifySource($source, $params));
     }
 
-    #[DataProvider('SourceProvider')]
+    #[DataProvider('sourceProvider')]
     public function testObjectValue($expected, $source, ...$params): void {
         $foo = new Foo();
-        $objFactory = new GetterFactory(true, null, $foo::class);
+        $objFactory = new GetterFactory($foo);
         $getter = $objFactory->getGetter($source, $params);
         $this->assertSame($expected, $getter->getValue($foo, 'rowKey'));
     }
@@ -68,7 +63,7 @@ final class GetterFactoryTest extends TestCase {
 
             public $name = 'anonymous';
         };
-        $objFactory = new GetterFactory(true, null, foo::class);
+        $objFactory = new GetterFactory($bar);
         $getter = $objFactory->getGetter($source, $params);
         $this->assertSame($expected, $getter->getValue($bar, 'rowKey'));
     }
@@ -91,7 +86,7 @@ final class GetterFactoryTest extends TestCase {
 
             public $name = 'anonymous';
         };
-        $objFactory = new GetterFactory(true, new foo('target'), null);
+        $objFactory = new GetterFactory($bar, new foo('target'), null);
         $getter = $objFactory->getGetter(['name', true], []);
         $this->assertSame('target', $getter->getValue($bar, 'rowKey'));
         $getter = $objFactory->getGetter(['say', true, false], ['is', 'default']);
@@ -100,7 +95,8 @@ final class GetterFactoryTest extends TestCase {
 
     #[DataProvider('InvalidSourceExceptionProvider')]
     public function testInvalidSourceException($expected, $source, ... $params): void {
-        $objFactory = new GetterFactory(true, new foo('target'), null);
+        $foo = new foo('target');
+        $objFactory = new GetterFactory($foo, $foo);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches($expected);
         $objFactory->getGetter($source, $params);
@@ -133,9 +129,8 @@ final class GetterFactoryTest extends TestCase {
         ];
     }
 
-    /**
-     * @dataProvider SourceWarningProvider
-     */
+    
+//     #[DataProvider('SourceWarningProvider')]
 //    public function testVerifySourceWarning($expected, $source, ... $params) {
 //        $this->expectWarning();
 //        $this->expectWarningMessageMatches($expected);
@@ -158,9 +153,10 @@ final class GetterFactoryTest extends TestCase {
 
     #[DataProvider('sheetProvider')]
     public function testGetValueForSheet($expected, $keySource, $source, ?array $keyParams = [], ...$params): void {
-        $objFactory = new GetterFactory(true);
+        $foo = new foo(value: 789);
+        $objFactory = new GetterFactory($foo);
         $getter = $objFactory->getSheetGetter($keySource, $source, $keyParams, $params);
-        $this->assertSame($expected, $getter->getValue(new foo(value: 789), 123));
+        $this->assertSame($expected, $getter->getValue($foo, 123));
     }
 
     public static function sheetProvider(): array {
