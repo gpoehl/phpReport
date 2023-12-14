@@ -27,29 +27,30 @@ The report class has some extra convenience methods to provide you with useful i
 
     .. php:method:: isFirst($level = null): bool
 
-            Checks if the current group is the first one within the next higher group.
+            Test if the group at $level the first one within the next higher group.
             e.g. Is it the first invoice for a customer.
 
             :param string|int|null $level: The group level to be checked. Defaults
-             to the next higher group level.
+             to the current group or row when at detail level.
 
-            :returns: True when the current group is the first one within
-             the givel level. False when not.
+            :returns: True when the group at $level is the first one within
+             the next higher level. False when not.
+
+             :throws: InvalidArgumentException when level is below the current level.
 
     .. php:method:: isLast($level = null): bool
 
-            Check if the current group footer action is executed the last time
-            within the group level.
-            The question can only be answered in group footers. 
+            Test if the group at $level is the last one within the next higher group.
+            The test can only be executed in group footers. 
 
             :param string|int|null $level: The group level to be checked. Defaults
-             to the next higher group level.
+              to the current group or row when at detail level.
 
-            :returns: True when the current action is executed the last time within
-             the given group level. False when not.
+            :returns: True when group at level is the last one within the next
+             higher level. False when not.
 
             :throws: InvalidArgumentException when method is not called in a group footer
-             or asked for group levels not higher than the current one.
+             or when $level is below the current level.
 
     .. php:method:: getLevel($groupName = null): int
 

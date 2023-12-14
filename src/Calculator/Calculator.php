@@ -13,8 +13,7 @@ declare(strict_types=1);
 namespace gpoehl\phpReport\Calculator;
 
 /**
- * Summarize values, provide counters and averages.
- * Counters and averages for values beeing not null or not zero are also provided.
+ * Summarize values, provide notNull and notZero counters and averages.
  */
 class Calculator extends CalculatorXS
 {

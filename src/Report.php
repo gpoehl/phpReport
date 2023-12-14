@@ -98,12 +98,13 @@ class Report {
     /** @var Action execution for levels above $skipLevel will be ignored. */
     private int|bool $skipLevel = false;
 
-    /* @var $toCumulate Holds objects which has 'cumulateToNextLevel' method */
+    /* @var Holds objects which has 'cumulateToNextLevel' method */
     private \SplObjectStorage $cumulateMap;
 
     /**
      * @param $target Default object or class name where action methods will be called.
      * @param $config Dynamic configuration to replace defaults set in config.php file.
+     * @param $outputHandler The output handler to be used . Defaults to StringOutput handler. 
      * @param $params Optional parameters not used by this library itself.
      * Might be used as a data transfer vehicle.
      */
@@ -406,7 +407,7 @@ class Report {
      */
     private function setRunTimeActions(): void {
         $params = [$this->target, $this->prototype, $this->callOption];
-       
+
         // Group actions
         foreach ($this->groups->items as $group) {
             $group->beforeAction->setRunTimeTarget(...$params);
@@ -729,46 +730,56 @@ class Report {
     }
 
     /**
-     * Check if the current group action is executed the first time within the given group level.
-     * @param string|int|null $level The group level to be checked. Defaults to the
-     * next higher group level.
-     * @return bool true when the current action is executed the first time within
-     * the given group level. False when not.
+     * Test if the group at $level or the current row at detail level occurs the
+     * first time in the group above.
+     * @param $level The group level to be tested. Defaults to the current level.
+     * $level must be equal or above then the current level.
+     * @return True when it's the first row at detail level or the action at
+     * the given group level is executed the first time within the above group level. 
+     * False when not.
+     * @throws InvalidArgumentException when given $level is below current level.
      */
-    public function isFirst($level = null): bool {
-        // For detail level compare with row counter of last group level.
-        // Detail level can only be checked when in detail action. If $level is not null
-        // it must match the detail level.
-        if ($this->currentAction->key === 'detail' && ($level === null || $level === $this->currentLevel)) {
-            return ($this->rc->items[$this->getDimID($level)]->sum($level) === 1);
+    public function isFirst(string|int|null $level = null): bool {
+        // On detail level compare with row counter in last group level.
+        if ($this->currentAction->key === 'detail' && $level === null) {
+            return ($this->rc->items[$this->dim->id]->sum() === 1);
         }
-        return ($this->gc->items[$this->getDimID($level)]->sum($this->getLevel($level) - 1) === 1);
+
+        $testLevel = $this->getLevel($level);
+        if ($level !== null and $testLevel > $this->currentLevel) {
+            throw new InvalidArgumentException('isFirst() makes no sense on lower group levels');
+        }
+
+        // Test against group counter. No need to use sum of higher level.
+        return ($this->gc->items[$testLevel]->sum($testLevel) === 1);
     }
 
     /**
-     * Check if the footer of the current group is last one within the given group.
+     * Test if the group at $level or the current row at detail level occurs the
+     * last time in the group above.
+     * 
      * In group headers or detail level this can't be answered (It would
      * require to read the next row(s) ahead).
-     * @param $level The group level to be checked.
-     * Note: Defaults to the next higher group level (instead of the current level)
-     * to verify if the current group is the higher group.
-     * @return True when it is the last footer within $level, else false.
-     * @throws InvalidArgumentException when method is not called in a group footer
-     * or asked for group levels not higher than the current one.
+     * 
+     * @param $level The group level to be tested. Defaults to the current level.
+     * $level must be equal or above the current level.
+     * @return True when it's 
+     * the last row at detail level -> not yet implemented
+     * or the action at 
+     * the given group level is executed the last time within the above group level. 
+     * False when not.
+     * @throws InvalidArgumentException when given $level is below current level.
      */
     public function isLast(int|string|null $level = null): bool {
         if ($this->currentAction->key !== 'groupFooter' && $this->currentAction->key !== 'afterGroup') {
             throw new InvalidArgumentException('isLast() can only be answered in groupFooter or afterGroup methods. Called from ' . $this->currentAction->key);
         }
-        if ($level === null) {
-            $level = $this->currentLevel - 1;
-        } else {
-            $level = $this->getLevel($level);
-            if ($level >= $this->currentLevel) {
-                throw new InvalidArgumentException('isLast() can check only for higher group levels');
-            }
+
+        $testLevel = $this->getLevel($level);
+        if ($level !== null and $testLevel > $this->currentLevel) {
+            throw new InvalidArgumentException('isLast() makes no sense on lower group levels');
         }
-        return ($this->isJobDone || $level >= $this->changedLevel);
+        return ($this->isJobDone || $testLevel >= $this->changedLevel);
     }
 
     /**
