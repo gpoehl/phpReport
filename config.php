@@ -33,15 +33,21 @@ return [
         // 'noData' => ':<br><strong>No data found</strong><br>',
         //
         // Action when join() method don't serve data.
-        // 'noData_n' => 'noDataDim%',
+        // 'noDataN' => 'noDataDim%',
         //
         // Action for each row in dimensions < last dimension. Usually not needed.
         // Group haeders and footers should be prefered.
-        // 'detail_n' => 'detail%',
+        // 'detailN' => 'detail%',
         //
         // Action only for rows not related to the last dimension and when
         // group(s) are declared but current row don't trigger a group change.
-        // 'noGroupChange_n' => ["Current row in dimension % didn't trigger a group change.", Action:ERROR]
-        // 'noGroupChange_n' => 'noGroupChange%'
+        // 'noGroupChangeN' => ["Current row in dimension % didn't trigger a group change.", Action:ERROR]
+        // 'noGroupChangeN' => 'noGroupChange%'
     ],
-];
+    /*  @var Classname for default output handler */
+    //'outputHandler' => output\StringOutput::class, 
+    
+    /** @var Classname for default prototye class */
+    //'prototype' => Prototye::class,
+]; 
+

@@ -28,13 +28,7 @@ use InvalidArgumentException;
  */
 class Report {
 
-    const VERSION = '3.1.1';
-    // Rules to execute actions
-    const CALL_EXISTING = 0;          // Call methods in owner class only when implemented. Default.
-    const CALL_ALWAYS = 1;            // Call also not existing methods in owner class. Allows using magic function calls.
-    const CALL_PROTOTYPE = 2;         // Call prototype for methods not implemented in owner class.
-    const CALL_ALWAYS_PROTOTYPE = 3;  // Call always prototype even when method exists in owner class.
-    const CALL_ALL_PROTOTYPE = 4;     // Call prototype for all actions which are not callables and action is not false.
+    const VERSION = '3.2';
 
     /** Object which collects output. */
     public AbstractOutput $out;
@@ -51,15 +45,15 @@ class Report {
     /** @var The currently executed action. */
     public Action $currentAction;
 
-    /** @var Action[] Possible actions loaded from config file indexed by the action key. */
+    /** @var Action[] Actions loaded from config file indexed by the action key. */
     private array $actions = [];
 
     /** @var The runTimeAction for 'detail' event. */
-    private Action $detailHeaderAction;
-    private Action $detailAction;
-    private Action $detailFooterAction;
+    private readonly Action $detailHeaderAction;
+    private readonly Action $detailAction;
+    private readonly Action $detailFooterAction;
 
-    /** @var Dimension[] An arrray of data dimension objects. */
+    /** @var Dimension[] Arrray of data dimension objects. */
     private array $dims = [];
 
     /** @var The actual dimension object. Shortcut of current($dims). */
@@ -72,14 +66,17 @@ class Report {
     private ?int $changedLevel;
 
     /** @var Groups object which holds any groups regardless of the related dimension. */
-    private Groups $groups;
+    private readonly Groups $groups;
 
     /** @var The option how and where event actions will be executed. */
-    private int $callOption = self::CALL_EXISTING;
+    private RuntimeOption $runtimeOption = RuntimeOption::Default;
+
+    /** @var Name of the prototype class */
+    private string $prototypeName;
 
     /** @var The prototype object which executes prototype actions. Will be
       instantiated only when really needed. */
-    private ?Prototype $prototype = null;
+    private ?PrototypeInterface $prototype = null;
 
     /** mixed Rule how group names will be build. See configuration documentaion. */
     private $buildMethodsByGroupName;
@@ -98,7 +95,7 @@ class Report {
     /** @var Action execution for levels above $skipLevel will be ignored. */
     private int|bool $skipLevel = false;
 
-    /* @var Holds objects which has 'cumulateToNextLevel' method */
+    /* @var Map objects implemented the 'cumulateToNextLevel' method to maxLevel as data */
     private \SplObjectStorage $cumulateMap;
 
     /**
@@ -121,6 +118,7 @@ class Report {
         $this->total = new Collector();
         $this->dims[] = $this->dim = new Dimension(0, 0, $target);
         $this->out = ($outputHandler) ? $outputHandler : new $conf->outputHandler();
+        $this->prototypeName = $conf->prototype;
         $this->cumulateMap = new \SplObjectStorage();
         return $this;
     }
@@ -144,9 +142,9 @@ class Report {
     public function join($source, $noDataAction = null, $dataAction = null, $noGroupChangeAction = null, ... $params): self {
         GetterFactory::verifySource($source, $params);
         $this->dim->setJoinSource($source, $params);
-        $this->dim->noDataAction = $this->makeAction('noData_n', $noDataAction, $this->dim->id);
-        $this->dim->noGroupChangeAction = $this->makeAction('noGroupChange_n', $noGroupChangeAction, $this->dim->id);
-        $this->dim->detailAction = $this->makeAction('detail_n', $dataAction, $this->dim->id);
+        $this->dim->noDataAction = $this->makeAction('noDataN', $noDataAction, $this->dim->id);
+        $this->dim->noGroupChangeAction = $this->makeAction('noGroupChangeN', $noGroupChangeAction, $this->dim->id);
+        $this->dim->detailAction = $this->makeAction('detailN', $dataAction, $this->dim->id);
         $this->dims[] = $this->dim = new Dimension($this->dim->id + 1, $this->dim->lastLevel, $this->target);
         return $this;
     }
@@ -169,18 +167,21 @@ class Report {
     public function group($name, $source = null, $beforeAction = null, $headerAction = null, $footerAction = null, $afterAction = null, ...$params): self {
         $source ??= $name;
         GetterFactory::verifySource($source, $params);
-        $group = new Group($name, ++$this->currentLevel, $this->dim->id, $source, $params);
+
+        $group = new Group($name, $this->dim->id, $source, $params);
+        $this->currentLevel = $this->groups->addGroup($group);
+
         $group->beforeAction = $this->makeAction('beforeGroup', $beforeAction, $group->level, $name);
         $group->headerAction = $this->makeAction('groupHeader', $headerAction, $group->level, $name);
         $group->footerAction = $this->makeAction('groupFooter', $footerAction, $group->level, $name);
         $group->afterAction = $this->makeAction('afterGroup', $afterAction, $group->level, $name);
-        $this->groups->addGroup($group);
-        $this->dim->groups[] = $group;
-        $this->dim->lastLevel = $group->level;
+
+        $this->dim->addGroup($group);
+
         $calculator = new CalculatorXS;
+        // Use method getLevel as first parameter
         $calculator->initialize($this->getLevel(...), $group->level);
-        $this->gc->addItem($calculator, $group->level);
-        $this->gc->setAltKey($name, $group->level);
+        $this->gc->addItem($calculator, $group->level, $name);
         $this->cumulateMap[$calculator] = $group->level;
         return $this;
     }
@@ -322,7 +323,7 @@ class Report {
      * Action objects are used to execute actions mapped to events.
      * @param $actionKey The event name.
      * @param array|null|false $actionParam
-     * @param $level the group level.
+     * @param $level The group level or dimension ID.
      * @param $name Group or Totalx name which replaces the % sign in $actionParam
      * @return The new action object.
      */
@@ -364,14 +365,17 @@ class Report {
         $this->detailAction = new Action('detail', $this->out->actionKeyMapper['detail'], $this->currentLevel, $this->actions['detail']);
         $this->detailFooterAction = new Action('detailFooter', $this->out->actionKeyMapper['detailFooter'], $this->currentLevel, $this->actions['detailFooter']);
         unset($this->actions['init'], $this->actions['totalHeader'], $this->actions['groupHeader'], $this->actions['groupFooter'],
-                $this->actions['noData_n'], $this->actions['data_n'], $this->actions['noGroupChange_n'], $this->actions['detail']);
+                $this->actions['noDataN'], $this->actions['dataN'], $this->actions['noGroupChangeN'], $this->actions['detail']);
         $this->setRunTimeActions();
         $this->currentAction = $this->detailAction;
+        $this->currentLevel = 0;
     }
 
     /**
-     * Call prototype class to prepare some data related to the last executed action.
-     * @return string A html table with the prepared data.
+     * Call magic method in prototype class. Will prepare some data related to 
+     * the last executed action.
+     * Prototype class will be instantiated on first call.
+     * @return The default prototype class returns an html table with the prepared data.
      */
     public function prototype(): string {
         $this->prototype ??= new Prototype($this);
@@ -379,22 +383,21 @@ class Report {
     }
 
     /**
-     * Set call option.
+     * Set runttime option.
      * Call option is used by action ojects to detect if and how actions
      * are executed. Primary use is to activate prototyping.
      * Usally call option will be set at program start but can also set or
      * altered during program execution.
-     * @param int $callOption One of the CALL_x constants.
-     * @throws InvalidArgumentException
+     * @param $runtimeOption @see enum RuntimeOption.
+     * @param $prototype Optional prototype object instead of default prototype
      */
-    public function setCallOption(int $callOption): self {
-        if ($callOption < 0 || $callOption > 3) {
-            throw new InvalidArgumentException('Invalid call option');
+    public function setRuntimeOption(RuntimeOption $runtimeOption, PrototypeInterace $prototype = null): self {
+        if ($prototype !== null) {
+            $this->prototype = $prototype;
+        } elseif ($runtimeOption->isPrototype() && !isset($this->prototype)) {
+            $this->prototype = new $this->prototypeName($this);
         }
-        if ($callOption >= self::CALL_PROTOTYPE && !isset($this->prototype)) {
-            $this->prototype = new Prototype($this);
-        }
-        $this->callOption = $callOption;
+        $this->runtimeOption = $runtimeOption;
         // Rebuild runTimeActions only when finalInitialisation wasn't done already.
         if (!isset($this->actions['init'])) {
             $this->setRunTimeActions();
@@ -406,7 +409,7 @@ class Report {
      * Set runtime actions for all actions which might be executed more than once.
      */
     private function setRunTimeActions(): void {
-        $params = [$this->target, $this->prototype, $this->callOption];
+        $params = [$this->target, $this->prototype, $this->runtimeOption];
 
         // Group actions
         foreach ($this->groups->items as $group) {
@@ -437,7 +440,7 @@ class Report {
         $action = ($key === 'totalHeader' || $key === 'totalFooter') ?
                 $this->makeAction($key, $this->actions[$key], 0, $this->groups->grandTotalName) :
                 new Action($key, $this->out->actionKeyMapper[$key], 0, $this->actions[$key]);
-        $action->setRuntimeTarget($this->target, $this->prototype, $this->callOption);
+        $action->setRuntimeTarget($this->target, $this->prototype, $this->runtimeOption);
         $this->execute($action);
     }
 
@@ -461,16 +464,20 @@ class Report {
             $params[] = $action->level;
             $output = ($action->runtimeTarget)(... $params);
         }
-        // Cancel execution when output of action equals false or write output to output object 
-        if ($output !== null) {
-            if ($output === false && $action->key === 'beforeGroup') {
-                return false;
-            }
-            if ($action->kind === Action::OUTPUT) {
-                $this->out->write($output, $action->level, $action->outputKey);
-            } else {
-                trigger_error($output, $action->kind);
-            }
+        // No output handling 
+        if ($output === null) {
+            return;
+        }
+        // End execution for this row.  
+        if ($output === false && $action->key === 'beforeGroup') {
+            return false;
+        }
+        if ($action->kind === Action::OUTPUT) {
+            // Write output to Output object
+            $this->out->write($output, $action->level, $action->outputKey);
+        } else {
+            // Action requested trigger message
+            trigger_error($output, $action->kind);
         }
     }
 
@@ -503,14 +510,14 @@ class Report {
                 $this->next($row, $rowKey);
             }
         } elseIf ($this->dim->id > 0) {
-            $this->noData_n();
+            $this->noDataN();
         }
     }
 
     /**
      * Handles a single data row.
-     * @param array|object $row Data row to be processed.
-     * @param $rowKey Optional key of $row. Defaults to null.
+     * @param $row Data to be processed. Usually object or array, but also scalar values are accepted.
+     * @param $rowKey Optional key of $row.
      */
     public function next($row, string|int|null $rowKey = null): void {
         $this->handleGroupChanges($row, $rowKey);
@@ -541,7 +548,7 @@ class Report {
      * Group change is true when values of group attributes in current row
      * are not equal with group values of previous row in same dimension.
      * When group has changed header and footer actions will be executed.
-     * @param array|object $row The current row.
+     * @param $row The current row.
      * @param $rowKey The key of $row.
      */
     private function handleGroupChanges($row, string|int|null $rowKey): void {
@@ -665,6 +672,7 @@ class Report {
             $this->isJobDone = true;
             $this->handleFooters();
         }
+        $this->currentLevel = 0;
         $this->executeAction('totalFooter');
         $this->executeAction('close');
         return $this->out->get();
@@ -674,7 +682,7 @@ class Report {
      * Handle action when row had no joined data.
      * Dim was set to next dimension. Use action and row of previous dim.
      */
-    private function noData_n(): void {
+    private function noDataN(): void {
         $this->dim = prev($this->dims);
         $this->execute($this->dim->noDataAction, $this->dim->row, $this->dim->rowKey, $this->dim->id);
         $this->dim = next($this->dims);
@@ -756,17 +764,17 @@ class Report {
 
     /**
      * Test if the group at $level or the current row at detail level occurs the
-     * last time in the group above.
+     * last time in the group above or in any higher group. 
      * 
      * In group headers or detail level this can't be answered (It would
      * require to read the next row(s) ahead).
      * 
-     * @param $level The group level to be tested. Defaults to the current level.
-     * $level must be equal or above the current level.
-     * @return True when it's 
-     * the last row at detail level -> not yet implemented
-     * or the action at 
-     * the given group level is executed the last time within the above group level. 
+     * @param $level The group level to be tested. Defaults to the level above 
+     * the current level. 
+     * $level must be higher then the current level.
+     * @return True when the current group  
+     * or the last row at detail level -> not yet implemented
+     * is the last one within the $level. 
      * False when not.
      * @throws InvalidArgumentException when given $level is below current level.
      */
@@ -776,10 +784,10 @@ class Report {
         }
 
         $testLevel = $this->getLevel($level);
-        if ($level !== null and $testLevel > $this->currentLevel) {
-            throw new InvalidArgumentException('isLast() makes no sense on lower group levels');
+        if ($level !== null and $testLevel >= $this->currentLevel) {
+            throw new InvalidArgumentException('isLast() can only test against higher group levels');
         }
-        return ($this->isJobDone || $testLevel >= $this->changedLevel);
+        return ($this->isJobDone || $testLevel > $this->changedLevel);
     }
 
     /**
@@ -823,7 +831,7 @@ class Report {
      * @param bool $fromFirstLevel When true all group values from the first
      * dimension to the requested dimension are returned. When false only the
      * group values of the requested dimension are returned.
-     * @return array Array with requested group values indexed by group level.
+     * @return Array with requested group values indexed by group level.
      */
     public function getGroupValues(?int $dimID = null, bool $fromFirstLevel = true): array {
         $dimID ??= $this->dim->id;
@@ -850,7 +858,7 @@ class Report {
 
     /**
      * Get all group names.
-     * @return array The group names. Key is the associated level.
+     * @return Array of all group names indexed by the associated level.
      */
     public function getGroupNames(): array {
         return array_flip($this->groups->groupLevel);
@@ -858,9 +866,9 @@ class Report {
 
     /**
      * Get the group name for a given group level.
-     * @param int $groupLevel The group level for which the group name will be returned.
+     * @param $groupLevel The group level for which the group name will be returned.
      * Defaults to the current level.
-     * @return string The group name of the requested level.
+     * @return The group name of the requested level.
      */
     public function getGroupName(int $groupLevel = null): string {
         $groupLevel ??= $this->currentLevel;

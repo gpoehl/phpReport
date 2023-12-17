@@ -8,6 +8,7 @@ declare(strict_types=1);
 use gpoehl\phpReport\Dimension;
 use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\Group;
+use gpoehl\phpReport\Groups;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -23,11 +24,14 @@ final class DimensionTest extends TestCase {
 
     #[DataProvider('rowProvider')]
     public function testGetGroupValues($row): void {
-        $group1 = new Group('A', 5, 1, 'Attr1', []);
+        $groups = new groups('total');
+        $group1 = new Group('A', 1, 'Attr1', []);
+        $groups->addGroup($group1);
         $this->stack->groups[] = $group1;
-        $group2 = new Group('B', 6, 1, 'Attr2', []);
+        $group2 = new Group('B', 1, 'Attr2', []);
+        $groups->addGroup($group2);
         $this->stack->groups[] = $group2;
-        $this->assertSame([5 => 'a', 'b'], $this->stack->getGroupValues($row, []));
+        $this->assertSame([1 => 'a', 'b'], $this->stack->getGroupValues($row, []));
     }
 
     #[DataProvider('rowProvider')]

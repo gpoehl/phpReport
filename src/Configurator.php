@@ -30,7 +30,7 @@ class Configurator
      * - in beforeGroup, groupHeader, groupFooter and afterGroup by a pattern
      * depending on $buildMethodsByGroupName rules.
      * - in totalHeader and totalFooter by the value of $grandTotalName.
-     * - in noData_n, detail_n and nogroupChange_n by the dimension ID.
+     * - in noDataN, detailN and nogroupChangeN by the dimension ID.
      */
     public array $actions = [
         'init' => 'init',
@@ -45,13 +45,16 @@ class Configurator
         'totalFooter' => '%Footer',
         'close' => 'close',
         'noData' => '<br><strong>No data found</strong><br>', // Dimension = 0
-        'noData_n' => 'noDataDim%',
-        'detail_n' => 'detail%',
-        'noGroupChange_n' => ["Current row in dimension % didn't trigger a group change.", Action::ERROR],
+        'noDataN' => 'noDataDim%',
+        'detailN' => 'detail%',
+        'noGroupChangeN' => ["Current row in dimension % didn't trigger a group change.", Action::ERROR],
     ];
 
     /** @var Classname for default output handler */
     public string $outputHandler = output\StringOutput::class;
+    
+    /** @var Classname for default prototye class */
+    public string $prototype = Prototype::class;
 
     /** @var true | false | 'ucfirst' Rule to build method groupheader and -footer 
      * as well as totalHeader and -footer names. 

@@ -21,9 +21,9 @@ project = 'phpReport'
 copyright = '2021, Günter Pöhl'
 author = 'Günter Pöhl'
 
-version ='3.0.0'
+version ='3.2.0'
 # The full version, including alpha/beta/rc tags
-release = '3.0.0'
+release = '3.2.0'
 
 
 # -- General configuration ---------------------------------------------------

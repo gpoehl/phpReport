@@ -29,6 +29,6 @@ The default rules are simple:
 The returned value will be appended to $output.
 3) If action is a callable the returned value will be appended to $output.
 
-The above rules can be altered by calling the setCallOption(). 
+The above rules can be altered by calling the setRuntimeOption(). 
 
 .. include:: actionMethods.rst

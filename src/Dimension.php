@@ -84,6 +84,15 @@ class Dimension
     public function __construct(public int $id, public int $lastLevel, private $defaultTarget) {
 
     }
+    
+   /**
+     * Add a group to groups array
+     * @param \gpoehl\phpReport\Group $group The group object
+     */
+    public function addGroup(Group $group):void {
+        $this->groups[]= $group;
+        $this->lastLevel = $group->level;
+    }
 
     /**
      * Keep parameters for computed items until getter class is instantiated.

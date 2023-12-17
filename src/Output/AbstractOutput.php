@@ -33,9 +33,9 @@ abstract class AbstractOutput
         'totalFooter' => 0,
         'close' => 0,
         'noData' => 0,
-        'noData_n' => 0,
-        'detail_n' => 0,
-        'noGroupChange_n' => 0,
+        'noDataN' => 0,
+        'detailN' => 0,
+        'noGroupChangeN' => 0,
     ];
 
     public function __construct(public string $separator = '') {

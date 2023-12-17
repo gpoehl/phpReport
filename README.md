@@ -165,7 +165,7 @@ class FirstExample{
         ->compute ('discount', false)
         ->join (['getOrderDetails'])
         ->compute ('amount')
-        ->setCallOption(Report::CALL_PROTOTYPE);
+        ->setRuntimeOption(RuntimeOption::Prototype);
         $this->rep->run($data);
         echo $this->rep->out->get();
     }

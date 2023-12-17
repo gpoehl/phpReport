@@ -5,10 +5,11 @@ declare(strict_types=1);
 /**
  * Unit test of Report class. Handling of multiple data dimensions
  */
-use gpoehl\phpReport\Action;
+
 use gpoehl\phpReport\Report;
-use PHPUnit\Framework\TestCase;
+use gpoehl\phpReport\RuntimeOption;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
 final class ReportMultipleDimensionTest extends TestCase {
 
@@ -28,7 +29,7 @@ final class ReportMultipleDimensionTest extends TestCase {
         $out = self::getBase()->rep
                 ->group('a', 'firstGroup')
                 ->join('b', $noDataAction)
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([$row]);
         $this->assertSame('init, totalHeader, aBefore, aHeader, detail0, ' . $expected . 'aFooter, aAfter, totalFooter, close, ', $out);
     }
@@ -56,7 +57,7 @@ final class ReportMultipleDimensionTest extends TestCase {
         $rep = self::getBase()
                 ->rep
                 ->join('B', null, $rowDetail)
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
 
         $this->assertInstanceOf(Report::class, $rep);
@@ -90,7 +91,7 @@ final class ReportMultipleDimensionTest extends TestCase {
                 ->rep
                 ->group('group1', 0)
                 ->join('C', null, null, $noGroupChange)
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
         // First row. Assertion in not really necessary.
         $rep->next($rows[0], 'k1');
@@ -137,7 +138,7 @@ final class ReportMultipleDimensionTest extends TestCase {
         $rep = $this->getBase()
                 ->rep
                 ->join('B')
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([$row]);
         $this->assertSame('init, totalHeader, detail0, detail, detail, totalFooter, close, ', $rep);
     }
@@ -149,7 +150,7 @@ final class ReportMultipleDimensionTest extends TestCase {
                 ->group('g2', 'B')
                 ->join('C')
                 ->group('g3', 'D')
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
 
         $out = explode(', ', substr($rep->out->get(), 0, -2));
@@ -278,9 +279,9 @@ final class ReportMultipleDimensionTest extends TestCase {
                     'totalFooter' => '%Footer',
                     'close' => 'close',
                     'noData' => ':<br><strong>No data found</strong><br>',
-                    'noData_n' => 'noDataDim%',
-                    'noGroupChange_n' => 'noGroupChange%',
-                    'detail_n' => 'detail%'
+                    'noDataN' => 'noDataDim%',
+                    'noGroupChangeN' => 'noGroupChange%',
+                    'detailN' => 'detail%'
                 ]
             ];
             public $rep;

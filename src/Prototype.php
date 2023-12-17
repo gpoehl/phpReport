@@ -18,7 +18,7 @@ use NumberFormatter;
  * Prototype provides some basic output to help developing classes using phpReport.
  * All methods may be called as prototye methods instead of owner methods.
  */
-class Prototype
+class Prototype implements PrototypeInterface
 {
 
     private $nfo;           // Number formatter for ordinal numbers
@@ -53,9 +53,9 @@ TABLE1;
         'detail' => '#ffb76f',
         'detailFooter' => '#ffb76f',
         'noData' => '#ff4000',
-        'noData_n' => '#f78181',
-        'noGroupChange_n' => '#f88080',
-        'detail_n' => '#ff8000',
+        'noDataN' => '#f78181',
+        'noGroupChangeN' => '#f88080',
+        'detailN' => '#ff8000',
     ];
     // Additional option signs for action keys
     private $signs = [
@@ -63,13 +63,13 @@ TABLE1;
         'groupFooter' => '&lt;',
         'detail' => '&#9826;',
         'noData' => '&#9826;',
-        'noData_n' => '&#9826;',
+        'noDataN' => '&#9826;',
     ];
 
     /**
      * @param report $rep The php report object
      */
-    public function __construct(private report $rep) {
+    public function __construct(private Report $rep) {
         $this->nfo = new NumberFormatter('EN_US', NumberFormatter::ORDINAL);
     }
 
@@ -123,7 +123,7 @@ TABLE1;
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
             ),
-             'noData_n', 'detail_n', 'noGroupChange_n' =>
+             'noDataN', 'detailN', 'noGroupChangeN' =>
             $this->$method(
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
@@ -260,7 +260,7 @@ TABLE1;
      * @param int $dimID The dimension id of row not having data for next dimension.
      * @return string Created output
      */
-    public function noData_n($row, $rowKey, int $dimID): string {
+    public function noDataN($row, $rowKey, int $dimID): string {
         $missingDimID = $dimID + 1;
         $content = '' //" Value of higher group level $groupName = $val."
                 . "<br>Row values belongs to dimension $dimID!";
@@ -276,7 +276,7 @@ TABLE1;
      * @param int $dimID The current dimension id
      * @return string Created output
      */
-    public function detail_n($row, $rowKey, int $dimID): string {
+    public function detailN($row, $rowKey, int $dimID): string {
         $content = $this->renderRowValues($row, $rowKey);
         $content .= $this->renderRowCounter();
         return $this->renderAction($content, ", Dim = $dimID Rowkey = $rowKey");
@@ -289,7 +289,7 @@ TABLE1;
      * @param int $dimID The current dimension id
      * @return string Created output
      */
-    public function noGroupChange_n($row, $rowKey, int $dimID): string {
+    public function noGroupChangeN($row, $rowKey, int $dimID): string {
         $content = $this->renderRowValues($row, $rowKey);
         return $this->renderAction($content, ", Dim = $dimID");
     }

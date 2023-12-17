@@ -21,10 +21,10 @@ use InvalidArgumentException;
 class Groups
 {
 
-    /** @var Group[] Group object indexed by group level. */
+    /** @var Group[] Group object indexed by group level. No group for grandTotal */
     public array $items = [];
 
-    /** @var int[] Group level indexed by group name. */
+    /** @var int[] Group level indexed by group name. Includes also grandTotal name */
     public array $groupLevel = [];
 
     /**
@@ -37,23 +37,17 @@ class Groups
     /**
      * Add a group to group items
      * @param \gpoehl\phpReport\Group $group The group object
-     * @throws InvalidArgumentException
+     * @return The current group level
+     * @throws InvalidArgumentException when group name exists
      */
-    public function addGroup(Group $group): void {
+    public function addGroup(Group $group):int {
         if (isset($this->groupLevel[$group->name])) {
-            throw new \InvalidArgumentException("Group $group->name has already been defined");
+            throw new \InvalidArgumentException("Group $group->name already exists.");
         }
-
-        // Check group level just checks that report class did it well.
-        if (empty($this->items) && $group->level !== 1) {
-            throw new \InvalidArgumentException("First grouplevel must be 1. '$group->level' given");
-        }
-        if (!empty($this->items) && $group->level <> end($this->items)->level + 1) {
-            throw new \InvalidArgumentException("Grouplevel '$group->level' must be 1 greater than the previous level");
-        }
-
-        $this->items[$group->level] = $group;
+        $group->level = count($this->groupLevel);
         $this->groupLevel[$group->name] = $group->level;
+        $this->items[$group->level] = $group;
+        return $group->level;
     }
 
 }

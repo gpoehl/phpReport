@@ -44,13 +44,14 @@ The report class has some extra convenience methods to provide you with useful i
             The test can only be executed in group footers. 
 
             :param string|int|null $level: The group level to be checked. Defaults
-              to the current group or row when at detail level.
+              to the level above the current level.
 
-            :returns: True when group at level is the last one within the next
-             higher level. False when not.
+            :returns: True when the current group is the last one in all group
+             levels between the group above the current level and $level.
+             False when not.
 
             :throws: InvalidArgumentException when method is not called in a group footer
-             or when $level is below the current level.
+             or when $level is not above the current level.
 
     .. php:method:: getLevel($groupName = null): int
 

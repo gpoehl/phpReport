@@ -54,9 +54,9 @@ class BandOutput extends AbstractOutput implements CumulateIF
         'totalFooter' => self::FOOTER,
         'close' => self::FOOTER,
         'noData' => self::DATA,
-        'noData_n' => self::DATA,
-        'detail_n' => self::DATA,
-        'noGroupChange_n' => self::DATA,
+        'noDataN' => self::DATA,
+        'detailN' => self::DATA,
+        'noGroupChangeN' => self::DATA,
     ];
 
     // The band keys by which the output will be sorted.

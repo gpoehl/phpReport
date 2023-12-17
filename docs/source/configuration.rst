@@ -64,7 +64,7 @@ how the % sign the will be replaced during run time.
         * - noData
           - <br><strong>No data found </strong><br>
           -
-        * - noData_n
+        * - noDataN
           - noDataDim%
           - dimension id
         * - noGroupChange
@@ -131,13 +131,13 @@ What might look very strange at the first sigth is very powerful when you want t
 
 Your are not limited to declare how method names are build.
 
-For some actions it is suitable to define a string. Then the string will be appende to the $output variable.
+For some actions it is suitable to define a string. Then the string will be appended to the $output variable.
 A good example is the 'noData' action.
 In many cases you won't instantiate **phpReport** when your data query doen't return any data. But you might also in this cases a report with nice header and footer and in between just printint a message like "Sorry, we couldn't find any data".
 So it's not worth to create a method in each report which returns such a string.
 The solution is to declare this string as a default. A : sign at the beginning makes sure that this string is always treated as a string and can not be mixed up with a method name.
 
-The % sign in 'noData_n' actions will be replaced by the number of current dimension when the current dimension is greater than 0. See multi dimensional data for more details.
+The % sign in 'dataN', 'noDataN' and 'noGroupChangeN' actions will be replaced by the number of current dimension when the current dimension is greater than 0. See multi dimensional data for more details.
 
 The very last parameter is called 'userConfig'. This is an optional way how you can pass data around. **phpReport** isself does't use this values.
 

@@ -5,9 +5,10 @@ declare(strict_types=1);
 /**
  * Unit test of Action class
  */
+
 use gpoehl\phpReport\Action;
 use gpoehl\phpReport\Prototype;
-use gpoehl\phpReport\Report;
+use gpoehl\phpReport\RuntimeOption;
 use PHPUnit\Framework\TestCase;
 
 class ActionTest extends TestCase
@@ -84,12 +85,12 @@ class ActionTest extends TestCase
         $expect = 'could_be_a_method';
         $actionParam = [$expect, false];
         return [
-            'string1' => [$key, 'ab cd', 'ab cd', Report::CALL_EXISTING],
-            'string2' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
-            'string3' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
-            'string4' => [$key, $expect, $actionParam, Report::CALL_PROTOTYPE],
-            'string5' => [$key, $expect, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'string6' => [$key, $expectPrototye, $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'string1' => [$key, 'ab cd', 'ab cd', RuntimeOption::Default],
+            'string2' => [$key, $expect, $actionParam, RuntimeOption::Default],
+            'string3' => [$key, $expect, $actionParam, RuntimeOption::Magic],
+            'string4' => [$key, $expect, $actionParam, RuntimeOption::Prototype],
+            'string5' => [$key, $expect, $actionParam, RuntimeOption::PrototypeMethods],
+            'string6' => [$key, $expectPrototye, $actionParam, RuntimeOption::PrototypeAll],
         ];
     }
 
@@ -98,11 +99,11 @@ class ActionTest extends TestCase
         $actionParam = fn($p1, $p2, $p3, $p4) => ($p1);
         $expect = [null, $actionParam];
         return [
-            'closure1' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
-            'closure2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
-            'closure3' => [$key, $expect, $actionParam, Report::CALL_PROTOTYPE],
-            'closure4' => [$key, $expect, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'closure5' => [$key, [true, 'groupHeader'], $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'closure1' => [$key, $expect, $actionParam, RuntimeOption::Default],
+            'closure2' => [$key, $expect, $actionParam, RuntimeOption::Magic],
+            'closure3' => [$key, $expect, $actionParam, RuntimeOption::Prototype],
+            'closure4' => [$key, $expect, $actionParam, RuntimeOption::PrototypeMethods],
+            'closure5' => [$key, [true, 'groupHeader'], $actionParam, RuntimeOption::PrototypeAll],
         ];
     }
 
@@ -110,11 +111,11 @@ class ActionTest extends TestCase
         $key = Action::CALLABLE;
         $actionParam = $expect = ['foo', 'bar'];
         return [
-            'callable1' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
-            'callable2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
-            'callable3' => [$key, $expect, $actionParam, Report::CALL_PROTOTYPE],
-            'callable4' => [$key, $expect, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'callable5' => [$key, $expect, $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'callable1' => [$key, $expect, $actionParam, RuntimeOption::Default],
+            'callable2' => [$key, $expect, $actionParam, RuntimeOption::Magic],
+            'callable3' => [$key, $expect, $actionParam, RuntimeOption::Prototype],
+            'callable4' => [$key, $expect, $actionParam, RuntimeOption::PrototypeMethods],
+            'callable5' => [$key, $expect, $actionParam, RuntimeOption::PrototypeAll],
         ];
     }
 
@@ -124,11 +125,11 @@ class ActionTest extends TestCase
         $expectPrototye = [true, 'groupHeader'];
         $expect = [false, $actionParam];
         return [
-            'method1' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
-            'method2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
-            'method3' => [$key, $expect, $actionParam, Report::CALL_PROTOTYPE],
-            'method4' => [$key, $expectPrototye, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'method5' => [$key, $expectPrototye, $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'method1' => [$key, $expect, $actionParam, RuntimeOption::Default],
+            'method2' => [$key, $expect, $actionParam, RuntimeOption::Magic],
+            'method3' => [$key, $expect, $actionParam, RuntimeOption::Prototype],
+            'method4' => [$key, $expectPrototye, $actionParam, RuntimeOption::PrototypeMethods],
+            'method5' => [$key, $expectPrototye, $actionParam, RuntimeOption::PrototypeAll],
         ];
     }
 
@@ -138,11 +139,11 @@ class ActionTest extends TestCase
         $expectPrototye = [true, 'groupHeader'];
         $expect = [false, $actionParam];
         return [
-            'NoMmethod1' => [$key, Null, $actionParam, Report::CALL_EXISTING],
-            'NoMmethod2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
-            'NoMmethod3' => [$key, $expectPrototye, $actionParam, Report::CALL_PROTOTYPE],
-            'NoMmethod4' => [$key, $expectPrototye, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'NoMmethod5' => [$key, $expectPrototye, $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'NoMmethod1' => [$key, Null, $actionParam, RuntimeOption::Default],
+            'NoMmethod2' => [$key, $expect, $actionParam, RuntimeOption::Magic],
+            'NoMmethod3' => [$key, $expectPrototye, $actionParam, RuntimeOption::Prototype],
+            'NoMmethod4' => [$key, $expectPrototye, $actionParam, RuntimeOption::PrototypeMethods],
+            'NoMmethod5' => [$key, $expectPrototye, $actionParam, RuntimeOption::PrototypeAll],
         ];
     }
 
@@ -153,17 +154,17 @@ class ActionTest extends TestCase
         $expectPrototye = Null;
         $expect = false;
         return [
-            'False1' => [$key, $expect, $actionParam, Report::CALL_EXISTING],
-            'False2' => [$key, $expect, $actionParam, Report::CALL_ALWAYS],
-            'False3' => [$key, $expectPrototye, $actionParam, Report::CALL_PROTOTYPE],
-            'False4' => [$key, $expectPrototye, $actionParam, Report::CALL_ALWAYS_PROTOTYPE],
-            'False5' => [$key, $expectPrototye, $actionParam, Report::CALL_ALL_PROTOTYPE],
+            'False1' => [$key, $expect, $actionParam, RuntimeOption::Default],
+            'False2' => [$key, $expect, $actionParam, RuntimeOption::Magic],
+            'False3' => [$key, $expectPrototye, $actionParam, RuntimeOption::Prototype],
+            'False4' => [$key, $expectPrototye, $actionParam, RuntimeOption::PrototypeMethods],
+            'False5' => [$key, $expectPrototye, $actionParam, RuntimeOption::PrototypeAll],
         ];
     }
 
     public static function triggerProvider() :array{
         $error = Action::ERROR;
-        $callAction = Report::CALL_ALWAYS;
+        $callAction = RuntimeOption::Magic;
         return [
             'String' => [Action::STRING, 'Warning message', ['Warning message', $error], $callAction, $error],
             'StringArr' => [Action::STRING, 'WarningMessage', [['WarningMessage', false], $error], $callAction, $error],
@@ -174,13 +175,13 @@ class ActionTest extends TestCase
     }
 
     public function testInvalidActionKind() :void {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Invalid action kind '999'.");
         new Action('init', null, 1, ['abc', 999]);
     }
 
     public function testInvalidArrayElements() :void{
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Action target array must have 2 elements.");
         new Action('init', null, 1, ['abc', 999, 44]);
     }

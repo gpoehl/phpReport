@@ -6,11 +6,13 @@ declare(strict_types=1);
  * Unit test of Report class.
  * For tests with multiple dimensions see ReportMultipleDimensionTest file
  */
+
 use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\output\AbstractOutput;
 use gpoehl\phpReport\Report;
-use PHPUnit\Framework\TestCase;
+use gpoehl\phpReport\RuntimeOption;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
 class ReportTest extends TestCase
 {
@@ -41,7 +43,7 @@ class ReportTest extends TestCase
      #[DataProvider('noDataProvider')]
     public function testNoData($data, $expected) :void {
         $rep = (new Report($this->getBase(), ['actions' => ['noData' => 'nodata']]))
-                ->setCallOption(Report::CALL_ALWAYS);
+                ->setRuntimeOption(RuntimeOption::Magic);
         $rep->run($data);
         $this->assertSame('init, totalHeader, ' . $expected . 'totalFooter, close, ', $rep->out->get());
     }
@@ -60,14 +62,14 @@ class ReportTest extends TestCase
 
     public function testNoGroupsDefined() :void  {
         $rep = (new Report($this->getBase()))
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['A']]);
         $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
     }
 
     public function testRun_CompletedIsFalse():void  {
         $rep = (new Report($this->getBase()))
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['A']], false)
                 ->end();
         $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
@@ -76,14 +78,14 @@ class ReportTest extends TestCase
     public function testCallEndMethodWhenFinalizeIsTrueFails() :void {
         $this->expectException(Error::class);
         $rep = (new Report($this->getBase()))
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(['A'])               // run returns a string
                 ->end();                   // method chaining works only on objects.
     }
 
     public function testChunkOfRowsWithOptionFinalizeIsFalseAndNext() :void {
         $rep = (new Report($this->getBase()))
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['A'], ['B']], false);
         $rep->next(['C']);
         $rep->end();
@@ -92,7 +94,7 @@ class ReportTest extends TestCase
 
     public function testNextForOneRowNoGroups():void  {
         $rep = (new Report($this->getBase()))
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
         $rep->next(['A']);
         $rep->end();
@@ -103,7 +105,7 @@ class ReportTest extends TestCase
         $rep = (new Report($this->getBase()))
                 ->group('a', 'firstGroup')
                 ->group('b', 'secondGroup')
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['firstGroup' => 'A', 'secondGroup' => 'X']]);
         $this->assertSame('init, totalHeader, aBefore, aHeader, bBefore, bHeader, ' .
                 'detailHeader, detail, detailFooter, bFooter, bAfter, aFooter, aAfter, totalFooter, close, ', $rep);
@@ -113,7 +115,7 @@ class ReportTest extends TestCase
         $proto = $this->getPrototype();
         $rep = (new Report($proto))
                 ->group('a', 0)
-                ->setCallOption(Report::CALL_ALWAYS);
+                ->setRuntimeOption(RuntimeOption::Magic);
         $proto->report = $rep;
         $rep->run([['any value for group a', 'other value']]);
 
@@ -132,7 +134,7 @@ class ReportTest extends TestCase
       #[DataProvider('GroupValue_sum_and_rsum_Provider')]
     public function testGroupValue_sum_and_rsum($groupSource, $compSource, $key, $val, $row) :void {
         $rep = (new Report($this->getBase()))
-                ->setCallOption(Report::CALL_PROTOTYPE)
+                ->setRuntimeOption(RuntimeOption::Prototype)
                 ->group('A', $groupSource)
                 ->compute('B', $compSource)
                 ->sheet('C', $key, $val);
@@ -155,7 +157,7 @@ class ReportTest extends TestCase
      */
     public function testNoGroups() :void {
         $rep = (new Report($this->getBase()))
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['A'], ['B']]);
         $this->assertSame('init, totalHeader, detail, detail, totalFooter, close, ', $rep);
     }
@@ -166,7 +168,7 @@ class ReportTest extends TestCase
                 ->group('b', 'gb')
                 ->group('c', 'gc')
                 ->compute('d', 'a2')
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
         // First row exectues all headers
         $rep->next(['ga' => 11, 'gb' => 21, 'gc' => 31, 'a1' => 'a', 'a2' => 2]);
@@ -215,7 +217,7 @@ class ReportTest extends TestCase
                     'buildMethodsByGroupName' => $rule
                         ]))
                 ->group($name, 'ga')
-                ->setCallOption(Report::CALL_ALWAYS)
+                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['ga' => 1, 'gb' => 2]]);
         $this->assertSame("init, $totalHeader, $header, detailHeader, detail, detailFooter, $footer, $totalFooter, close, ", $rep);
     }
@@ -233,7 +235,7 @@ class ReportTest extends TestCase
         $rep = (new Report($this->getBase()))
                 ->group('a', 'ga')
                 ->group('b', 'gb', null, $headerAction, $footerAction)
-                ->setCallOption(Report::CALL_ALWAYS)
+                   ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['ga' => 1, 'gb' => 2]]);
         $this->assertSame('init, totalHeader, aBefore, aHeader, ' . $expectedHeader . 'detailHeader, detail, detailFooter, ' . $expectedFooter . 'aFooter, aAfter, totalFooter, close, ', $rep);
     }

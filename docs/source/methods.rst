@@ -44,9 +44,9 @@ Action methods called from report class
 
 :php:meth:`noData` Called when no data was given.
 
-:php:meth:`noData_n` Called when no data was given for dimension 'n'.
+:php:meth:`noDataN` Called when no data was given for dimension 'n'.
 
-:php:meth:`noGroupChange_n` Called when groups for dimension 'n' are declared but row didn't trigger a group change.
+:php:meth:`noGroupChangeN` Called when groups for dimension 'n' are declared but row didn't trigger a group change.
 
 
 Methods returning information

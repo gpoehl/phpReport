@@ -11,7 +11,7 @@ in parenthesis.
 Data independent events
 -----------------------
 
-These methods are called even when no data are provided.
+These actions will always be executed:
 
 init()
 ______
@@ -37,7 +37,6 @@ Data driven events
 noData()
 ________
     This event only occurs when the given data set is empty.
-    In this case the following events will never be raised.
 
 
 beforeGroupHeader($groupValue, $row, $rowKey)
@@ -113,14 +112,14 @@ Methods for multi dimensional data
 
 Following events belongs only to data sources having joined data.
 
-noData_n($dimID)
-________________
+noDataN($dimID)
+_______________
 
     Called when the declared source for the next data dimension doesn't return any data.
     :param int $dimID: The ID of data dimension not having related data.
 
-detail_n($row, $rowKey)
-_______________________
+detailN($row, $rowKey)
+______________________
 
     Except for the last dimension this event is raised for each data row (See detail method).
 
@@ -130,8 +129,8 @@ _______________________
     :param array|object $row: The current row.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
 
-noGroupChange_n($row, $rowKey, $dimID)
-______________________________________
+noGroupChangeN($row, $rowKey, $dimID)
+_____________________________________
 
     Raised only for rows not related to the last dimension and when
     group(s) are declared but current row don't trigger a group change.

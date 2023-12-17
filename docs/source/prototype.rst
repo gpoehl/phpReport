@@ -20,20 +20,22 @@ You can call the prototype function at any time by just calling
 
    $rep->prototype();
 
-This will return an html table for the current action key.
+This will call the same method in the prototype object.
 
 
-The other way is setting the call method parameter by calling the
-setCallAction() method with one of the following constants as parameter.
+The other way is setting the runtime option by calling the
+setruntimeOption(RuntimeOption $runtimeOption, PrototypeInterace $prototype = null) method by providing one of the RuntimeOption enum values.
 
-:CALL_EXISTING = 0:  Call methods in owner class only when implemented. Default.
-:CALL_ALWAYS = 1:  Call also not existing methods in owner class.
-   This allows using magic function calls.
-:CALL_PROTOTYPE = 2:  Call prototype for methods not implemented in owner class.
+:Default:  Call methods in target class only when implemented. 
+:Magic:  Call also not existing methods in owner class. Use _magic() in the target class to avoid runtim errors
+:Prototype:  Call prototype for methods not implemented in target class.
    Very useful for incremental developing of reports.
-:CALL_ALWAYS_PROTOTYPE = 3:  Call always prototype even when method exists in owner class.
-:CALL_ALL_PROTOTYPE = 4: Call prototype for all actions which are not callables and action is not false.
+   The prototype object might have on option to return any value for beforeGroup and afterGroup actions.
+:PrototypeMethods:  Call always prototype even when method exists in owner class.
+:PrototypeAll: Call prototype for all actions which are not callables and action is not false.
 
+The second parameter allows setting an prototye object. This can be any class which implemente the PrototypeInterface.
+ 
 
 Usually the method is called once before calling the run() method. But it is
 also possible to alter the call action at any time.
@@ -41,9 +43,11 @@ also possible to alter the call action at any time.
 .. code-block:: php
 
    // $rep has a reference to phpReport object
-   $rep->setCallAction(Report::CALL_EXISTING);
-   $rep->setCallAction(Report::CALL_ALWAYS);
-   $rep->setCallAction(Report::CALL_PROTOTYPE);
-   $rep->setCallAction(Report::CALL_ALWAYS_PROTOTYPE);
+   $rep->setRuntimeOption(RuntimeOption::Default);
+   $rep->setRuntimeOption(RuntimeOption::Magic, new MyOwnPrototype(exectueBeforeAndAfter:false));
+   $rep->setRuntimeOption(RuntimeOption::Prototype);
+   $rep->setRuntimeOption(RuntimeOption::PrototypeMethods);
+   $rep->setRuntimeOption(RuntimeOption::PrototypeAll);
 
-The prototying class is a good example how flexible a report can be.
+
+The default prototying class is a good example how flexible a report can be.
