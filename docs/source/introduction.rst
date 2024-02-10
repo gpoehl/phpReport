@@ -2,6 +2,72 @@
 Introduction
 ============
 
+
+|project_name| is a library written in pure PHP that provides a set of classes to 
+create any kind of reports.
+
+|project_name| integrates seamless with any framework but can also run alone.
+
+|project_name| manages all tasks when values in declared data fields changes 
+between data rows (group changes).
+
+.. code-block:: php
+
+    $rep = (new Report ($this))
+    ->group ('customer') 
+    ->group ('order', 'orderID')
+    ->group ('year', fn($row) => substr($row->orderDate, 0, 4));
+    
+The example above declares three groups. Group customer is linked to the field
+'customer', group order to the field 'orderID' and group year to the first four 
+bytes of the orderDate.
+
+To cumulate values call the compute function like
+
+.. code-block:: php
+
+
+
+
+    ->cumulate (substr($row->orderDate, 0, 4'orderValue') 
+    ->cumulate ('oderAmount')
+
+
+
+
+
+
+
+
+
+To cumulate values like in a spreadsheet call the sheet function like
+
+.. code-block:: php
+
+    ->sheet ('orderValue') 
+    ->cumulate ('oderAmount')
+
+    ->group ('year', fn($row) => substr($row->orderDate, 0, 4));
+ 
+
+Cumulating values is as easy as  
+
+Values of other data fields can be cumulated to get totals or subtotals at any
+time for all declared groups.
+
+to group changes and calculates
+ 
+values to provide totals and subtotals at any time for all declared groups.
+
+There is no need to create any 'printed output'. |project_name| can be used
+for all kind of jobs where actions need to be performed based on different 
+values in declared fields between two data rows.
+
+grouped or tasks  most typical scenario but there are a lot of other use cases. 
+
+Creating reports it the most typical scenario but there are a lot of other use cases. 
+
+
 |project_name| is a solid foundation for most applications working with
 data sets having to deal with group changes or to calculate totals and subtotals.
 Creating reports it the most typical scenario but there are a lot of other use cases. 

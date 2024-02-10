@@ -3,43 +3,6 @@
 Prototyping
 ===========
 
-Prototyping can be used in various scenarios to get information about the current
-status of the processed data.
-
-Prototyping in |project_name| is designed to help mainly in two scenarions.
-The first one is providing information while running an action method.  
-
-By simply calling the prototype method.
-
-.. code-block:: php
-
-   $rep->prototype();
-
-you'll call a method in the prototype object. The name of the prototype method
-is the same a the current action name.
-
-Within the other scenario you might redirect calls from the target object to the
-prototype object. 
-Setting the runTimeOption defines what calls will be redirected.
-
-
-
-To replace execution of actions in the target object with methods in a prototype 
-object call the setRuntimeOption method.
-
-.. code-block:: php
-
-   $rep->setRuntimeOption($option, PrototypeInterface $prototype = null);
-
-
-
-When no $prototype is given the default protottype object will be used.
-
-
-
-Protoyping the report
----------------------
-
 Before you start writing any code you might want to use the prototyping system
 to generate a report which shows some data of the currently processed row,
 names of methods which will be called in real life applications, the value of group
@@ -48,16 +11,16 @@ fields and some values out of the aggregated fields.
 Prototype tells also what the real action would be (e.g. Call method xy or
 append string 'foobarbaz').
 
+It's also a good idea to use prototyping before you start tracing or debugging
+your application.
 
-Protoyping for unit tests
--------------------------
+You can call the prototype function at any time by just calling
 
-Creating a generic prototype class can help to create ouptut which can be
-eleminate the requirement to create mock objects to run unit tests.
+.. code-block:: php
 
+   $rep->prototype();
 
-
-
+This will call the same method in the prototype object.
 
 
 The other way is setting the runtime option by calling the
@@ -88,8 +51,3 @@ also possible to alter the call action at any time.
 
 
 The default prototying class is a good example how flexible a report can be.
-
-
-
-Before using prototying the prototype object must be declared. This will be done
-via normal configuration.

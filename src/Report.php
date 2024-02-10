@@ -324,7 +324,7 @@ class Report {
      * @param $actionKey The event name.
      * @param array|null|false $actionParam
      * @param $level The group level or dimension ID.
-     * @param $name Group or Totalx name which replaces the % sign in $actionParam
+     * @param $name Group or Totalx name to replace the % sign in $actionParam
      * @return The new action object.
      */
     private function makeAction(string $actionKey, $actionParam, int $level, ?string $name = null): Action {

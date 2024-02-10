@@ -16,8 +16,7 @@ namespace gpoehl\phpReport;
  * Configurator handles configuration options
  * It loads the config file and merges configuration parameters
  */
-class Configurator
-{
+class Configurator {
 
     /**
      * @var $action[] Default actions indexed by the action key.
@@ -32,7 +31,28 @@ class Configurator
      * - in totalHeader and totalFooter by the value of $grandTotalName.
      * - in noDataN, detailN and nogroupChangeN by the dimension ID.
      */
-    public array $actions = [
+    public array $actionsNew = [
+        'beforeGroup' => 'before%',
+        'headerGroup' => 'header%',
+        'footerGroup' => 'footer%',
+        'afterGroup' => 'after%',
+        
+        // Detail has no group number
+        'headerDetail' => 'headerDetail',
+        'detail' => 'detail',
+        'footerDetail' => 'footerDetail',
+        
+        'noData' => '<br><strong>No data found</strong><br>', // Dimension = 0
+        
+        // Actions related to dimension. Dimensions don't have names.
+        'noDataN' => 'noDataDim%',
+        'detailN' => 'detail%',
+        'noGroupChangeN' => ["Current row in dimension % didn't trigger a group change.", Action::ERROR],
+    ];
+    
+   
+    
+     public array $actions = [
         'init' => 'init',
         'totalHeader' => '%Header',
         'beforeGroup' => '%Before',
@@ -52,14 +72,14 @@ class Configurator
 
     /** @var Classname for default output handler */
     public string $outputHandler = output\StringOutput::class;
-    
+
     /** @var Classname for default prototye class */
     public string $prototype = Prototype::class;
 
     /** @var true | false | 'ucfirst' Rule to build method groupheader and -footer 
      * as well as totalHeader and -footer names. 
      * True will replace the % sign by the group name, false by the groupID. 
-     * 'ucfirst' will use the reselut of the ucfirst($groupName) function. 
+     * 'ucfirst' will use the result of the ucfirst($groupName) function. 
      */
     public $buildMethodsByGroupName = true;
 
@@ -99,9 +119,9 @@ class Configurator
     private function setConfiguration(array $config = null): void {
         if ($config !== null) {
             foreach ($config as $param => $value) {
-                $result = match ($param) {
+                match ($param) {
                     'buildMethodsByGroupName' => $this->setBuildMethodsByGroupName($value),
-                    'grandTotalName' => $this->setGrandTotalName($value),
+                    'grandTotalName' => $this->grandTotalName = $this->validateName( $value, 'Grand total'),
                     'actions' => $this->setActions($value),
                     default => throw new \InvalidArgumentException("Unknown configuration parameter $param."),
                 };
@@ -128,20 +148,20 @@ class Configurator
     }
 
     /**
-     * Set the name for the grand total group
-     * @param string $name The name of the grand total group (level = 0)
+     * Validate variable name 
+     * @param string The message prefix in case of invalid name  
+     * @param string $name The name to be validated
      * @throws InvalidArgumentException
      */
-    private function setGrandTotalName(string $name): void {
+    private function validateName(string $name, string $messagePrefix) :string  {
         $name = trim($name);
         if ($name === null || $name == '') {
-            throw new \InvalidArgumentException("Grand total name can not be empty.");
+            throw new \InvalidArgumentException("$messagePrefix name can not be empty.");
         }
         if (!Action::isNameValid($name)) {
-            throw new \InvalidArgumentException("Grand total name '$name' is invalid.");
+            throw new \InvalidArgumentException("$messagePrefix name '$name' is invalid.");
         }
-
-        $this->grandTotalName = $name;
+       return $name;
     }
 
     /**
@@ -159,5 +179,4 @@ class Configurator
             $this->actions[$key] = $baseAction;
         }
     }
-
 }
