@@ -37,18 +37,18 @@ interface PrototypeInterface
     
 
 
-    public function init(): string ;
+    public function Start(): string ;
 
-    public function close(): string ;
+    public function Finish(): string ;
    
 
-    public function totalHeader();
+    public function TotalHeader();
 
-    public function totalFooter(): string ;
+    public function TotalFooter(): string ;
     
-    public function beforeGroup($val, $row, $rowKey): string ;
+    public function GroupBefore($val, $row, $rowKey): string ;
 
-    public function groupHeader($val, $row, $rowKey): string;
+    public function GroupHeader($val, $row, $rowKey): string;
 
     /**
      * Prepare output for group footers
@@ -59,24 +59,24 @@ interface PrototypeInterface
      * @param type $rowKey
      * @return string Table with data related to a group footer
      */
-    public function groupFooter($val, $row, $rowKey): string ;
+    public function GroupFooter($val, $row, $rowKey): string ;
 
-    public function afterGroup($val, $row, $rowKey): string ;
+    public function GroupAfter($val, $row, $rowKey): string ;
 
-    public function detailHeader($row, $rowKey): string ;
+    public function DetailHeader($row, $rowKey): string ;
 
-    public function detail($row, $rowKey): string ;
+    public function Detail($row, $rowKey): string ;
 
-    public function detailFooter($row, $rowKey): string ;
+    public function DetailFooter($row, $rowKey): string ;
 
-    public function noData(): string ;
+    public function NoData(): string ;
 
     /**
      * Create output when no data was given in $dimID for next dimension
      * @param int $dimID The dimension id of row not having data for next dimension.
      * @return string Created output
      */
-    public function noDataN($row, $rowKey, int $dimID): string ;
+    public function dimNoData($row, $rowKey, int $dimID): string ;
 
     /**
      * Create output for row of dimensions but not for the last dimenion.
@@ -86,7 +86,7 @@ interface PrototypeInterface
      * @param int $dimID The current dimension id
      * @return string Created output
      */
-    public function detailN($row, $rowKey, int $dimID): string ;
+    public function dimDetail($row, $rowKey, int $dimID): string ;
 
     /**
      * Create output when row in dimensions didn't trigger a group change.
@@ -95,7 +95,7 @@ interface PrototypeInterface
      * @param int $dimID The current dimension id
      * @return string Created output
      */
-    public function noGroupChangeN($row, $rowKey, int $dimID): string ;
+    public function dimNoGroupChange($row, $rowKey, int $dimID): string ;
 
   
 

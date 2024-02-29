@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace gpoehl\phpReport\Output;
 
+use gpoehl\phpReport\Actionkey;
 use gpoehl\phpReport\CumulateIF;
 
 /**
@@ -31,33 +32,15 @@ use gpoehl\phpReport\CumulateIF;
  * This class runs at nearly the same speed as the StringOutput class but needs
  * more peak memory while strings are build from array elements.
  */
-class BandOutput extends AbstractOutput implements CumulateIF
-{
+class BandOutput extends AbstractOutput implements CumulateIF {
 
     /**
      * @var $output[][][]. $values saved via write() are stored indexed by
      * group level, band key. Last key is a non associated key for added output.
      */
     private array $output = [];
-    
     // Map action keys to numeric keys. Output will be sorted by this keys.
-    public array $actionKeyMapper = [
-        'init' => self::HEADER,
-        'totalHeader' => self::HEADER,
-        'beforeGroup' => self::HEADER,
-        'groupHeader' => self::HEADER,
-        'detailHeader' => self::HEADER,
-        'detail' => self::DATA,
-        'detailFooter' => self::FOOTER,
-        'groupFooter' => self::FOOTER,
-        'afterGroup' => self::FOOTER,
-        'totalFooter' => self::FOOTER,
-        'close' => self::FOOTER,
-        'noData' => self::DATA,
-        'noDataN' => self::DATA,
-        'detailN' => self::DATA,
-        'noGroupChangeN' => self::DATA,
-    ];
+    public \WeakMap $actionKeyMapper;
 
     // The band keys by which the output will be sorted.
     public const HEADER = 1;
@@ -69,6 +52,27 @@ class BandOutput extends AbstractOutput implements CumulateIF
     public const BOTTOMSUMMARYDATA = 7;
     public const BOTTOMSUMMARYFOOTER = 8;
     public const FOOTER = 9;
+
+    public function __construct(public string $separator = '') {
+        $this->actionKeyMapper = new \WeakMap();
+        $this->actionKeyMapper [Actionkey::Start] = self::HEADER;
+        $this->actionKeyMapper [Actionkey::Finish] = self::FOOTER;
+        $this->actionKeyMapper [Actionkey::TotalHeader] = self::HEADER;
+        $this->actionKeyMapper [Actionkey::TotalFooter] = self::FOOTER;
+        $this->actionKeyMapper [Actionkey::NoData] = self::DATA;
+        $this->actionKeyMapper [Actionkey::DetailHeader] = self::HEADER;
+        $this->actionKeyMapper [Actionkey::Detail] = self::DATA;
+        $this->actionKeyMapper [Actionkey::DetailFooter] = self::FOOTER;
+        $this->actionKeyMapper [Actionkey::GroupBefore] = self::HEADER;
+        $this->actionKeyMapper [Actionkey::GroupFirst] = self::HEADER;
+        $this->actionKeyMapper [Actionkey::GroupHeader] = self::HEADER;
+        $this->actionKeyMapper [Actionkey::GroupFooter] = self::FOOTER;
+        $this->actionKeyMapper [Actionkey::GroupLast] = self::FOOTER;
+        $this->actionKeyMapper [Actionkey::GroupAfter] = self::FOOTER;
+        $this->actionKeyMapper [Actionkey::DimNoData] = self::DATA;
+        $this->actionKeyMapper [Actionkey::DimDetail] = self::DATA;
+        $this->actionKeyMapper [Actionkey::DimNoGroupChange] = self::DATA;
+    }
 
     /**
      * Write (append) a value to output
@@ -220,5 +224,4 @@ class BandOutput extends AbstractOutput implements CumulateIF
     public function __toString() {
         return $this->get();
     }
-
 }

@@ -19,7 +19,7 @@ final class DimensionTest extends TestCase {
 
     public function setUp(): void {
         $this->total = new Collector();
-        $this->stack = new Dimension(1, 4, 'DefaultTarget');
+        $this->stack = new Dimension(1, '0',4, 'DefaultTarget');
     }
 
     #[DataProvider('rowProvider')]

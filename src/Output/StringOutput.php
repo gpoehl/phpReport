@@ -18,8 +18,14 @@ namespace gpoehl\phpReport\Output;
  * Output is managed as plain string.
  * Parameter for level and subkey are ignored.
  */
-class StringOutput extends AbstractOutput
-{
+class StringOutput extends AbstractOutput {
+
+    public function __construct(public string $separator = '') {
+        $this->actionKeyMapper = new \WeakMap();
+        foreach (\gpoehl\phpReport\Actionkey::cases() as $case) {
+            $this->actionKeyMapper[$case] = 0;
+        }
+    }
 
     private $output = '';
 
@@ -51,5 +57,4 @@ class StringOutput extends AbstractOutput
     public function __toString() {
         return $this->get();
     }
-
 }

@@ -17,14 +17,10 @@ namespace gpoehl\phpReport;
  */
 class Group {
 
-    // @var The group header action to be executed before the headerAction
-    public Action $beforeAction;
-    // @var The group header action to be executed on begin of a group change
-    public Action $headerAction;
-    // @var The group footer action to be executed after all group members are handled.
-    public Action $footerAction;
-    // @var The group header action to be executed after the footerAction
-    public Action $afterAction;
+    /* @var $actions Action objects indexed by ActionKey enum. */
+    public \WeakMap $actions;
+            
+   
      // @var The group level set when group is added to Groups
     public int $level;
 
@@ -38,7 +34,7 @@ class Group {
      * Will be unset when dimension instatiates getter class
      */
     public function __construct(public readonly string $name, public readonly int $dimID,  public $valueSource, public array $params) {
-      
+      $this->actions = new \WeakMap;
         if ($dimID < 0) {
             throw new \InvalidArgumentException("DimID '$dimID' must not be less zero");
         }

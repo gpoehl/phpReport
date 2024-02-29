@@ -19,28 +19,29 @@ namespace gpoehl\phpReport\Output;
 abstract class AbstractOutput
 {
 
-     /* @var $actionKeyMapper indexed by action name to map action with band. */
-    public array $actionKeyMapper = [
-        'init' => 0,
-        'totalHeader' => 0,
-        'beforeGroup' => 0,
-        'groupHeader' => 0,
-        'detailHeader' => 0,
-        'detailFooter' => 0,
-        'detail' => 0,
-        'groupFooter' => 0,
-        'afterGroup' => 0,
-        'totalFooter' => 0,
-        'close' => 0,
-        'noData' => 0,
-        'noDataN' => 0,
-        'detailN' => 0,
-        'noGroupChangeN' => 0,
-    ];
+//     /* @var $actionKeyMapper indexed by action name to map action with band. */
+ public \WeakMap $actionKeyMapper;
+//    public array $actionKeyMapper = [
+//         'Start' => 0,
+//        'TotalHeader' => 0,
+//        'GroupFirst' => 0,
+//        'GroupBefore' => 0,
+//        'GroupHeader' => 0,
+//        'DetailHeader' => 0,
+//        'Detail' => 0,
+//        'DetailFooter' => 0,
+//        'GroupFooter' => 0,
+//        'GroupLast' => 0,
+//        'GroupAfter' => 0,
+//        'TotalFooter' => 0,
+//        'Finish' => 0,
+//        'NoData' => 0,
+//        'DimNoData' => 0,
+//        'DimDetail' => 0,
+//        'DimNoGroupChange' => 0,
+//    ];
 
-    public function __construct(public string $separator = '') {
-
-    }
+    abstract function __construct(string $separator);   
 
     public function setSeparator(string $separator) {
         $this->separator = $separator;

@@ -41,29 +41,29 @@ TABLE1;
     TABLE2;
     // Background colors for action keys. Columns 1 and 2 of table header in $table.
     private $colors = [
-        'init' => '#ccff33',
-        'close' => '#ccff33',
-        'totalHeader' => '#b4faa3',
-        'totalFooter' => '#b4faa3',
-        'beforeGroup' => '#93db00',
-        'groupHeader' => '#93db00',
-        'groupFooter' => '#93db00',
-        'afterGroup' => '#93db00',
-        'detailHeader' => '#ffb76f',
-        'detail' => '#ffb76f',
-        'detailFooter' => '#ffb76f',
-        'noData' => '#ff4000',
-        'noDataN' => '#f78181',
-        'noGroupChangeN' => '#f88080',
-        'detailN' => '#ff8000',
+        'Start' => '#ccff33',
+        'Finish' => '#ccff33',
+        'TotalHeader' => '#b4faa3',
+        'TotalFooter' => '#b4faa3',
+        'GroupBefore' => '#93db00',
+        'GroupHeader' => '#93db00',
+        'GroupFooter' => '#93db00',
+        'GroupAfter' => '#93db00',
+        'DetailHeader' => '#ffb76f',
+        'Detail' => '#ffb76f',
+        'DetailFooter' => '#ffb76f',
+        'NoData' => '#ff4000',
+        'DimNoData' => '#f78181',
+        'DimNoGroupChange' => '#f88080',
+        'DimDetail' => '#ff8000',
     ];
     // Additional option signs for action keys
     private $signs = [
-        'groupHeader' => '&gt;',
-        'groupFooter' => '&lt;',
-        'detail' => '&#9826;',
-        'noData' => '&#9826;',
-        'noDataN' => '&#9826;',
+        'GroupHeader' => '&gt;',
+        'GroupFooter' => '&lt;',
+        'Detail' => '&#9826;',
+        'NoData' => '&#9826;',
+        'DimNoData' => '&#9826;',
     ];
 
     /**
@@ -86,11 +86,12 @@ TABLE1;
     private function renderAction(string $content, string $headerData = ''): string {
         $methodKey = $this->rep->currentAction->key;
         $headerCol3 = $this->getMethodName() . $headerData;
-        $sign = ($this->signs[$methodKey]) ?? '';
-        $color = substr($this->colors[$methodKey], 1);
+        $sign = ($this->signs[$methodKey->name]) ?? '';
+        $color = substr($this->colors[$methodKey->name], 1);
         // Modify groupheader and footer background colors. Using hex color codes
         // of a method and increase this by hex(30) * actual Level
-        if (str_starts_with($methodKey, 'group')) {
+//        if (str_starts_with($methodKey, 'group')) {
+            if ($methodKey->group()=== 'group') {
             $color = '#' . dechex(hexdec($color) + (hexdec("000030") * $this->rep->getLevel()));
         }
         // width of column 1
@@ -98,10 +99,9 @@ TABLE1;
         // width of column 3 (constant is sum of column 1 and column 3
         $widthCol3 = 100 - $width;
 
-        if (!in_array($methodKey, ['init', 'close', 'noData'])) {
-            $methodKey .= '&nbsp;' . $this->rep->getLevel();
-        }
-        return "\n" . sprintf($this->table, $color, $width, $sign, $methodKey, $widthCol3, $headerCol3, $content);
+        $methodName = ($methodKey->group() !== 'main') ? $methodKey->name : $methodKey->name . '&nbsp;' . $this->rep->getLevel();
+        
+        return "\n" . sprintf($this->table, $color, $width, $sign, $methodName, $widthCol3, $headerCol3, $content);
     }
 
     /**
@@ -111,26 +111,27 @@ TABLE1;
      */
     public function magic(): string {
         $method = $this->rep->currentAction->key;
-        return match ($method) {
-           'beforeGroup', 'afterGroup', 'groupHeader', 'groupFooter' =>
-            $this->$method(
+        $methodName = $method->name;
+        return match ($method->group()) {
+           'group' =>
+            $this->$methodName(
                     $this->rep->getGroupValue(),
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
             ),
-            'detail', 'detailHeader' ,'detailFooter',  =>
-            $this->$method(
+            'detail',  =>
+            $this->$methodName(
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
             ),
-             'noDataN', 'detailN', 'noGroupChangeN' =>
-            $this->$method(
+             'dim' =>
+            $this->$methodName(
                     $this->rep->getRow(),
                     $this->rep->getRowKey(),
                     $this->rep->getDimID()
             ),
             //  Methods without extra parameters,
-            default => $this->$method(),
+           default => $this->$methodName(),
         };
     }
 
@@ -162,19 +163,19 @@ TABLE1;
         }
     }
 
-    public function init(): string {
+    public function start(): string {
         return $this->renderAction('Place here all stuff to initialize the job.');
     }
 
-    public function close(): string {
+    public function finish(): string {
         return $this->renderAction('Cleanup your dishes here.');
     }
 
-    public function totalHeader(): string {
+     public function TotalHeader(): string {
         return $this->renderAction('A good place to print selection criteria or a cover page.');
     }
 
-    public function totalFooter(): string {
+     public function Totalfooter(): string {
         $content = 'A good place to print global summaries.';
         $content .= $this->renderTotals();
         $content .= $this->renderRowCounter();
@@ -182,7 +183,7 @@ TABLE1;
         return $this->renderAction($content);
     }
 
-     public function beforeGroup($val, $row, $rowKey): string {
+     public function groupBefore($val, $row, $rowKey): string {
         $content = $this->renderRowValues($row, $rowKey);
         $val = $val ?? 'Null';
         return $this->renderAction($content, ", Group value = $val");
@@ -221,7 +222,7 @@ TABLE1;
         return $this->renderAction($content, ", Group value = $val");
     }
 
-    public function afterGroup($val, $row, $rowKey): string {
+    public function groupAfter($val, $row, $rowKey): string {
         $content = ($this->rep->isLast()) ?
                 "I was the last " . $this->rep->getGroupName() :
                 "There are more {$this->rep->getGroupName()}(s)";
@@ -260,7 +261,7 @@ TABLE1;
      * @param int $dimID The dimension id of row not having data for next dimension.
      * @return string Created output
      */
-    public function noDataN($row, $rowKey, int $dimID): string {
+    public function dimNoData($row, $rowKey, int $dimID): string {
         $missingDimID = $dimID + 1;
         $content = '' //" Value of higher group level $groupName = $val."
                 . "<br>Row values belongs to dimension $dimID!";
@@ -276,7 +277,7 @@ TABLE1;
      * @param int $dimID The current dimension id
      * @return string Created output
      */
-    public function detailN($row, $rowKey, int $dimID): string {
+    public function dimDetail($row, $rowKey, int $dimID): string {
         $content = $this->renderRowValues($row, $rowKey);
         $content .= $this->renderRowCounter();
         return $this->renderAction($content, ", Dim = $dimID Rowkey = $rowKey");
@@ -289,7 +290,7 @@ TABLE1;
      * @param int $dimID The current dimension id
      * @return string Created output
      */
-    public function noGroupChangeN($row, $rowKey, int $dimID): string {
+    public function dimNoGroupChange($row, $rowKey, int $dimID): string {
         $content = $this->renderRowValues($row, $rowKey);
         return $this->renderAction($content, ", Dim = $dimID");
     }

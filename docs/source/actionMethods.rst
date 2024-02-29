@@ -1,11 +1,14 @@
 Named events
 ............
 
-Each named event is mapped to an action.
-Below are all events listed. Parameters passed to the action object are shown
-in parenthesis.
+Actions are identified by an ActionKey Enum. But you can always use the name
+of the ActionKey. That allows usage of ActionKeys as keys in an array.
 
-.. note: Not all actions make use of the parameters.
+The executable action can be set during the initialisation process or by passing
+specific parameters to certain methods.
+ 
+Below is a list of all actions. Parameters passed to the action object are shown
+in parenthesis.
 
 
 Data independent events
@@ -13,34 +16,34 @@ Data independent events
 
 These actions will always be executed:
 
-init()
-______
+Start()
+_______
     First event. Use to initialize application properties independent
     from the __construct method.
 
-close()
-_______
+Finish()
+________
     Last event. Use to clean up the dishes independent from __destruct method.
 
-totalHeader()
+TotalHeader()
 _____________
 
-    Called once to build the total header page of the report.
+    Called once to build the total header of the report.
 
-totalFooter()
+TotalFooter()
 _____________
-    Called once to build the total footer page of the report.
+    Called once to build the total footer of the report.
 
 Data driven events
 ------------------
 
-noData()
+NoData()
 ________
     This event only occurs when the given data set is empty.
 
 
-beforeGroupHeader($groupValue, $row, $rowKey)
-_____________________________________________
+GroupBefore($groupValue, $row, $rowKey)
+_______________________________________
 
     Raised before the group header action. To suppress any further actions
     return 'false'.
@@ -49,8 +52,8 @@ _____________________________________________
     :param array|object $row: The current row which triggered the group change.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
 
-groupHeader($groupValue, $row, $rowKey)
-_______________________________________________
+GroupHeader($groupValue, $row, $rowKey)
+_______________________________________
 
     Raised when group values between two rows are not equal. Each group has
     its own groupHeader.
@@ -64,7 +67,7 @@ _______________________________________________
     :param array|object $row: The current row which triggered the group change.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
 
-groupFooter($groupValue, $row, $rowKey, $dimID)
+GroupFooter($groupValue, $row, $rowKey, $dimID)
 _______________________________________________
 
     groupFooters are executed like groupHeaders when group values between to rows
@@ -77,8 +80,8 @@ _______________________________________________
     to the last row within this group and **not** to the latest read row which triggered
     the group change.
 
-afterGroupFooter($groupValue, $row, $rowKey)
-____________________________________________
+GroupAfter($groupValue, $row, $rowKey)
+_______________________________________
 
     Raised after groupFooter. Might be used to handle the current output.
     Examples:
@@ -86,14 +89,14 @@ ____________________________________________
     Generate pdf file.
     Send output per mail.
 
-beforeDetail($row, $rowKey)
+DetailHeader($row, $rowKey)
 ___________________________
 
     Raised before detail actions. This is after the last afterGroupFooter action.
     Might be used to create header for details when groupFooter of last group
     is not suitable or to be more flexible.
 
-detail($row, $rowKey)
+Detail($row, $rowKey)
 _____________________
 
     Executed for each row of the last data dimension. When the row triggered
@@ -102,7 +105,7 @@ _____________________
     :param array|object $row: The current row.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
 
-afterDetail($row, $rowKey)
+DetailFooter($row, $rowKey)
 ___________________________
 
     Raised after detail actions.
@@ -112,14 +115,14 @@ Methods for multi dimensional data
 
 Following events belongs only to data sources having joined data.
 
-noDataN($dimID)
-_______________
+DimNoData($dimID)
+_________________
 
     Called when the declared source for the next data dimension doesn't return any data.
     :param int $dimID: The ID of data dimension not having related data.
 
-detailN($row, $rowKey)
-______________________
+DimDdetail($row, $rowKey)
+_________________________
 
     Except for the last dimension this event is raised for each data row (See detail method).
 
@@ -129,8 +132,8 @@ ______________________
     :param array|object $row: The current row.
     :param mixed $rowKey: The rowKey is the key of the current row taken from the input data set or given by calling the next() method.
 
-noGroupChangeN($row, $rowKey, $dimID)
-_____________________________________
+DimNoGroupChange($row, $rowKey, $dimID)
+_______________________________________
 
     Raised only for rows not related to the last dimension and when
     group(s) are declared but current row don't trigger a group change.

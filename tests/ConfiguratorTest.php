@@ -7,38 +7,102 @@ declare(strict_types=1);
  */
 use gpoehl\phpReport\Configurator;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-class ConfiguratorTest extends TestCase {
 
-    public function testBuildMethodsByGroupName() {
-        $conf = new Configurator(['buildMethodsByGroupName' => 'ucfirst']);
-        $this->assertSame('ucfirst', $conf->buildMethodsByGroupName);
-        $conf = new Configurator(['buildMethodsByGroupName' => ' uCfIrSt ']);
-        $this->assertSame('ucfirst', $conf->buildMethodsByGroupName);
-        $conf = new Configurator(['buildMethodsByGroupName' => true]);
-        $this->assertSame(true, $conf->buildMethodsByGroupName);
-        $conf = new Configurator(['buildMethodsByGroupName' => false]);
-        $this->assertSame(false, $conf->buildMethodsByGroupName);
-        $this->expectException(InvalidArgumentException::class);
-        $conf = new Configurator(['buildMethodsByGroupName' => 'invalid']);
+final class ConfiguratorTest extends TestCase {
+
+    #[DataProvider('namesProvider')]
+    public function testNames(string $name, string $value, string $expected): void {
+        $conf = new Configurator([$name => $value]);
+        $this->assertSame($expected, $conf->$name,);
     }
 
-    public function testSetGrandTotalName() {
-        $conf = new Configurator(['grandTotalName' => 'validName']);
-        $this->assertSame('validName', $conf->grandTotalName);
-        $this->expectException(InvalidArgumentException::class);
-        new Configurator(['grandTotalName' => 'invalid Name']);
+    public static function namesProvider(): array {
+        return [
+            ['totalName', 'testTotal', 'testTotal'],
+            ['detailName', 'testDetail', 'testDetail'],
+        ];
     }
-    
-     public function testEmptyGrandTotalName() {
+
+    #[DataProvider('invalidNamesProvider')]
+    public function testInvalidNames(string $name, string $value): void {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Grand total name can not be empty.");
-        new Configurator(['grandTotalName' => '']);
+        new Configurator([$name => $value]);
+    }
+
+    public static function invalidNamesProvider(): array {
+        return [
+            ['totalName', 'test Total'],
+            ['detailName', 'test Detail'],
+        ];
+    }
+
+    #[DataProvider('emptyNamesProvider')]
+    public function testEmptyNames(string $name, string $value): void {
+        $this->expectException(InvalidArgumentException::class);
+        new Configurator([$name => $value]);
+    }
+
+    public static function emptyNamesProvider(): array {
+        return [
+            ['totalName', ''],
+            ['detailName', ''],
+        ];
     }
 
     public function testInvalidConfigurationParameter() {
         $this->expectException(InvalidArgumentException::class);
         new Configurator(['invalid' => 'invalid Parameter']);
     }
-
+    
+    #[DataProvider('actionsProvider')]
+    #[DataProvider('configFileProvider')]
+    public function testActions(array $params, string $expected): void {
+        $conf = new Configurator($params);
+        $this->assertSame($expected, $conf->actions[gpoehl\phpReport\Actionkey::GroupHeader]);
+    }
+   
+    public static function actionsProvider(): array {
+        return [
+           'Get default' => [ ['configFile' =>false], 'header%S'],
+           'False nameded actions'  => [['useNumberedActions' => false], 'header%S'],
+            'Use numbered actions' =>[ ['useNumberedActions' => true] , 'header%n'],
+            'Alter default actions' => [ ['useNumberedActions' => true,
+                'numberedActions' => [gpoehl\phpReport\Actionkey::GroupHeader->name => 'test%s']], 'test%s'],
+            'actions has highest priority' => [ ['useNumberedActions' => true,
+                'numberedActions' => [gpoehl\phpReport\Actionkey::GroupHeader->name => 'test%s'],
+                'actions' => [gpoehl\phpReport\Actionkey::GroupHeader->name => '%Stest'],
+                ], '%Stest'],
+        ];
+    }
+    
+     public static function configFileProvider(): array {
+        return [
+           'Get default' => [ [], 'header%S'],
+           'False nameded actions'  => [['useNumberedActions' => false], 'header%S'],
+            'Use numbered actions' =>[ ['useNumberedActions' => true] , 'header%n'],
+            'Alter default actions' => [ ['useNumberedActions' => true,
+                'numberedActions' => [gpoehl\phpReport\Actionkey::GroupHeader->name => 'test%s']], 'test%s'],
+            'actions has highest priority' => [ ['useNumberedActions' => true,
+                'numberedActions' => [gpoehl\phpReport\Actionkey::GroupHeader->name => 'test%s'],
+                'actions' => [gpoehl\phpReport\Actionkey::GroupHeader->name => '%Stest'],
+                ], '%Stest'],
+        ];
+    }
+    
+     #[DataProvider('configFileNameProvider')]
+     public function testConfigFileName($name, string $expected): void {
+        $conf = new Configurator(['configFilename' => __Dir__ . $name]);
+//        $this->assertSame($expected, __Dir__);
+        $this->assertSame($expected, $conf->totalName);
+    }
+    
+     public static function configFileNameProvider(): array {
+        return [
+           'Get default' => ['/config/config1.php' , 'config1'],
+          
+        ];
+    }
+    
 }

@@ -30,8 +30,8 @@ class Groups
     /**
      * @param $grandTotalName Name for grand total group (Level = 0)
      */
-    public function __construct(public string $grandTotalName) {
-        $this->groupLevel[$grandTotalName] = 0;
+    public function __construct(public string $totalName) {
+        $this->groupLevel[$totalName] = 0;
     }
 
     /**

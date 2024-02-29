@@ -18,27 +18,22 @@ row don't equal those of the current row.
 Once a group change has been detected the appropiate action methods (group headers
 and group footers) will be executed.
 
-.. php:method:: group($name, $value = null, $headerAction = null, $footerAction = null, ...params)
+.. php:method:: group ($name, $source = null, $actions = null, ...params):report
 
     Declare a data group. 
 
     :param string $name: The name to be used for this group. 
-     This name will be used to build method names for group headers and footers
-     (depending on configuration parameters). Must be unique between all dimensions.
+     This name might be used to build method names for group headers and footers 
+     and must be unique.
      All group related values (including cumulated values from sum or sheet methods 
      as well as row and group counters) can be retrieved by this group name or the group level.
 
-    :param mixed $value: Source of the group value. Use the attribute name 
-      when data row is an object or the key name when data row is an array.
+    :param mixed $source: Source of the group value. Defaults to the name.
+     Use the attribute name when data row is an object or the key name when data row is an array.
       It's also possiblbe to use a callable (a closure or an array having 
       class and method parameters) expecting $row and $rowKey as parameters. 
-      When the $value parameter is null it defaults to the content of $name parameter. 
 
-    :param mixed $headerAction: Set individual group header action. 
-      Null to execte the default action. False to deny any action.
-
-    :param mixed $footerAction: Set individual group footer action. 
-      Null to execte the default action. False to deny any action.
+     :param iterable|null $actions: Array of group related actions to replace configurated actions.
 
     :param mixed $params: Variadic parameters to be passed to callables declared 
      with value parameter. 

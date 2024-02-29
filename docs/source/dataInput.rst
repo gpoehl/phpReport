@@ -60,13 +60,20 @@ To the application joining data is largely invisible. Grouping and computing
 values behave like data would have been served as a flat record.
  
 
-.. php:method:: join($value, $noDataAction, $dataAction, $noGroupChangeAction, ...$params): Report
+.. php:method:: join ($name, $source = null, $actions = null, ...$params): Report
  
-    :param mixed $value: The source for the joined data. When source is
-     a callable just return the whole the data set or return false and call the 
-     nextSet() method or the next() method for each data row.  
-    :param mixed $noDataAction: The action to be executed when $source doesn't return any data.
-    :param mixed $dataAction: The action to be executed for each row returned by $source.
-    :param mixed $noGroupChangeAction: The action to be executed when two consecutive rows don't trigger
-     a group change.
+    :param string $name: The name to be used for this data set. 
+     This name might be used to build method names related to a data set and must
+     be unique between all data sets.
+     Data rows can retrieved by this name or by an id. The id for the first data set
+     is always 0. So each call of the join methods incremets this id.
+
+    :param mixed $source: The source for the joined data. Defaults to the name.
+     When source is a callable return the whole the data set or false and call the 
+     nextSet() method or the next() method for each data row. 
+ 
+    :param iterable|null $actions: Array of data set related actions to replace configurated actions.
+
     :param mixed $params: Variadic parameters to be passed to $source.
+
+    :returns: $this which allows method call chaining.

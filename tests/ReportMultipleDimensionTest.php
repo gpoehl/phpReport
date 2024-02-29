@@ -28,20 +28,20 @@ final class ReportMultipleDimensionTest extends TestCase {
     public function runNoDataInDimension($row, $noDataAction, $expected): void {
         $out = self::getBase()->rep
                 ->group('a', 'firstGroup')
-                ->join('b', $noDataAction)
+                ->join('b', null , ['DimNoData' => $noDataAction])
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([$row]);
-        $this->assertSame('init, totalHeader, aBefore, aHeader, detail0, ' . $expected . 'aFooter, aAfter, totalFooter, close, ', $out);
+        $this->assertSame('start, headerTotal, beforeA, headerA, detail0, ' . $expected . 'footerA, afterA, footerTotal, finish, ', $out);
     }
 
     /**
-     * Parmeter to test all possible action methods when no data are given for dimension > 0.
-     * @return array Array with arrays. They have a description as key. Data is the
+     * Parameter to test all possible action methods when no data are given for dimension > 0.
+     * @return array Array with indexed by an description. Data is the
      * value for the $noData parameter of the data() method and the expected result.
      */
     public static function noDataParamProvider(): array {
         return [
-            'Call the default method' => [null, 'noDataDim0, '],
+            'Call the default method' => [null, 'noData0, '],
             'No action will executed' => [false, ''],
             'Output is the given string' => [' no data in dim, ', ' no data in dim, '],
             'Call the given method' => ['myMethod', 'myMethod, '],
@@ -56,12 +56,12 @@ final class ReportMultipleDimensionTest extends TestCase {
     public function testRowDetailParameterOfDataMethod($row, $rowDetail, $expected): void {
         $rep = self::getBase()
                 ->rep
-                ->join('B', null, $rowDetail)
+                ->join('B', null, ['DimDetail' =>$rowDetail])
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
 
         $this->assertInstanceOf(Report::class, $rep);
-        $this->assertSame('init, totalHeader, ', $rep->out->get());
+        $this->assertSame('start, headerTotal, ', $rep->out->get());
         $rep->out->delete();
         $rep->next($row, 'k1');
         $this->assertSame($expected, substr($rep->out->get(), 0, -2));
@@ -90,12 +90,12 @@ final class ReportMultipleDimensionTest extends TestCase {
         $rep = self::getBase()
                 ->rep
                 ->group('group1', 0)
-                ->join('C', null, null, $noGroupChange)
+                ->join('join1', 'C', ['DimNoGroupChange' =>$noGroupChange])
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
         // First row. Assertion in not really necessary.
         $rep->next($rows[0], 'k1');
-        $this->assertSame('init, totalHeader, group1Before, group1Header, detail0, detail, ', $rep->out->get());
+        $this->assertSame('start, headerTotal, beforeGroup1, headerGroup1, detail0, detail, ', $rep->out->get());
         // Clear output and test second row which didn't trigger a group change.
         $rep->out->delete();
         $rep->next($rows[1], 'k2');
@@ -105,9 +105,9 @@ final class ReportMultipleDimensionTest extends TestCase {
     public static function noGroupChangeProvider(): array {
         $rows = [['A', 'B', 'C' => [[1, 3]]], ['A', 'X', 'C' => [[4, 5]]]];
         return [
-            'Call default method' => [$rows, null, 'noGroupChange0, detail0, detail'],
+//            'Call default method' => [$rows, null, 'noGroupChange0, detail0, detail'],  // Default actions throws error: Don't test it here.
             'No action' => [$rows, false, 'detail0, detail'],
-            'String' => [$rows, "Row in my dim didn't trigger a group change, ", "Row in my dim didn't trigger a group change, detail0, detail"],
+            'String' => [$rows, "Row in dim %s didn't trigger a group change, ", "Row in dim 0 didn't trigger a group change, detail0, detail"],
             'Call named method' => [$rows, 'myMethod', 'myMethod, detail0, detail'],
             'Print arguments' => [$rows, 'printArguments', ' arg0=' . json_encode($rows[1]) . ' arg1="k2" arg2=0 arg3=1, detail0, detail'],
             'Closure' => [$rows, function ($row, $rowKey, $dimID) {
@@ -140,7 +140,7 @@ final class ReportMultipleDimensionTest extends TestCase {
                 ->join('B')
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([$row]);
-        $this->assertSame('init, totalHeader, detail0, detail, detail, totalFooter, close, ', $rep);
+        $this->assertSame('start, headerTotal, detail0, detail, detail, footerTotal, finish, ', $rep);
     }
 
     public function testSameDataDoesNotTriggerGroupChange() :void {
@@ -148,15 +148,15 @@ final class ReportMultipleDimensionTest extends TestCase {
                 ->rep
                 ->group('g1', 'A')
                 ->group('g2', 'B')
-                ->join('C')
+                // Don't throw error.
+                ->join('C', null, ['DimNoGroupChange' => 'noGroupChange%S'])
                 ->group('g3', 'D')
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
-
         $out = explode(', ', substr($rep->out->get(), 0, -2));
         $this->assertSame(2, count($out));
-        $this->assertSame('init arg0=0', $out[0]);
-        $this->assertSame('totalHeader arg0=0', $out[1]);
+        $this->assertSame('start arg0=0', $out[0]);
+        $this->assertSame('headerTotal arg0=0', $out[1]);
 
         $rep->out->delete();
         $dimrows = [['D' => 11, 'E' => '1a'], ['D' => 11, 'E' => '1b'], ['D' => 12, 'E' => '2a']];
@@ -164,37 +164,37 @@ final class ReportMultipleDimensionTest extends TestCase {
         $rowKey = 'k1';
         $rep->next($row, $rowKey);
         $out = explode(', ', substr($rep->out->pop(), 0, -2));
-        $this->assertSame('g1Before arg0=10 arg1=' . json_encode($row)
+        $this->assertSame('beforeG1 arg0=10 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=1', $out[0]);
-        $this->assertSame('g1Header arg0=10 arg1=' . json_encode($row)
+        $this->assertSame('headerG1 arg0=10 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=1', $out[1]);
-        $this->assertSame('g2Before arg0=20 arg1=' . json_encode($row)
+        $this->assertSame('beforeG2 arg0=20 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=2', $out[2]);
-        $this->assertSame('g2Header arg0=20 arg1=' . json_encode($row)
+        $this->assertSame('headerG2 arg0=20 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=2', $out[3]);
         $this->assertSame('detail0 arg0=' . json_encode($row)
                 . ' arg1="' . $rowKey . '" arg2=0 arg3=2', $out[4]);
-        $this->assertSame('g3Before arg0=11 arg1=' . json_encode($dimrows[0])
+        $this->assertSame('beforeG3 arg0=11 arg1=' . json_encode($dimrows[0])
                 . ' arg2=0 arg3=3', $out[5]);
-        $this->assertSame('g3Header arg0=11 arg1=' . json_encode($dimrows[0])
+        $this->assertSame('headerG3 arg0=11 arg1=' . json_encode($dimrows[0])
                 . ' arg2=0 arg3=3', $out[6]);
-        $this->assertSame('detailHeader arg0=' . json_encode($dimrows[0])
+        $this->assertSame('headerDetail arg0=' . json_encode($dimrows[0])
                 . ' arg1=0 arg2=3', $out[7]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[0])
                 . ' arg1=0 arg2=3', $out[8]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[1])
                 . ' arg1=1 arg2=3', $out[9]);
-        $this->assertSame('detailFooter arg0=' . json_encode($dimrows[1])
+        $this->assertSame('footerDetail arg0=' . json_encode($dimrows[1])
                 . ' arg1=1 arg2=3', $out[10]);
-        $this->assertSame('g3Footer arg0=11 arg1=' . json_encode($dimrows[1])
+        $this->assertSame('footerG3 arg0=11 arg1=' . json_encode($dimrows[1])
                 . ' arg2=1 arg3=3', $out[11]);
-        $this->assertSame('g3After arg0=11 arg1=' . json_encode($dimrows[1])
+        $this->assertSame('afterG3 arg0=11 arg1=' . json_encode($dimrows[1])
                 . ' arg2=1 arg3=3', $out[12]);
-        $this->assertSame('g3Before arg0=12 arg1=' . json_encode($dimrows[2])
+        $this->assertSame('beforeG3 arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=3', $out[13]);
-        $this->assertSame('g3Header arg0=12 arg1=' . json_encode($dimrows[2])
+        $this->assertSame('headerG3 arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=3', $out[14]);
-        $this->assertSame('detailHeader arg0=' . json_encode($dimrows[2])
+        $this->assertSame('headerDetail arg0=' . json_encode($dimrows[2])
                 . ' arg1=2 arg2=3', $out[15]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[2])
                 . ' arg1=2 arg2=3', $out[16]);
@@ -204,58 +204,58 @@ final class ReportMultipleDimensionTest extends TestCase {
         $rep->next($row, $rowKey);
         $out = explode(', ', substr($rep->out->pop(), 0, -2));
         $this->assertSame('noGroupChange0 arg0=' . json_encode($row)
-                . ' arg1="' . $rowKey . '" arg2=0 arg3=2', $out[0]);
+                . ' arg1="' . $rowKey . '" arg2=0 arg3=3', $out[0]);
         $this->assertSame('detail0 arg0=' . json_encode($row)
-                . ' arg1="' . $rowKey . '" arg2=0 arg3=2', $out[1]);
-        $this->assertSame('detailFooter arg0=' . json_encode($dimrows[2])
+                . ' arg1="' . $rowKey . '" arg2=0 arg3=3', $out[1]);
+        $this->assertSame('footerDetail arg0=' . json_encode($dimrows[2])
                 . ' arg1=2 arg2=3', $out[2]);
-        $this->assertSame('g3Footer arg0=12 arg1=' . json_encode($dimrows[2])
+        $this->assertSame('footerG3 arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=3', $out[3]);
-        $this->assertSame('g3After arg0=12 arg1=' . json_encode($dimrows[2])
+        $this->assertSame('afterG3 arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=3', $out[4]);
-        $this->assertSame('g3Before arg0=11 arg1=' . json_encode($dimrows[0])
+        $this->assertSame('beforeG3 arg0=11 arg1=' . json_encode($dimrows[0])
                 . ' arg2=0 arg3=3', $out[5]);
-        $this->assertSame('g3Header arg0=11 arg1=' . json_encode($dimrows[0])
+        $this->assertSame('headerG3 arg0=11 arg1=' . json_encode($dimrows[0])
                 . ' arg2=0 arg3=3', $out[6]);
-        $this->assertSame('detailHeader arg0=' . json_encode($dimrows[0])
+        $this->assertSame('headerDetail arg0=' . json_encode($dimrows[0])
                 . ' arg1=0 arg2=3', $out[7]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[0])
                 . ' arg1=0 arg2=3', $out[8]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[1])
                 . ' arg1=1 arg2=3', $out[9]);
-        $this->assertSame('detailFooter arg0=' . json_encode($dimrows[1])
+        $this->assertSame('footerDetail arg0=' . json_encode($dimrows[1])
                 . ' arg1=1 arg2=3', $out[10]);
-        $this->assertSame('g3Footer arg0=11 arg1=' . json_encode($dimrows[1])
+        $this->assertSame('footerG3 arg0=11 arg1=' . json_encode($dimrows[1])
                 . ' arg2=1 arg3=3', $out[11]);
-        $this->assertSame('g3After arg0=11 arg1=' . json_encode($dimrows[1])
+        $this->assertSame('afterG3 arg0=11 arg1=' . json_encode($dimrows[1])
                 . ' arg2=1 arg3=3', $out[12]);
-        $this->assertSame('g3Before arg0=12 arg1=' . json_encode($dimrows[2])
+        $this->assertSame('beforeG3 arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=3', $out[13]);
-        $this->assertSame('g3Header arg0=12 arg1=' . json_encode($dimrows[2])
+        $this->assertSame('headerG3 arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=3', $out[14]);
-        $this->assertSame('detailHeader arg0=' . json_encode($dimrows[2])
+        $this->assertSame('headerDetail arg0=' . json_encode($dimrows[2])
                 . ' arg1=2 arg2=3', $out[15]);
         $this->assertSame('detail arg0=' . json_encode($dimrows[2])
                 . ' arg1=2 arg2=3', $out[16]);
 
         $rep->end();
         $out = explode(', ', substr($rep->out->pop(), 0, -2));
-        $this->assertSame('detailFooter arg0=' . json_encode($dimrows[2])
+        $this->assertSame('footerDetail arg0=' . json_encode($dimrows[2])
                 . ' arg1=2 arg2=3', $out[0]);
-        $this->assertSame('g3Footer arg0=12 arg1=' . json_encode($dimrows[2])
+        $this->assertSame('footerG3 arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=3', $out[1]);
-        $this->assertSame('g3After arg0=12 arg1=' . json_encode($dimrows[2])
+        $this->assertSame('afterG3 arg0=12 arg1=' . json_encode($dimrows[2])
                 . ' arg2=2 arg3=3', $out[2]);
-        $this->assertSame('g2Footer arg0=20 arg1=' . json_encode($row)
+        $this->assertSame('footerG2 arg0=20 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=2', $out[3]);
-        $this->assertSame('g2After arg0=20 arg1=' . json_encode($row)
+        $this->assertSame('afterG2 arg0=20 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=2', $out[4]);
-        $this->assertSame('g1Footer arg0=10 arg1=' . json_encode($row)
+        $this->assertSame('footerG1 arg0=10 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=1', $out[5]);
-        $this->assertSame('g1After arg0=10 arg1=' . json_encode($row)
+        $this->assertSame('afterG1 arg0=10 arg1=' . json_encode($row)
                 . ' arg2="' . $rowKey . '" arg3=1', $out[6]);
-        $this->assertSame('totalFooter arg0=0', $out[7]);
-        $this->assertSame('close arg0=0', $out[8]);
+        $this->assertSame('footerTotal arg0=0', $out[7]);
+        $this->assertSame('finish arg0=0', $out[8]);
     }
 
     /**
@@ -266,29 +266,11 @@ final class ReportMultipleDimensionTest extends TestCase {
 
         return new class($printArguments) {
 
-            // Make sure to have a defined set of actions not influenced by defaults
-            // of confic class
-            public $config = ['actions' => [
-                    'init' => 'init',
-                    'totalHeader' => '%Header',
-                    'beforeGroup' => '%Before',
-                    'groupHeader' => '%Header',
-                    'detail' => 'detail',
-                    'groupFooter' => '%Footer',
-                    'afterGroup' => '%After',
-                    'totalFooter' => '%Footer',
-                    'close' => 'close',
-                    'noData' => ':<br><strong>No data found</strong><br>',
-                    'noDataN' => 'noDataDim%',
-                    'noGroupChangeN' => 'noGroupChange%',
-                    'detailN' => 'detail%'
-                ]
-            ];
             public $rep;
             public $printArguments = false;
 
             public function __construct($printArguments = false) {
-                $this->rep = new Report($this, $this->config);
+                $this->rep = new Report($this);
                 $this->printArguments = $printArguments;
             }
 

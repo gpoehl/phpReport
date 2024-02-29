@@ -11,64 +11,64 @@ use PHPUnit\Framework\TestCase;
 class BandOutputTest extends TestCase
 {
 
-    private BandOutput $mock;
+    private BandOutput $out;
     
     public function setup(): void {
-        $this->mock = new BandOutput();
+        $this->out = new BandOutput();
     }
 
     public function write($val, $level, $key) {
-        $this->mock->write($val, $level, $this->mock->actionKeyMapper[$key]);
+        $actionKey = gpoehl\phpReport\Actionkey::fromName($key);
+        $this->out->write($val, $level, $this->out->actionKeyMapper[$actionKey]);
     }
 
     public function testWrite() {
-        $this->write('a', 0, 'init');
-        $this->write('b', 0, 'totalHeader');
-        $this->write('c', 1, 'groupHeader');
-        $this->write('d', 2, 'groupHeader');
-        $this->write('e', 2, 'detail');
-        $this->write('f', 2, 'detail');
-        $this->write('g', 2, 'detail');
-        $this->write('h', 2, 'groupFooter');
-        $this->write('i', 1, 'groupFooter');
-        $this->write('j', 0, 'totalFooter');
-        $this->write('k', 0, 'close');
-        $this->assertEquals(implode(range('a', 'k')), $this->mock->get());
+        $this->write('a', 0, 'Start');
+        $this->write('b', 0, 'TotalHeader');
+        $this->write('c', 1, 'GroupHeader');
+        $this->write('d', 2, 'GroupHeader');
+        $this->write('e', 2, 'Detail');
+        $this->write('f', 2, 'Detail');
+        $this->write('g', 2, 'Detail');
+        $this->write('h', 2, 'GroupFooter');
+        $this->write('i', 1, 'GroupFooter');
+        $this->write('j', 0, 'TotalFooter');
+        $this->write('k', 0, 'Finish');
+        $this->assertEquals(implode(range('a', 'k')), $this->out->get());
     }
 
     public function testWriteWithCumulate() {
-        $this->write('a', 0, 'init');
-        $this->write('b', 0, 'totalHeader');
-        $this->write('c', 1, 'groupHeader');
-        $this->write('d', 2, 'groupHeader');
-        $this->write('e', 2, 'detail');
-        $this->write('f', 2, 'detail');
-        $this->write('g', 2, 'detail');
-        $this->write('h', 2, 'groupFooter');
-        $this->mock->cumulateToNextLevel(2);
-        $this->write('i', 2, 'groupHeader');
-        $this->write('j', 2, 'detail');
-        $this->write('k', 2, 'detail');
-        $this->write('l', 2, 'detail');
-        $this->write('m', 2, 'groupFooter');
-        $this->write('n', 1, 'groupFooter');
-        $this->write('o', 0, 'totalFooter');
-        $this->write('p', 0, 'close');
-        $this->assertEquals(implode(range('a', 'p')), $this->mock->get(0));
+        $this->write('a', 0, 'Start');
+        $this->write('b', 0, 'TotalHeader');
+        $this->write('c', 1, 'GroupHeader');
+        $this->write('d', 2, 'GroupHeader');
+        $this->write('e', 2, 'Detail');
+        $this->write('f', 2, 'Detail');
+        $this->write('g', 2, 'Detail');
+        $this->write('h', 2, 'GroupFooter');
+        $this->out->cumulateToNextLevel(2);
+        $this->write('i', 2, 'GroupHeader');
+        $this->write('j', 2, 'Detail');
+        $this->write('k', 2, 'Detail');
+        $this->write('l', 2, 'Detail');
+        $this->write('m', 2, 'GroupFooter');
+        $this->write('n', 1, 'GroupFooter');
+        $this->write('o', 0, 'TotalFooter');
+        $this->write('p', 0, 'Finish');
+        $this->assertEquals(implode(range('a', 'p')), $this->out->get(0));
     }
 
     public function testGet() {
         $this->testWrite();
-        $out = $this->mock;
-        $this->assertEquals(implode(range('a', 'k')), $out->get());
-        $this->assertEquals(implode(range('a', 'k')), $out->get(0));
-        $this->assertEquals(implode(range('c', 'i')), $out->get(1));
-        $this->assertEquals(implode(range('d', 'h')), $out->get(2));
+        $this->assertEquals(implode(range('a', 'k')), $this->out->get());
+        $this->assertEquals(implode(range('a', 'k')), $this->out->get(0));
+        $this->assertEquals(implode(range('c', 'i')), $this->out->get(1));
+        $this->assertEquals(implode(range('d', 'h')), $this->out->get(2));
     }
 
     public function testDelete() {
         $this->testWrite();
-        $out = $this->mock;
+        $out = $this->out;
         $out->delete(2);
         $this->assertEquals(implode(range('a', 'c')) . implode(range('i', 'k')), $out->get());
         $out->delete(1);
@@ -79,14 +79,13 @@ class BandOutputTest extends TestCase
 
     public function testDeleteOtherLevel() {
         $this->testWrite();
-        $out = $this->mock;
-        $out->delete(1);
-        $this->assertEquals('abjk', $out->get());
+        $this->out->delete(1);
+        $this->assertEquals('abjk', $this->out->get());
     }
 
     public function testPop() {
         $this->testWrite();
-        $out = $this->mock;
+        $out = $this->out;
         $this->assertEquals(implode(range('a', 'k')), $out->get());
         $this->assertEquals(implode(range('d', 'h')), $out->pop(2));
         $this->assertEquals(implode(range('a', 'c')) . implode(range('i', 'k')), $out->get());

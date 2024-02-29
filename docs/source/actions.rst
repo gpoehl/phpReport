@@ -1,11 +1,8 @@
 Actions
 =======
 
-Before we start to learn any details about using |project_name| we need to know
-something about actions.
-
 Calling the run() method starts the execution and |project_name| takes control over the 
-program flow. Whenever an important event occurs an action might be invoked.
+program flow. At several points during program events occurs and related action will be invoked.
 
 Typical actions are: 
 
@@ -14,21 +11,13 @@ Typical actions are:
 * execute a callable
 * call a method in the prototyp class
 
-Within the configuration file you can specify exactly what action will be executed.
-During instantiation of the report class you might replace some of the configuration
-parameters. 
+One can specify exactly what action will be executed by configuration.
 
-
-Events like a group change will trigger individual action for defined 
-groups. To be able to execute different action types the group() 
-method also allows replacing the default action.
-  
 The default rules are simple:
-1) If action is a string this string will be appended to $output.
-2) If action is a method name the method will only be called when the method exist.
-The returned value will be appended to $output.
-3) If action is a callable the returned value will be appended to $output.
+1) If action is a string this string will be appended to the output object.
+2) If action is a method name  a callablthe method will only be called when the method exist.
+The returned value will be appended to the output object.
+3) If action is a callable the returned value will alseo appended to the output object.
 
-The above rules can be altered by calling the setRuntimeOption(). 
 
 .. include:: actionMethods.rst

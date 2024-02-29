@@ -42,10 +42,10 @@ class ReportTest extends TestCase
 
      #[DataProvider('noDataProvider')]
     public function testNoData($data, $expected) :void {
-        $rep = (new Report($this->getBase(), ['actions' => ['noData' => 'nodata']]))
+        $rep = (new Report($this->getBase(), ['actions' => ['NoData' => 'nodata']]))
                 ->setRuntimeOption(RuntimeOption::Magic);
         $rep->run($data);
-        $this->assertSame('init, totalHeader, ' . $expected . 'totalFooter, close, ', $rep->out->get());
+        $this->assertSame('start, headerTotal, ' . $expected . 'footerTotal, finish, ', $rep->out->get());
     }
 
     public static function noDataProvider() :array {
@@ -64,7 +64,7 @@ class ReportTest extends TestCase
         $rep = (new Report($this->getBase()))
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['A']]);
-        $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
+        $this->assertSame('start, headerTotal, detail, footerTotal, finish, ', $rep);
     }
 
     public function testRun_CompletedIsFalse():void  {
@@ -72,7 +72,7 @@ class ReportTest extends TestCase
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['A']], false)
                 ->end();
-        $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep);
+        $this->assertSame('start, headerTotal, detail, footerTotal, finish, ', $rep);
     }
 
     public function testCallEndMethodWhenFinalizeIsTrueFails() :void {
@@ -89,7 +89,7 @@ class ReportTest extends TestCase
                 ->run([['A'], ['B']], false);
         $rep->next(['C']);
         $rep->end();
-        $this->assertSame('init, totalHeader, detail, detail, detail, totalFooter, close, ', $rep->out->get());
+        $this->assertSame('start, headerTotal, detail, detail, detail, footerTotal, finish, ', $rep->out->get());
     }
 
     public function testNextForOneRowNoGroups():void  {
@@ -98,7 +98,7 @@ class ReportTest extends TestCase
                 ->run(null, false);
         $rep->next(['A']);
         $rep->end();
-        $this->assertSame('init, totalHeader, detail, totalFooter, close, ', $rep->out->get());
+        $this->assertSame('start, headerTotal, detail, footerTotal, finish, ', $rep->out->get());
     }
 
     public function testGroupsWithOneDataRow():void  {
@@ -107,8 +107,8 @@ class ReportTest extends TestCase
                 ->group('b', 'secondGroup')
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['firstGroup' => 'A', 'secondGroup' => 'X']]);
-        $this->assertSame('init, totalHeader, aBefore, aHeader, bBefore, bHeader, ' .
-                'detailHeader, detail, detailFooter, bFooter, bAfter, aFooter, aAfter, totalFooter, close, ', $rep);
+        $this->assertSame('start, headerTotal, beforeA, headerA, beforeB, headerB, ' .
+                'headerDetail, detail, footerDetail, footerB, afterB, footerA, afterA, footerTotal, finish, ', $rep);
     }
 
     public function testPrototype():void  {
@@ -120,15 +120,15 @@ class ReportTest extends TestCase
         $rep->run([['any value for group a', 'other value']]);
 
         $out = $rep->out->get();
-        $this->assertStringContainsString('>init</th>', $out);
-        $this->assertStringContainsString('>totalHeader</th>', $out);
-        $this->assertStringContainsString('>groupHeader', $out);
-        $this->assertStringContainsString('>aHeader', $out);
+        $this->assertStringContainsString('>start</th>', $out);
+        $this->assertStringContainsString('>headerTotal</th>', $out);
+        $this->assertStringContainsString('>beforeA', $out);
+        $this->assertStringContainsString('>headerA', $out);
         $this->assertStringContainsString('>detail', $out);
-        $this->assertStringContainsString('>groupFooter', $out);
-        $this->assertStringContainsString('>aFooter', $out);
-        $this->assertStringContainsString('>totalFooter</th>', $out);
-        $this->assertStringContainsString('>close</th>', $out);
+        $this->assertStringContainsString('>footerDetail', $out);
+        $this->assertStringContainsString('>footerA', $out);
+        $this->assertStringContainsString('>footerTotal</th>', $out);
+        $this->assertStringContainsString('>finish</th>', $out);
     }
 
       #[DataProvider('GroupValue_sum_and_rsum_Provider')]
@@ -159,7 +159,7 @@ class ReportTest extends TestCase
         $rep = (new Report($this->getBase()))
                 ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['A'], ['B']]);
-        $this->assertSame('init, totalHeader, detail, detail, totalFooter, close, ', $rep);
+        $this->assertSame('start, headerTotal, detail, detail, footerTotal, finish, ', $rep);
     }
 
     public function testFlowWithGroupChangesOnMultipleGroups() :void {
@@ -172,7 +172,7 @@ class ReportTest extends TestCase
                 ->run(null, false);
         // First row exectues all headers
         $rep->next(['ga' => 11, 'gb' => 21, 'gc' => 31, 'a1' => 'a', 'a2' => 2]);
-        $this->assertSame('init, totalHeader, aBefore, aHeader, bBefore, bHeader, cBefore, cHeader, detailHeader, detail, ', $rep->out->pop());
+        $this->assertSame('start, headerTotal, beforeA, headerA, beforeB, headerB, beforeC, headerC, headerDetail, detail, ', $rep->out->pop());
         $this->assertSame(1, $rep->gc->items[1]->sum(0));
         $this->assertSame(1, $rep->gc->{1}->sum(0));
         $this->assertSame(1, $rep->gc->a->sum(0));
@@ -180,23 +180,23 @@ class ReportTest extends TestCase
 
         // Next row change on gc executes only cFooter and cHeader
         $rep->next(['ga' => 11, 'gb' => 21, 'gc' => 32, 'a1' => 'a', 'a2' => 2]);
-        $this->assertSame('detailFooter, cFooter, cAfter, cBefore, cHeader, detailHeader, detail, ', $rep->out->pop());
+        $this->assertSame('footerDetail, footerC, afterC, beforeC, headerC, headerDetail, detail, ', $rep->out->pop());
 
         // Next row change on ga executes all footers and headers
         $rep->next(['ga' => 12, 'gb' => 21, 'gc' => 3, 'a1' => 'a', 'a2' => 2]);
-        $this->assertSame('detailFooter, cFooter, cAfter, bFooter, bAfter, aFooter, aAfter, aBefore, aHeader, bBefore, bHeader, cBefore, cHeader, detailHeader, detail, ', $rep->out->pop());
+        $this->assertSame('footerDetail, footerC, afterC, footerB, afterB, footerA, afterA, beforeA, headerA, beforeB, headerB, beforeC, headerC, headerDetail, detail, ', $rep->out->pop());
 
         // Next row change on gc executes only cFooter and cHeader
         $rep->next(['ga' => 12, 'gb' => 21, 'gc' => 32, 'a1' => 'a', 'a2' => 2]);
-        $this->assertSame('detailFooter, cFooter, cAfter, cBefore, cHeader, detailHeader, detail, ', $rep->out->pop());
+        $this->assertSame('footerDetail, footerC, afterC, beforeC, headerC, headerDetail, detail, ', $rep->out->pop());
 
         // Next row change on gb executes gb and gc footers and headers
         $rep->next(['ga' => 12, 'gb' => 22, 'gc' => 99, 'a1' => 'a', 'a2' => 2]);
-        $this->assertSame('detailFooter, cFooter, cAfter, bFooter, bAfter, bBefore, bHeader, cBefore, cHeader, detailHeader, detail, ', $rep->out->pop());
+        $this->assertSame('footerDetail, footerC, afterC, footerB, afterB, beforeB, headerB, beforeC, headerC, headerDetail, detail, ', $rep->out->pop());
 
         // End of job
         $rep->end();
-        $this->assertSame('detailFooter, cFooter, cAfter, bFooter, bAfter, aFooter, aAfter, totalFooter, close, ', $rep->out->get());
+        $this->assertSame('footerDetail, footerC, afterC, footerB, afterB, footerA, afterA, footerTotal, finish, ', $rep->out->get());
         $this->assertSame(5 * 2, $rep->total->d->sum());
         $this->assertSame(5, $rep->rc->sum());
         $this->assertSame(2, $rep->gc->a->sum(0));      // Total a groups
@@ -204,61 +204,6 @@ class ReportTest extends TestCase
         $this->assertSame(5, $rep->gc->c->sum(0));      // Total c groups
     }
 
-     #[DataProvider('buildMethodsByGroupNameProvider')]
-    public function testBuildMethodsByGroupName($rule, $name, $header, $footer, $totalHeader, $totalFooter) :void{
-        $rep = (new Report($this->getBase(),
-                        ['actions' => [
-                        'beforeGroup' => 'before%',
-                        'groupHeader' => 'header%',
-                        'groupFooter' => 'footer%',
-                        'afterGroup' => 'after%',
-                        'totalHeader' => 'header%',
-                        'totalFooter' => 'footer%'],
-                    'buildMethodsByGroupName' => $rule
-                        ]))
-                ->group($name, 'ga')
-                ->setRuntimeOption(RuntimeOption::Magic)
-                ->run([['ga' => 1, 'gb' => 2]]);
-        $this->assertSame("init, $totalHeader, $header, detailHeader, detail, detailFooter, $footer, $totalFooter, close, ", $rep);
-    }
-
-    public static function buildMethodsByGroupNameProvider() :array {
-        return [
-            [true, 'a', 'beforea, headera', 'footera, aftera', 'headertotal', 'footertotal'],
-            ['ucfirst', 'a', 'beforeA, headerA', 'footerA, afterA', 'headerTotal', 'footerTotal'],
-            [false, 'a', 'before1, header1', 'footer1, after1', 'header0', 'footer0'],
-        ];
-    }
-
-     #[DataProvider('headerAndFooterActionProvider')]
-    public function testHeaderAndFooterActions($headerAction, $footerAction, $expectedHeader, $expectedFooter) :void {
-        $rep = (new Report($this->getBase()))
-                ->group('a', 'ga')
-                ->group('b', 'gb', null, $headerAction, $footerAction)
-                   ->setRuntimeOption(RuntimeOption::Magic)
-                ->run([['ga' => 1, 'gb' => 2]]);
-        $this->assertSame('init, totalHeader, aBefore, aHeader, ' . $expectedHeader . 'detailHeader, detail, detailFooter, ' . $expectedFooter . 'aFooter, aAfter, totalFooter, close, ', $rep);
-    }
-
-    public static function headerAndFooterActionProvider() {
-        return [
-            'alternate header' => ['H, ', null, 'bBefore, H, ', 'bFooter, bAfter, '],
-            'alternate header, no footer' => ['H, ', false, 'bBefore, H, ', 'bAfter, '],
-            'alternate footer' => [null, 'F, ', 'bBefore, bHeader, ', 'F, bAfter, '],
-            'no header, alternate footer' => [false, 'F, ', 'bBefore, ', 'F, bAfter, '],
-            'no header, noFooter' => [false, false, 'bBefore, ', 'bAfter, '],
-            'Closure header and footer' => [
-                function ($val, $row) {
-                    return (string) $val . (string) $row['ga'] . ', ';
-                },
-                function ($val, $row) {
-                    return $val . $row['gb'] . ', ';
-                },
-                'bBefore, 21, ',
-                '22, bAfter, '
-            ],
-        ];
-    }
 
     /**
      * Basic class which executes actions called from Report
@@ -282,7 +227,7 @@ class ReportTest extends TestCase
     }
 
     /**
-     * Test class to call prototyp method in report object.
+     * Test class calls prototyp method in report object.
      */
     public function getPrototype() {
         return new class() {

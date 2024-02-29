@@ -1,78 +1,72 @@
 .. _prototype-label:
 
+The normal process flow can be altered by setting the runTimeOption. Main reason
+is to use prototyping or to allow working with __magic() methods.
+
 Prototyping
 ===========
 
-Prototyping can be used in various scenarios to get information about the current
-status of the processed data.
+Prototyping helps in various ways to get information about the current status of the processed data.
 
-Prototyping in |project_name| is designed to help mainly in two scenarions.
-The first one is providing information while running an action method.  
-
-By simply calling the prototype method.
+First one is by calling the prototype method.
 
 .. code-block:: php
 
    $rep->prototype();
 
-you'll call a method in the prototype object. The name of the prototype method
-is the same a the current action name.
+This call will be passed to a method in the prototype object which in turn delivers
+some detailed data of the current status.  
 
-Within the other scenario you might redirect calls from the target object to the
-prototype object. 
-Setting the runTimeOption defines what calls will be redirected.
+Using the second scenario actions might be executed in the prototype class instead
+or in addition to the application target object. The default prototyp class provides
+the currently processed row, names of methods which whould habe been called in normal
+mode, the value of group fields and some values out of the aggregated fields.
 
-
-
-To replace execution of actions in the target object with methods in a prototype 
-object call the setRuntimeOption method.
+Without writing any line of code you'll get a basic idea of the contents of your report.
 
 .. code-block:: php
 
    $rep->setRuntimeOption($option, PrototypeInterface $prototype = null);
 
+When no $prototype is given the default prototype object will be used.
 
 
-When no $prototype is given the default protottype object will be used.
-
-
-
-Protoyping the report
----------------------
-
-Before you start writing any code you might want to use the prototyping system
-to generate a report which shows some data of the currently processed row,
-names of methods which will be called in real life applications, the value of group
-fields and some values out of the aggregated fields.
-
-Prototype tells also what the real action would be (e.g. Call method xy or
-append string 'foobarbaz').
-
-
-Protoyping for unit tests
--------------------------
-
-Creating a generic prototype class can help to create ouptut which can be
-eleminate the requirement to create mock objects to run unit tests.
-
-
-
-
+.. tip:: Protyping for unit tests.
+    Creating a specific prototype class might help to create ouptut to be tested
+    within unit tests.
 
 
 The other way is setting the runtime option by calling the
-setruntimeOption(RuntimeOption $runtimeOption, PrototypeInterace $prototype = null) method by providing one of the RuntimeOption enum values.
+setruntimeOption(RuntimeOption $runtimeOption, PrototypeInterface $prototype = null) method by providing one of the RuntimeOption enum values.
 
-:Default:  Call methods in target class only when implemented. 
-:Magic:  Call also not existing methods in owner class. Use _magic() in the target class to avoid runtime errors
-:Prototype:  Call prototype for methods not implemented in target class.
-   Very useful for incremental developing of reports.
-   The prototype object might have on option to return any value for beforeGroup and afterGroup actions.
-:PrototypeMethods:  Call always prototype even when method exists in owner class.
-:PrototypeAll: Call prototype for all actions which are not callables and action is not false.
+.. php:method:: setRuntimeOption($option, PrototypeInterface $prototype = null):report
 
-The second parameter allows setting an prototye object. This can be any class which implemente the PrototypeInterface.
+ :param Runtimeoption $option: The option to be selected.
+
+ :param PrototypeInterface $prototype: Prototyp class to be used instead of the default one.
  
+ :returns: $this which allows method call chaining.
+
+
+.. list-table:: Runtime options
+        :widths: auto
+        :header-rows: 1
+
+        * - Option
+          - Description
+        * - Default
+          - Call methods in target class only when implemented.
+        * - Magic
+          - Call also not existing methods in owner class. Use _magic() in the target class to avoid runtime errors.
+        * - Prototype
+          - Call prototype for methods not implemented in target class.
+            Very useful for incremental developing of reports.
+            The prototype object might have on option to return any value for beforeGroup and afterGroup actions.
+        * - PrototypeMethods
+          - Call always prototype even when method exists in owner class.
+        * - PrototypeAll
+          - Call prototype for all actions which are not callables and action is not false.
+      
 
 Usually the method is called once before calling the run() method. But it is
 also possible to alter the call action at any time.
@@ -88,8 +82,3 @@ also possible to alter the call action at any time.
 
 
 The default prototying class is a good example how flexible a report can be.
-
-
-
-Before using prototying the prototype object must be declared. This will be done
-via normal configuration.

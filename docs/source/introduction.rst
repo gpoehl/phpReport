@@ -3,10 +3,10 @@ Introduction
 ============
 
 
-|project_name| is a library written in pure PHP that provides a set of classes to 
-create any kind of reports.
+|project_name| is a pure PHP library to create any kind of reports or other 
+applications working with data groups.
 
-|project_name| integrates seamless with any framework but can also run alone.
+|project_name| can be used within any framework without additional configruation.
 
 |project_name| manages all tasks when values in declared data fields changes 
 between data rows (group changes).
@@ -18,59 +18,38 @@ between data rows (group changes).
     ->group ('order', 'orderID')
     ->group ('year', fn($row) => substr($row->orderDate, 0, 4));
     
-The example above declares three groups. Group customer is linked to the field
-'customer', group order to the field 'orderID' and group year to the first four 
-bytes of the orderDate.
+The example above declares three groups. Data for the customer group is taken
+from the field 'customer', for the order group from the 'orderID' field and 
+the year group from the first four bytes of the orderDate.
 
-To cumulate values call the compute function like
-
-.. code-block:: php
-
-
-
-
-    ->cumulate (substr($row->orderDate, 0, 4'orderValue') 
-    ->cumulate ('oderAmount')
-
-
-
-
-
-
-
-
-
-To cumulate values like in a spreadsheet call the sheet function like
+Values can be cumulated by calling the compute() method.
 
 .. code-block:: php
 
-    ->sheet ('orderValue') 
-    ->cumulate ('oderAmount')
+    ->compute ('oderAmount')
+    ->compute ('orderDate', fn($row) => substr($row->orderDate, 0, 4)) 
+
+The rules how data will be get from the data row are the same as for the group() method.
+
+To cumulate values like in a spreadsheet call the sheet function. It's very similar like
+the compute function but requires an additional field to be used as a key. 
+
+.. code-block:: php
 
     ->group ('year', fn($row) => substr($row->orderDate, 0, 4));
+    ->sheet ('orderValue', fn($row) => substr($row->orderDate, 4, 2), 'oderAmount')
+   
+The snippet obove declares a group for the year of the orderDate and cumulates
+the 'orderAmount' in an collector indexed by the month of the orderDate.    
  
-
-Cumulating values is as easy as  
-
-Values of other data fields can be cumulated to get totals or subtotals at any
-time for all declared groups.
-
-to group changes and calculates
- 
-values to provide totals and subtotals at any time for all declared groups.
-
-There is no need to create any 'printed output'. |project_name| can be used
-for all kind of jobs where actions need to be performed based on different 
-values in declared fields between two data rows.
-
-grouped or tasks  most typical scenario but there are a lot of other use cases. 
-
-Creating reports it the most typical scenario but there are a lot of other use cases. 
+Cumulated values provides totals and subtotals at any time for all declared groups.
 
 
-|project_name| is a solid foundation for most applications working with
-data sets having to deal with group changes or to calculate totals and subtotals.
-Creating reports it the most typical scenario but there are a lot of other use cases. 
+Creating reports it the most typical scenario when using |project_name| but there
+are a lot of other use cases. |project_name| can be used for all kind of jobs 
+where actions need to be performed on grouped data.  
+That's why there is no need to create any 'printed output'. 
+
 
 While |project_name| will handle most of the repetive tasks it is wide open to 
 let you use all your business objects and methods. It also integrates seamless

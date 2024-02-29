@@ -5,14 +5,14 @@ declare(strict_types=1);
 /**
  * Unit test of Action class
  */
-
 use gpoehl\phpReport\Action;
+use gpoehl\phpReport\Actionkey;
 use gpoehl\phpReport\Prototype;
 use gpoehl\phpReport\RuntimeOption;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-class ActionTest extends TestCase
-{
+class ActionTest extends TestCase {
 
     public object $prototype;
     static object $targetObj;
@@ -44,17 +44,15 @@ class ActionTest extends TestCase
         $this->prototype = $stub;
     }
 
-    /**
-     * @dataProvider actionStringProvider
-     * @dataProvider actionClosureProvider
-     * @dataProvider actionCallableProvider
-     * @dataProvider actionMethodProvider
-     * @dataProvider actionMethodNotExistsProvider
-     * @dataProvider actionFalseProvider
-     * @dataProvider triggerProvider
-     */
+    #[DataProvider('actionStringProvider')]
+    #[DataProvider('actionClosureProvider')]
+    #[DataProvider('actionCallableProvider')]
+    #[DataProvider('actionMethodProvider')]
+    #[DataProvider('actionMethodNotExistsProvider')]
+    #[DataProvider('actionFalseProvider')]
+    #[DataProvider('triggerProvider')]
     public function testExecuter($expectTargetKey, $expect, $target, $callOption, $error = null) {
-        $action = new Action('groupHeader', null, 1, $target);
+        $action = new Action(Actionkey::GroupHeader, null, $target);
         $action->setRuntimeTarget(self::$targetObj, $this->prototype, $callOption);
         $this->assertEquals($expectTargetKey, $action->targetKey,);
         if (is_array($expect)) {
@@ -79,9 +77,9 @@ class ActionTest extends TestCase
         }
     }
 
-    public static function actionStringProvider() :array{
+    public static function actionStringProvider(): array {
         $key = Action::STRING;
-        $expectPrototye = [true, 'groupHeader'];
+        $expectPrototye = [true, 'GroupHeader'];
         $expect = 'could_be_a_method';
         $actionParam = [$expect, false];
         return [
@@ -94,7 +92,7 @@ class ActionTest extends TestCase
         ];
     }
 
-    public static function actionClosureProvider() :array{
+    public static function actionClosureProvider(): array {
         $key = Action::CLOSURE;
         $actionParam = fn($p1, $p2, $p3, $p4) => ($p1);
         $expect = [null, $actionParam];
@@ -103,11 +101,11 @@ class ActionTest extends TestCase
             'closure2' => [$key, $expect, $actionParam, RuntimeOption::Magic],
             'closure3' => [$key, $expect, $actionParam, RuntimeOption::Prototype],
             'closure4' => [$key, $expect, $actionParam, RuntimeOption::PrototypeMethods],
-            'closure5' => [$key, [true, 'groupHeader'], $actionParam, RuntimeOption::PrototypeAll],
+            'closure5' => [$key, [true, 'GroupHeader'], $actionParam, RuntimeOption::PrototypeAll],
         ];
     }
 
-    public static function actionCallableProvider():array {
+    public static function actionCallableProvider(): array {
         $key = Action::CALLABLE;
         $actionParam = $expect = ['foo', 'bar'];
         return [
@@ -119,10 +117,10 @@ class ActionTest extends TestCase
         ];
     }
 
-    public static function actionMethodProvider() :array{
+    public static function actionMethodProvider(): array {
         $actionParam = 'header';
         $key = Action::METHOD;
-        $expectPrototye = [true, 'groupHeader'];
+        $expectPrototye = [true, 'GroupHeader'];
         $expect = [false, $actionParam];
         return [
             'method1' => [$key, $expect, $actionParam, RuntimeOption::Default],
@@ -133,10 +131,10 @@ class ActionTest extends TestCase
         ];
     }
 
-    public static function actionMethodNotExistsProvider() :array{
+    public static function actionMethodNotExistsProvider(): array {
         $actionParam = 'headerNotExist';
         $key = Action::METHOD;
-        $expectPrototye = [true, 'groupHeader'];
+        $expectPrototye = [true, 'GroupHeader'];
         $expect = [false, $actionParam];
         return [
             'NoMmethod1' => [$key, Null, $actionParam, RuntimeOption::Default],
@@ -148,7 +146,7 @@ class ActionTest extends TestCase
     }
 
     // Parameter false will never be executed
-    public static function actionFalseProvider() :array {
+    public static function actionFalseProvider(): array {
         $actionParam = false;
         $key = Action::NOTHING;
         $expectPrototye = Null;
@@ -162,7 +160,7 @@ class ActionTest extends TestCase
         ];
     }
 
-    public static function triggerProvider() :array{
+    public static function triggerProvider(): array {
         $error = Action::ERROR;
         $callAction = RuntimeOption::Magic;
         return [
@@ -174,31 +172,30 @@ class ActionTest extends TestCase
         ];
     }
 
-    public function testInvalidActionKind() :void {
+    public function testInvalidActionKind(): void {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Invalid action kind '999'.");
-        new Action('init', null, 1, ['abc', 999]);
+        new Action(Actionkey::Start, null, ['abc', 999]);
     }
 
-    public function testInvalidArrayElements() :void{
+    public function testInvalidArrayElements(): void {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Action target array must have 2 elements.");
-        new Action('init', null, 1, ['abc', 999, 44]);
+        new Action(Actionkey::Start, null, ['abc', 999, 44]);
     }
 
-    public function testIsValidNameReturnsTrue():void {
+    public function testIsValidNameReturnsTrue(): void {
         $this->assertTrue(Action::isNameValid('a'));
         $this->assertTrue(Action::isNameValid('äöüÄÖÜß'));
         $this->assertTrue(Action::isNameValid('__a'));
         $this->assertTrue(Action::isNameValid('a%', true), '% sign allowed');
     }
 
-    public function testIsValidNameReturnsFalse():void {
+    public function testIsValidNameReturnsFalse(): void {
         $this->assertFalse(Action::isNameValid('a b'), 'has blank');
         $this->assertFalse(Action::isNameValid('1a'), 'start with a number');
         $this->assertFalse(Action::isNameValid('a%'), '% sign not allowed');
         $this->assertFalse(Action::isNameValid('a\v'), 'has backslash');
         $this->assertFalse(Action::isNameValid('a/v'), 'has slash');
     }
-
 }

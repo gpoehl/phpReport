@@ -21,22 +21,14 @@ use gpoehl\phpReport\getter\GetterFactory;
  * Each report has at least one dimension. Addional ones are instantiated
  * for every joined data.
  */
-class Dimension
-{
+class Dimension {
 
     /** @var True when this is the last dimension (has not joined data). */
     public bool $isLastDim = true;
-
     // Actions to be executed when dimension is not the last one.
 
-    /** @var Action object to be executed when join returns no data. */
-    public Action $noDataAction;
-
-    /** @var Action object to be executed when row doesn't trigger a group change. */
-    public Action $noGroupChangeAction;
-
-    /** @var Action object to be executed for every data row. */
-    public Action $detailAction;
+    /* @var $actions Action objects indexed by ActionKey enum. */
+    public \WeakMap $actions;
 
     /** @var The current active data row. */
     public $row;
@@ -60,7 +52,7 @@ class Dimension
     public array $calcGetters = [];
 
     /** @var Object to get joined values. */
-    private BaseGetter $joinGetter;
+    public BaseGetter $joinGetter;
 
     // Source values will be unset after instantiating of getter objects.
 
@@ -71,7 +63,7 @@ class Dimension
     private array $sheetSources = [];
 
     /** @var Parameter for joined data. */
-    private array $joinSource;
+    public array $joinSource;
 
     /**
      * Instantiate a new dimension object
@@ -81,16 +73,16 @@ class Dimension
      * @param object|className $defaultTarget Object or name of a class in which the
      * methods will be called when $source is not specified.
      */
-    public function __construct(public int $id, public int $lastLevel, private $defaultTarget) {
-
+    public function __construct(public int $id, public string $name, public int $lastLevel, private $defaultTarget) {
+        $this->actions = new \WeakMap();
     }
-    
-   /**
+
+    /**
      * Add a group to groups array
      * @param \gpoehl\phpReport\Group $group The group object
      */
-    public function addGroup(Group $group):void {
-        $this->groups[]= $group;
+    public function addGroup(Group $group): void {
+        $this->groups[] = $group;
         $this->lastLevel = $group->level;
     }
 
@@ -184,8 +176,9 @@ class Dimension
         }
         if (!$this->isLastDim) {
             $this->joinGetter = $factory->getGetter(... $this->joinSource);
+//            echo '<br>Dim ' . $this->id .'<br>';
+//                var_dump($this->joinGetter);
         }
         unset($this->calcSources, $this->sheetSources, $this->joinSource);
     }
-    
 }

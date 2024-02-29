@@ -17,7 +17,7 @@ namespace gpoehl\phpReport;
 /**
  * Action to be executed when Report triggers an event
  */
-class Action
+final class Action
 {
 
     // pattern to check that method or variable names are valid.
@@ -58,9 +58,9 @@ class Action
      * @param string|null $replacement Optinal replacement for the % sign in $target
      * @throws InvalidArgumentException2
      */
-    public function __construct(public readonly string $key, public $outputKey, public readonly int $level, public $target, string $replacement = null) {
+    public function __construct(public readonly ActionKey $key, public $outputKey, public $target, public ?string $name ='', public ?int $id = 0) {
         if ($target !== false) {
-            $this->targetKey = $this->detectTargetKey($replacement);
+            $this->targetKey = $this->detectTargetKey();
             if (!in_array($this->kind, [self::OUTPUT, self::NOTICE, self::WARNING, self::ERROR])) {
                 throw new \InvalidArgumentException("Invalid action kind '$this->kind'.");
             }
@@ -71,7 +71,7 @@ class Action
      * Detect the target key related to the given target
      * @throws InvalidArgumentException2
      */
-    private function detectTargetKey($replacement): int {
+    private function detectTargetKey(): int {
         if (is_array($this->target)) {
             if (count($this->target) !== 2) {
                 throw new \InvalidArgumentException("Action target array must have 2 elements.");
@@ -94,12 +94,12 @@ class Action
             }
             // When second element equals false action[0] is handled as string.
             if ($this->target[1] === false) {
-                $this->target = $this->replace($replacement, $this->target[0]);
+                $this->target = $this->replaceNameAndID($this->target[0]);
                 return self::STRING;
             }
         }
 
-        $this->target = $this->replace($replacement, $this->target);
+      $this->target = $this->replaceNameAndID($this->target);
 
         return match (true) {
             $this->target === false => self::NOTHING,
@@ -108,17 +108,16 @@ class Action
             default => self::STRING,
         };
     }
-
-    private function replace($replacement, $subject) {
-        if ($replacement !== null) {
-            if (is_array($subject)) {
-                $subject[1] = str_replace('%', $replacement, $subject[1]);
-            } else {
-                $subject = str_replace('%', $replacement, $subject);
-            }
+    
+    private function replaceNameAndID($value) {
+        if (is_array($value)){
+            $value[1] = str_replace(['%n', '%s', '%S'], [(string) $this->id, $this->name, ucfirst($this->name)], $value[1]);
+            return $value;
+        } else {
+             return str_replace(['%n', '%s', '%S'], [(string) $this->id, $this->name, ucfirst($this->name)], $value);
         }
-        return $subject;
     }
+
 
     /**
      * Set the target to be executed when an event occurs.
@@ -135,14 +134,14 @@ class Action
             $this->targetKey === self::CALLABLE => $this->target,
             // Prototype
             $runtimeOption === RuntimeOption::PrototypeAll,
-            $runtimeOption === RuntimeOption::PrototypeMethods && $this->targetKey === self::METHOD => [$prototype, $this->key],
+            $runtimeOption === RuntimeOption::PrototypeMethods && $this->targetKey === self::METHOD => [$prototype, $this->key->name],
             // Don't duplicate strings
             $this->targetKey === self::STRING => true,
             $this->targetKey === self::CLOSURE || $this->targetKey === self::CALLABLE => $this->target,
             // Now we have only a method
             $runtimeOption === RuntimeOption::Magic,
             method_exists($target, $this->target) => [$target, $this->target],
-            $runtimeOption === RuntimeOption::Prototype => [$prototype, $this->key],
+            $runtimeOption === RuntimeOption::Prototype => [$prototype, $this->key->name],
             default => null
         };
     }
