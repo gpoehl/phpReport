@@ -24,7 +24,7 @@ class GetConstant extends BaseGetter
      * @see BaseGetter::getValue
      */
     public function getValue($row, $rowKey = null) {
-        return constant($this->source);
+        return $this->source;
     }
 
 }

@@ -26,7 +26,7 @@ Without writing any line of code you'll get a basic idea of the contents of your
 
 .. code-block:: php
 
-   $rep->setRuntimeOption($option, PrototypeInterface $prototype = null);
+   $rep->setRuntimeOption($option, PrototypeBase $prototype = null);
 
 When no $prototype is given the default prototype object will be used.
 
@@ -37,13 +37,13 @@ When no $prototype is given the default prototype object will be used.
 
 
 The other way is setting the runtime option by calling the
-setruntimeOption(RuntimeOption $runtimeOption, PrototypeInterface $prototype = null) method by providing one of the RuntimeOption enum values.
+setruntimeOption(RuntimeOption $runtimeOption, PrototypeBase $prototype = null) method by providing one of the RuntimeOption enum values.
 
-.. php:method:: setRuntimeOption($option, PrototypeInterface $prototype = null):report
+.. php:method:: setRuntimeOption($option, PrototypeBase $prototype = null):report
 
  :param Runtimeoption $option: The option to be selected.
 
- :param PrototypeInterface $prototype: Prototyp class to be used instead of the default one.
+ :param PrototypeBase $prototype: Prototyp class to be used instead of the default one.
  
  :returns: $this which allows method call chaining.
 

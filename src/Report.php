@@ -28,7 +28,7 @@ use InvalidArgumentException;
  */
 class Report {
 
-    const VERSION = '3.3';
+    const VERSION = '3.5';
 
     protected string $configFilename = '';
 
@@ -55,13 +55,12 @@ class Report {
     private readonly Action $detailAction;
     private readonly Action $detailFooterAction;
 
-    /** @var Dimension[] Arrray of data dimension objects. */
-//    private array $dims = [];
-    public array $dims = [];
+    /** @var Dimensions Object managing dimension objects. */
+    public Dimensions $dims;
 
     /** @var The actual dimension object. Shortcut of current($dims). */
-//    private Dimension $dim;
-    public Dimension $dim;
+    private Dimension $dim;
+//    public Dimension $dim;
 
     /** @var The current group level. */
     public int $currentLevel = 0;
@@ -80,7 +79,7 @@ class Report {
 
     /** @var The prototype object which executes prototype actions. Will be
       instantiated only when really needed. */
-    private ?PrototypeInterface $prototype = null;
+    public ?PrototypeBase $prototype = null;
 
     /** var Group level of lowest called header. This wil be the first footer.
      * The group level of the last dimension can't be used. When a dimension has
@@ -107,7 +106,7 @@ class Report {
      * @param $params Optional parameters not used by this library itself.
      * Might be used as a data transfer vehicle.
      */
-    public function __construct(
+    final public function __construct(
             private object|string|null $target = null,
             null|array $config = null,
             AbstractOutput $outputHandler = null,
@@ -121,7 +120,9 @@ class Report {
         $this->rc = new Collector();
         $this->gc = new Collector();
         $this->total = new Collector();
-        $this->dims[] = $this->dim = new Dimension(0, '0',0, $target);
+        $this->dims = new Dimensions();
+        $this->dim = new Dimension($conf->dimensionName, $target);
+        $this->dims->add($this->dim);
         $this->out = ($outputHandler) ? $outputHandler : new $conf->outputHandler();
         $this->prototypeName = $conf->prototype;
         $this->cumulateMap = new \SplObjectStorage();
@@ -148,7 +149,8 @@ class Report {
             $action = (isset($validatedActions[$actionKey])) ? $validatedActions[$actionKey] : $this->actions[$actionKey];
             $this->dim->actions[$actionKey] = $this->getNewAction($actionKey, $action, $this->dim->id, $this->dim->name);
         }
-        $this->dims[] = $this->dim = new Dimension($this->dim->id + 1, $name , $this->dim->lastLevel, $this->target);
+        $this->dim = new Dimension($name, $this->target);
+        $this->dims->add($this->dim);
         return $this;
     }
 
@@ -367,9 +369,7 @@ class Report {
             $this->rc->addItem($calculator);
             $this->cumulateMap[$calculator] = $dim->lastLevel;
         }
-        
-        reset($this->dims);
-        $this->dim = current($this->dims);
+        $this->dim = $this->dims[0];
         $this->currentLevel = 0;
         $this->executeAction(Actionkey::Start);
         $this->executeAction(Actionkey::TotalHeader);
@@ -395,7 +395,7 @@ class Report {
      * @return The default prototype class returns an html table with the prepared data.
      */
     public function prototype(): string {
-        $this->prototype ??= new Prototype($this);
+        $this->prototype ??= new $this->prototypeName($this);
         return $this->prototype->magic();
     }
 
@@ -406,12 +406,9 @@ class Report {
      * Usally call option will be set at program start but can also set or
      * altered during program execution.
      * @param $runtimeOption @see enum RuntimeOption.
-     * @param $prototype Optional prototype object instead of default prototype
      */
-    public function setRuntimeOption(RuntimeOption $runtimeOption, PrototypeInterace $prototype = null): self {
-        if ($prototype !== null) {
-            $this->prototype = $prototype;
-        } elseif ($runtimeOption->isPrototype() && !isset($this->prototype)) {
+    public function setRuntimeOption(RuntimeOption $runtimeOption): self {
+        if ($runtimeOption->isPrototype() && !isset($this->prototype)) {
             $this->prototype = new $this->prototypeName($this);
         }
         $this->runtimeOption = $runtimeOption;
@@ -445,6 +442,7 @@ class Report {
                 $this->detailFooterAction->setRunTimeTarget(...$params);
             }
         }
+        $this->dims->rewind();
     }
 
     /**
@@ -476,8 +474,6 @@ class Report {
             $output = $action->target;
         } else {
             $this->currentAction = $action;
-//            $params[] = $this->currentLevel;
-              $params[] = $this->currentLevel;
             $output = ($action->runtimeTarget)(... $params);
         }
         // No output handling 
@@ -521,12 +517,18 @@ class Report {
      * @param iterable|null $data
      */
     public function nextSet(?iterable $data): void {
-        if (!empty($data)) {
+        if (empty($data)) {
+            If ($this->dim->id > 0) {
+                // Dimension 0 is handled in end(). Can't be here because data can
+                // be feed by next() method.
+                // Handling of data in other than default method must must handle noDataN
+                // by themself.
+                $this->noDataN();
+            }
+        } else {
             foreach ($data as $rowKey => $row) {
                 $this->next($row, $rowKey);
             }
-        } elseIf ($this->dim->id > 0) {
-            $this->noDataN();
         }
     }
 
@@ -540,7 +542,7 @@ class Report {
         if ($this->skipLevel !== false) {
             return;
         }
-           $this->rc->items[$this->dim->id]->inc();
+        $this->rc->items[$this->dim->id]->inc();
         foreach ($this->dim->calcGetters as $name => $getter) {
             $this->total[$name]->add($getter->getValue($row, $rowKey));
         }
@@ -592,15 +594,16 @@ class Report {
             $group = $this->groups->items[$i];
             $this->currentLevel = $group->level;
             $this->gc->items[$group->level]->inc();
-            if ($this->execute($group->actions[Actionkey::GroupBefore], $groupValues[$group->level], $this->dim->row, $this->dim->rowKey) === false) {
+            $params = [$groupValues[$group->level], $this->dim->row, $this->dim->rowKey, $this->currentLevel];
+            if ($this->execute($group->actions[Actionkey::GroupBefore], ... $params) === false) {
                 $this->skipLevel = $group->level;
                 break;
             }
-            $this->execute($group->actions[Actionkey::GroupHeader], $groupValues[$group->level], $this->dim->row, $this->dim->rowKey);
+            $this->execute($group->actions[Actionkey::GroupHeader], ... $params);
         }
         if ($this->dim->isLastDim && $this->skipLevel === false) {
-            $this->execute($this->detailHeaderAction, $row, $rowKey);
-             $this->currentAction = $this->detailAction;
+            $this->execute($this->detailHeaderAction, $row, $rowKey, $this->currentLevel);
+            $this->currentAction = $this->detailAction;
         }
     }
 
@@ -613,13 +616,13 @@ class Report {
             if ($this->skipLevel === false || $this->currentLevel >= $this->skipLevel) {
                 $group = $this->groups->items[$this->currentLevel];
                 $this->dim = $this->dims[$group->dimID];
+                $params = [$this->dim->row, $this->dim->rowKey, $this->currentLevel];
                 if ($this->dim->isLastDim && $this->currentLevel === $this->dim->lastLevel) {
-                    $this->execute($this->detailFooterAction, $this->dim->row, $this->dim->rowKey);
+                    $this->execute($this->detailFooterAction, ... $params);
                 }
-                $this->execute($group->actions[Actionkey::GroupFooter], $this->dim->groupValues[$this->currentLevel],
-                        $this->dim->row, $this->dim->rowKey);
-                $this->execute($group->actions[Actionkey::GroupAfter], $this->dim->groupValues[$this->currentLevel],
-                        $this->dim->row, $this->dim->rowKey);
+                $groupValue = $this->dim->groupValues[$this->currentLevel];
+                $this->execute($group->actions[Actionkey::GroupFooter], $groupValue, ... $params);
+                $this->execute($group->actions[Actionkey::GroupAfter], $groupValue, ... $params);
             }
             // Cumulation is required even for skipped levels.
             foreach ($this->cumulateMap as $value) {
@@ -647,12 +650,22 @@ class Report {
         $this->currentAction = $this->detailAction;
         $prevDim = $this->dim;
         // Load next dimension
-        $this->dim = next($this->dims);
-        // Reset group values of new dim only when previous dim had a group change.
+        $this->dim = $this->dims[$this->dim->id + 1];
+
+        /**
+          Clear group values of new dim only when previous dim had a group change.
+          If one would cleard them even when previous dim had no group change the
+          new dim wouldn't have any group values and so couldn't create any
+          group header or footers.
+         */
         (!$changed) ?: $this->dim->groupValues = [];
+
         $nextDimData = $prevDim->getJoinedData();
+        // When data has been already handled $nextDimData must be false.
+        // If not the default action 'nextSet' will be called. 
         ($nextDimData === false) ?: $this->nextSet($nextDimData);
-        $this->dim = prev($this->dims);
+        // Data of current dimension has been handled. Go back one level.
+        $this->dim = $this->dims[$this->dim->id - 1];
     }
 
     /**
@@ -699,9 +712,9 @@ class Report {
      * Dim was set to next dimension. Use action and row of previous dim.
      */
     private function noDataN(): void {
-        $this->dim = prev($this->dims);
+        $this->dim = $this->dims[$this->dim->id - 1];
         $this->execute($this->dim->actions[Actionkey::DimNoData], $this->dim->row, $this->dim->rowKey, $this->dim->id);
-        $this->dim = next($this->dims);
+        $this->dim = $this->dims[$this->dim->id + 1];
     }
 
     /**
@@ -739,12 +752,12 @@ class Report {
     }
 
     /**
-     * Get the dimID related to a group level.
+     * Get the dimID related to a group.
      * @param $level The group level for which the dimID will be returned.
      * @see getGroupLevel()
      * @return int The dimension ID for the requested level.
      */
-    public function getDimID(int|string|null $level = null): int {
+    public function getDimId(int|string|null $level = null): int {
         if ($level === null) {
             return $this->dim->id;
         }
@@ -807,35 +820,36 @@ class Report {
     }
 
     /**
-     * Get active row for a given dimension.
-     * @param int $dimID The dimension id. Defaults to null.
-     * When $dimID is null rows of the current dimID will be returned.
-     * If $dimID is negative the value will be subtracted from the current
-     * data dimension.
-     * @return mixed The active data row for the requested dimension.
+     * Get the current row for the requested dimension.
+     * @param $dim The requested dimension. Defaults to null.
+     * When $dim is null row of the current dimension will be returned.
+     * If $dim is negative the value will be subtracted from the current
+     * data dimensionID.
+     * @return mixed The active row for the requested dimension.
      */
-    public function getRow(int $dimID = null) {
-        if ($dimID === null) {
-            return $this->dim->row;
-        }
-        $dimID = ($dimID >= 0) ?: $dimID + $this->dim->id;
-        return $this->dims[$dimID]->row;
+    public function getRow(string|int|null $dim = null) {
+        return $this->dims[$this->getIntOfDimParam($dim)]->row;
     }
 
     /**
-     * Get the key of active row for the requested dimension.
-     * @param int $dimID The dimension id. Defaults to null.
-     * When $dimID is null row key of the current dimID will be returned.
-     * If $dimID is negative the value will be subtracted from the current
-     * data dimension.
+     * Get the key of current row for the requested dimension.
+     * @param $dim The requested dimension. Defaults to null.
+     * When $dim is null row key of the current dimension will be returned.
+     * If $dim is negative the value will be subtracted from the current
+     * data dimensionID.
      * @return mixed The key of the active row for the requested dimension.
      */
-    public function getRowKey(int $dimID = null) {
-        if ($dimID === null) {
-            return $this->dim->rowKey;
-        }
-        $dimID = ($dimID >= 0) ?: $dimID + $this->dim->id;
-        return $this->dims[$dimID]->rowKey;
+    public function getRowKey(string|int|null $dim = null) {
+        return $this->dims[$this->getIntOfDimParam($dim)]->rowKey;
+    }
+
+    private function getIntOfDimParam(string|int|null $dim): int {
+        return match (true) {
+            $dim === null => $this->dim->id,
+            is_string($dim) => $this->dims->names[$dim],
+            $dim <= 0 => $dimID + $this->dim->id,
+            default => $dim,
+        };
     }
 
     /**

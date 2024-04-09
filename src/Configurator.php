@@ -43,6 +43,9 @@ final class Configurator {
 
     /** @var The name of the detail group (lowest group level). */
     public string $detailName = 'detail';
+    
+     /** @var The name of the root data dimension. */
+    public string $dimensionName = 'root';
 
     /** @var Classname for default output handler */
     public string $outputHandler = output\StringOutput::class;
@@ -102,6 +105,7 @@ final class Configurator {
             match ($param) {
                 'totalName' => $this->totalName = $this->validateName($value, 'Grand total'),
                 'detailName' => $this->detailName = $this->validateName($value, 'Detail'),
+                'dimensionName' => $this->dimensionName = $this->validateName($value, 'Dimension'),
                 'useNumberedActions' => $this->useNumberedActions = $value,
                 'actions' => $this->replaceActions($value, $this->actions),
                 'defaultActions' => $this->replaceActions($value, $this->defaultActions),
@@ -169,7 +173,7 @@ final class Configurator {
         $ac[ActionKey::GroupAfter] = 'after%S';
         $ac[ActionKey::DimNoData] = 'noData%S';
         $ac[ActionKey::DimDetail] = $this->detailName . '%S';
-        $ac[ActionKey::DimNoGroupChange] = ["Current row in dimension %s didn't trigger a group change.", Action::ERROR];
+        $ac[ActionKey::DimNoGroupChange] = ["Current row in dimension '%s' didn't trigger a group change.", Action::ERROR];
         $this->defaultActions = $ac;
         $this->loadNumberedActions();
     }

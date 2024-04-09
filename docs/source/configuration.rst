@@ -16,6 +16,10 @@ Default names and classes:
 
     The name to be used in detail actions.
 
+.. php:attr:: dimensionName
+
+    The name of the root dimension.
+
 .. php:attr:: outputHandler
 
     The classname of the default output handler

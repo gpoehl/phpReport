@@ -127,7 +127,7 @@ final class Action
      * @param $prototype The prototype object which executes prototype actions.
      * @param $runtTimeOption The option how and where event actions will be executed. 
      */
-    public function setRunTimeTarget(object $target, ?PrototypeInterface $prototype, RuntimeOption $runtimeOption) {
+    public function setRunTimeTarget(object $target, ?PrototypeBase $prototype, RuntimeOption $runtimeOption) {
         
         $this->runtimeTarget = match (true) {
             $this->targetKey === self::NOTHING => null,

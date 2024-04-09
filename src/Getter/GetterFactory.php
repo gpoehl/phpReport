@@ -92,8 +92,7 @@ class GetterFactory {
                 // Callable not expecting $row and $rowKey
                 $selector === false => new GetFromPureCallable([$target, $name], $params),
                 preg_match('/stat/i', $selector) === 1 => new GetStaticProperty([$target, $name]),
-                // Constant requires classname
-                preg_match('/const/i', $selector) === 1 => new GetConstant(((is_object($target)) ? $target::class : $target) . '::' . $name),
+                preg_match('/const/i', $selector) === 1 => new GetConstant($target::{$name}),
             };
         } catch (UnhandledMatchError $e) {
             $name = print_r($name, true);

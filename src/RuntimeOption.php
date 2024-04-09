@@ -43,7 +43,7 @@ enum RuntimeOption: int
             self::Magic => 'Call also non existing methods. Use _magic().',
             self::Prototype => 'Prototype methods not implemented in target class.',
             self::PrototypeMethods => 'Prototype all methods.',
-            self::PrototypeAll => 'Prototype all actions except callables and actions methods eqals false.',
+            self::PrototypeAll => 'Prototype all actions except callables and actions methods equals false.',
         };
     }
 }

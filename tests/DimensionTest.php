@@ -19,12 +19,12 @@ final class DimensionTest extends TestCase {
 
     public function setUp(): void {
         $this->total = new Collector();
-        $this->stack = new Dimension(1, '0',4, 'DefaultTarget');
+        $this->stack = new Dimension('0', 'DefaultTarget');
     }
 
     #[DataProvider('rowProvider')]
     public function testGetGroupValues($row): void {
-        $groups = new groups('total');
+        $groups = new Groups('total');
         $group1 = new Group('A', 1, 'Attr1', []);
         $groups->addGroup($group1);
         $this->stack->groups[] = $group1;

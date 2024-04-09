@@ -64,6 +64,10 @@ class Dimension {
 
     /** @var Parameter for joined data. */
     public array $joinSource;
+    
+    public int $id = 0;
+    public int $lastLevel = 0;
+    
 
     /**
      * Instantiate a new dimension object
@@ -73,7 +77,7 @@ class Dimension {
      * @param object|className $defaultTarget Object or name of a class in which the
      * methods will be called when $source is not specified.
      */
-    public function __construct(public int $id, public string $name, public int $lastLevel, private $defaultTarget) {
+    public function __construct(public string $name, private $defaultTarget = null) {
         $this->actions = new \WeakMap();
     }
 

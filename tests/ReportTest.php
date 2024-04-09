@@ -6,18 +6,17 @@ declare(strict_types=1);
  * Unit test of Report class.
  * For tests with multiple dimensions see ReportMultipleDimensionTest file
  */
-
 use gpoehl\phpReport\Collector;
 use gpoehl\phpReport\output\AbstractOutput;
 use gpoehl\phpReport\Report;
 use gpoehl\phpReport\RuntimeOption;
+use gpoehl\phpReport\PrototypeMini;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class ReportTest extends TestCase
-{
+class ReportTest extends TestCase {
 
-    public function testBasics() :void {
+    public function testBasics(): void {
         $rep = (new Report());
         $this->assertInstanceOf(Collector::class, $rep->rc);
         $this->assertInstanceOf(Collector::class, $rep->gc);
@@ -26,13 +25,13 @@ class ReportTest extends TestCase
         $this->assertInstanceOf(AbstractOutput::class, $rep->out);
     }
 
-     #[DataProvider('paramsProvider')]
-    public function testConstructorParams($data) : void{
+    #[DataProvider('paramsProvider')]
+    public function testConstructorParams($data): void {
         $rep = (new Report(null, null, null, $data));
         $this->assertSame($data, $rep->params);
     }
 
-    public static function paramsProvider() :array {
+    public static function paramsProvider(): array {
         return [
             'Empty param' => [null],
             'One param' => ['myParam'],
@@ -40,111 +39,92 @@ class ReportTest extends TestCase
         ];
     }
 
-     #[DataProvider('noDataProvider')]
-    public function testNoData($data, $expected) :void {
-        $rep = (new Report($this->getBase(), ['actions' => ['NoData' => 'nodata']]))
-                ->setRuntimeOption(RuntimeOption::Magic);
+    #[DataProvider('noDataProvider')]
+    public function testNoData($data, $expected): void {
+        $rep = new Report($this, [
+            'prototype' => PrototypeMini::class,
+            'actions' => ['NoData' => 'nodata']]);
+        $rep->setRuntimeOption(RuntimeOption::Prototype);
         $rep->run($data);
         $this->assertSame('start, headerTotal, ' . $expected . 'footerTotal, finish, ', $rep->out->get());
     }
 
-    public static function noDataProvider() :array {
+    public static function noDataProvider(): array {
         return [
             'Data set equals null' => [null, 'nodata, '],
             'Data set is an empty array' => [[], 'nodata, '],
         ];
     }
 
-    public function testStringAsData() :void {
+    // String is not iterable
+    public function testStringAsData(): void {
         $this->expectException(Error::class);
-        (new Report($this->getBase()))->run('');
+        (new Report($this))->run('xx');
     }
 
-    public function testNoGroupsDefined() :void  {
-        $rep = (new Report($this->getBase()))
-                ->setRuntimeOption(RuntimeOption::Magic)
+    public function testNoGroupsDefined(): void {
+        $rep = (new Report($this, ['prototype' => PrototypeMini::class,]))
+                ->setRuntimeOption(RuntimeOption::Prototype)
                 ->run([['A']]);
         $this->assertSame('start, headerTotal, detail, footerTotal, finish, ', $rep);
     }
 
-    public function testRun_CompletedIsFalse():void  {
-        $rep = (new Report($this->getBase()))
-                ->setRuntimeOption(RuntimeOption::Magic)
+    public function testRunCompleteIsFalse(): void {
+        $rep = (new Report($this, ['prototype' => PrototypeMini::class,]))
+                ->setRuntimeOption(RuntimeOption::Prototype)
                 ->run([['A']], false)
                 ->end();
         $this->assertSame('start, headerTotal, detail, footerTotal, finish, ', $rep);
     }
 
-    public function testCallEndMethodWhenFinalizeIsTrueFails() :void {
+    public function testCallEndMethodWhenFinalizeIsTrueFails(): void {
         $this->expectException(Error::class);
-        $rep = (new Report($this->getBase()))
-                ->setRuntimeOption(RuntimeOption::Magic)
+        $rep = (new Report($this))
                 ->run(['A'])               // run returns a string
                 ->end();                   // method chaining works only on objects.
     }
 
-    public function testChunkOfRowsWithOptionFinalizeIsFalseAndNext() :void {
-        $rep = (new Report($this->getBase()))
-                ->setRuntimeOption(RuntimeOption::Magic)
+    public function testChunkOfRowsWithParamCompleteIsFalseAndNext(): void {
+        $rep = (new Report($this, ['prototype' => PrototypeMini::class,]))
+                ->setRuntimeOption(RuntimeOption::Prototype)
                 ->run([['A'], ['B']], false);
         $rep->next(['C']);
         $rep->end();
         $this->assertSame('start, headerTotal, detail, detail, detail, footerTotal, finish, ', $rep->out->get());
     }
 
-    public function testNextForOneRowNoGroups():void  {
-        $rep = (new Report($this->getBase()))
-                ->setRuntimeOption(RuntimeOption::Magic)
+    public function testNextForOneRowNoGroups(): void {
+        $rep = (new Report($this, ['prototype' => PrototypeMini::class,]))
+                ->setRuntimeOption(RuntimeOption::Prototype)
                 ->run(null, false);
         $rep->next(['A']);
         $rep->end();
         $this->assertSame('start, headerTotal, detail, footerTotal, finish, ', $rep->out->get());
     }
 
-    public function testGroupsWithOneDataRow():void  {
-        $rep = (new Report($this->getBase()))
+    public function testGroupsWithOneDataRow(): void {
+        $rep = (new Report($this, ['prototype' => PrototypeMini::class,]))
+                ->setRuntimeOption(RuntimeOption::Prototype)
                 ->group('a', 'firstGroup')
                 ->group('b', 'secondGroup')
-                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run([['firstGroup' => 'A', 'secondGroup' => 'X']]);
         $this->assertSame('start, headerTotal, beforeA, headerA, beforeB, headerB, ' .
                 'headerDetail, detail, footerDetail, footerB, afterB, footerA, afterA, footerTotal, finish, ', $rep);
     }
 
-    public function testPrototype():void  {
-        $proto = $this->getPrototype();
-        $rep = (new Report($proto))
-                ->group('a', 0)
-                ->setRuntimeOption(RuntimeOption::Magic);
-        $proto->report = $rep;
-        $rep->run([['any value for group a', 'other value']]);
-
-        $out = $rep->out->get();
-        $this->assertStringContainsString('>start</th>', $out);
-        $this->assertStringContainsString('>headerTotal</th>', $out);
-        $this->assertStringContainsString('>beforeA', $out);
-        $this->assertStringContainsString('>headerA', $out);
-        $this->assertStringContainsString('>detail', $out);
-        $this->assertStringContainsString('>footerDetail', $out);
-        $this->assertStringContainsString('>footerA', $out);
-        $this->assertStringContainsString('>footerTotal</th>', $out);
-        $this->assertStringContainsString('>finish</th>', $out);
-    }
-
-      #[DataProvider('GroupValue_sum_and_rsum_Provider')]
-    public function testGroupValue_sum_and_rsum($groupSource, $compSource, $key, $val, $row) :void {
-        $rep = (new Report($this->getBase()))
+    #[DataProvider('sumAndRangeProvider')]
+    public function testSumAndRange($groupSource, $compSource, $key, $val, $row): void {
+        $rep = (new Report($this, ['prototype' => PrototypeMini::class,]))
                 ->setRuntimeOption(RuntimeOption::Prototype)
                 ->group('A', $groupSource)
                 ->compute('B', $compSource)
                 ->sheet('C', $key, $val);
         $out = $rep->run([$row]);
-        $this->assertStringContainsString('groupAvalue', $out);
         $this->assertSame(5, $rep->total['B']->sum());
         $this->assertSame(7, $rep->total['C']->range([6])->sum());
     }
 
-    public static function GroupValue_sum_and_rsum_Provider() :array {
+    public static function sumAndRangeProvider(): array {
         $data = ['attr0' => 'groupAvalue', 'attr1' => 5, 'attr2' => 6, 'attr3' => 7];
         return ([
             [0, 1, 2, 3, array_values($data)],
@@ -152,23 +132,13 @@ class ReportTest extends TestCase
         ]);
     }
 
-    /**
-     * Make sure that no group method is called. One detail() method call per row.
-     */
-    public function testNoGroups() :void {
-        $rep = (new Report($this->getBase()))
-                ->setRuntimeOption(RuntimeOption::Magic)
-                ->run([['A'], ['B']]);
-        $this->assertSame('start, headerTotal, detail, detail, footerTotal, finish, ', $rep);
-    }
-
-    public function testFlowWithGroupChangesOnMultipleGroups() :void {
-        $rep = (new Report($this->getBase()))
+    public function testFlowWithGroupChangesOnMultipleGroups(): void {
+        $rep = (new Report($this, ['prototype' => PrototypeMini::class,]))
+                ->setRuntimeOption(RuntimeOption::Prototype)
                 ->group('a', 'ga')
                 ->group('b', 'gb')
                 ->group('c', 'gc')
                 ->compute('d', 'a2')
-                ->setRuntimeOption(RuntimeOption::Magic)
                 ->run(null, false);
         // First row exectues all headers
         $rep->next(['ga' => 11, 'gb' => 21, 'gc' => 31, 'a1' => 'a', 'a2' => 2]);
@@ -203,41 +173,4 @@ class ReportTest extends TestCase
         $this->assertSame(3, $rep->gc->b->sum(0));      // Total b groups
         $this->assertSame(5, $rep->gc->c->sum(0));      // Total c groups
     }
-
-
-    /**
-     * Basic class which executes actions called from Report
-     * @return anonymous class
-     */
-    public function getBase() {
-        return new class() {
-
-            public function __call($name, $arguments) {
-                return $name . ', ';
-            }
-
-            public static function staticCallMethod() {
-                return 'my method called static, ';
-            }
-
-            public static function callMethod() {
-                return 'my method called on object, ';
-            }
-        };
-    }
-
-    /**
-     * Test class calls prototyp method in report object.
-     */
-    public function getPrototype() {
-        return new class() {
-
-            public $report;
-
-            public function __call($name, $arguments) {
-                return $this->report->prototype();
-            }
-        };
-    }
-
 }

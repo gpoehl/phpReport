@@ -1,11 +1,24 @@
-phpReport 3.3.x
-===============
+phpReport 3.5
+=============
 
 New features
 ------------
+* Allow setting name for root data dimension.
+* getRow() and getRowKey() now also accepts dimension name as parameter 
+* New getDimIdOfGroup() method to get dimension by group name or group id. 
+* New prototype class 'PrototypeMini' for program flow tests or for usage with
+  phpunit assertions.
+
+Changes
+-------
+* Alter Actionkey backed enums to pure enums.
+* Remove some not required tests.
+* Replace dimensions array by new array iterator class.
+* Tests use new PrototypeMini class
+* Getter for constant properties use new php 8.3 syntax
 
 
-phpReport 3.3
+phpReport 3.4
 =============
 
 New features

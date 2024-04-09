@@ -15,25 +15,25 @@ namespace gpoehl\phpReport;
  * Description of Actions
  *
  */
-Enum Actionkey: int {
+Enum Actionkey  {
 
-    case Start = 1;
-    case Finish = 2;
-    case TotalHeader = 3;
-    case TotalFooter = 4;
-    case NoData = 5;
-    case DetailHeader = 6;
-    case Detail = 7;
-    case DetailFooter = 8;
-    case GroupBefore = 10;
-    case GroupFirst = 11;
-    case GroupHeader = 12;
-    case GroupFooter = 13;
-    case GroupLast = 14;
-    case GroupAfter = 15;
-    case DimNoData = 20;
-    case DimDetail = 21;
-    case DimNoGroupChange = 22;
+    case Start;
+    case Finish;
+    case TotalHeader;
+    case TotalFooter;
+    case NoData;
+    case DetailHeader;
+    case Detail;
+    case DetailFooter;
+    case GroupBefore;
+    case GroupFirst;
+    case GroupHeader;
+    case GroupFooter;
+    case GroupLast;
+    case GroupAfter;
+    case DimNoData;
+    case DimDetail;
+    case DimNoGroupChange;
 
     public function group(): string {
         return match ($this) {
