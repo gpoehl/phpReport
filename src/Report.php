@@ -847,7 +847,7 @@ class Report {
         return match (true) {
             $dim === null => $this->dim->id,
             is_string($dim) => $this->dims->names[$dim],
-            $dim <= 0 => $dimID + $this->dim->id,
+            $dim <= 0 => $this->dim->id + $dim,
             default => $dim,
         };
     }
