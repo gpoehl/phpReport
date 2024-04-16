@@ -23,10 +23,6 @@ use gpoehl\phpReport\getter\GetterFactory;
  */
 class Dimension {
 
-    /** @var True when this is the last dimension (has not joined data). */
-    public bool $isLastDim = true;
-    // Actions to be executed when dimension is not the last one.
-
     /* @var $actions Action objects indexed by ActionKey enum. */
     public \WeakMap $actions;
 
@@ -118,7 +114,6 @@ class Dimension {
      * @param array $params Parameters passed unpacked when $source is a callable.
      */
     public function setJoinSource($source, array $params): void {
-        $this->isLastDim = false;
         $this->joinSource = [$source, $params];
     }
 
@@ -126,11 +121,9 @@ class Dimension {
      * Get all group values from given row.
      * This is the first method call for each data row. So this is the place to
      * instantiate getters.
-     * @param type $row
-     * @param type $rowKey
      * @return array The requested group values indexed by group level.
      */
-    public function getGroupValues($row, $rowKey = null): array {
+    public function getGroupValues($row, $rowKey): array {
         if (!$this->gettersInstantiated) {
             $this->instantiateGetters($row);
             $this->gettersInstantiated = true;
@@ -143,7 +136,7 @@ class Dimension {
     }
 
     /**
-     * Get data joined to the current row
+     * Get data joined from the current row
      */
     public function getJoinedData() {
         return $this->joinGetter->getValue($this->row, $this->rowKey);
@@ -152,11 +145,8 @@ class Dimension {
     /**
      * Save given parameters to make them active.
      * Call method when footer actions are done and new row is active.
-     * @param type $row
-     * @param type $rowKey
-     * @param array $groupValues
      */
-    public function activateValues($row, $rowKey = null, array $groupValues = []): void {
+    public function activateValues($row, $rowKey, array $groupValues): void {
         $this->row = $row;
         $this->rowKey = $rowKey;
         $this->groupValues = $groupValues;
@@ -178,11 +168,11 @@ class Dimension {
         foreach ($this->sheetSources as $name => $source) {
             $this->calcGetters[$name] = $factory->getSheetGetter(... $source);
         }
-        if (!$this->isLastDim) {
+        // Latest dimension doesn't have joinSource
+        if (isset($this->joinSource)) {
             $this->joinGetter = $factory->getGetter(... $this->joinSource);
-//            echo '<br>Dim ' . $this->id .'<br>';
-//                var_dump($this->joinGetter);
+            unset($this->joinSource);
         }
-        unset($this->calcSources, $this->sheetSources, $this->joinSource);
+        unset($this->calcSources, $this->sheetSources);
     }
 }

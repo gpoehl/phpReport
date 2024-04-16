@@ -31,15 +31,15 @@ final class DimensionTest extends TestCase {
         $group2 = new Group('B', 1, 'Attr2', []);
         $groups->addGroup($group2);
         $this->stack->groups[] = $group2;
-        $this->assertSame([1 => 'a', 'b'], $this->stack->getGroupValues($row, []));
+        $this->assertSame([1 => 'a', 'b'], $this->stack->getGroupValues($row, null));
     }
 
     #[DataProvider('rowProvider')]
     public function testGetJoinedData($row): void {
         $this->stack->setJoinSource('Attr5', []);
-        $this->stack->getGroupValues($row);   // Required to setGetters()
+        $this->stack->getGroupValues($row, null);   // Required to setGetters()
 
-        $this->stack->activateValues($row);
+        $this->stack->activateValues($row, null, []);
         $this->assertSame([['x'], ['y'], ['z']], $this->stack->getJoinedData());
     }
 

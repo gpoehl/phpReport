@@ -22,9 +22,6 @@ use InvalidArgumentException;
 
 /**
  * Main class of phpReport library.
- *
- * Handles group changes, computes values and joins multiple data sources.
- * Actions will be invoked on defined events.
  */
 class Report {
 
@@ -56,20 +53,22 @@ class Report {
     private readonly Action $detailFooterAction;
 
     /** @var Dimensions Object managing dimension objects. */
-    public Dimensions $dims;
+    private Dimensions $dims;
 
-    /** @var The actual dimension object. Shortcut of current($dims). */
+    /** @var The actual dimension object. */
     private Dimension $dim;
-//    public Dimension $dim;
 
     /** @var The current group level. */
-    public int $currentLevel = 0;
+    private int $currentLevel = 0;
 
     /** @var Highest level of changed group. Null when no group change detected. */
-    private ?int $changedLevel;
+    private int|null $changedLevel;
 
     /** @var Groups object which holds any groups regardless of the related dimension. */
     private readonly Groups $groups;
+    
+    /** @var ID of latest dimension. */
+    private readonly int $lastDimID;
 
     /** @var The option how and where event actions will be executed. */
     private RuntimeOption $runtimeOption = RuntimeOption::Default;
@@ -120,9 +119,8 @@ class Report {
         $this->rc = new Collector();
         $this->gc = new Collector();
         $this->total = new Collector();
-        $this->dims = new Dimensions();
         $this->dim = new Dimension($conf->dimensionName, $target);
-        $this->dims->add($this->dim);
+        $this->dims = new Dimensions([$this->dim]);
         $this->out = ($outputHandler) ? $outputHandler : new $conf->outputHandler();
         $this->prototypeName = $conf->prototype;
         $this->cumulateMap = new \SplObjectStorage();
@@ -142,6 +140,7 @@ class Report {
      */
     public function join(string $name, $source = null, iterable|null $actions = [], ... $params): self {
         $source ??= $name;
+        // Source is stored in current dim and not in the new one!
         GetterFactory::verifySource($source, $params);
         $this->dim->setJoinSource($source, $params);
         $validatedActions = $this->getValidatedActions($actions, 'dim');
@@ -150,7 +149,7 @@ class Report {
             $this->dim->actions[$actionKey] = $this->getNewAction($actionKey, $action, $this->dim->id, $this->dim->name);
         }
         $this->dim = new Dimension($name, $this->target);
-        $this->dims->add($this->dim);
+        $this->dims->push($this->dim);
         return $this;
     }
 
@@ -369,6 +368,7 @@ class Report {
             $this->rc->addItem($calculator);
             $this->cumulateMap[$calculator] = $dim->lastLevel;
         }
+        $this->lastDimID = count($this->dims)-1;
         $this->dim = $this->dims[0];
         $this->currentLevel = 0;
         $this->executeAction(Actionkey::Start);
@@ -432,7 +432,7 @@ class Report {
         }
         // Dim actions. Actions for last dimension are set in main class.
         foreach ($this->dims as $dim) {
-            if (!$dim->isLastDim) {
+            if ($dim->id < $this->lastDimID) {
                 foreach ($dim->actions as $actionKey => $action) {
                     $action->setRunTimeTarget(...$params);
                 }
@@ -547,7 +547,7 @@ class Report {
             $this->total[$name]->add($getter->getValue($row, $rowKey));
         }
         // Handle next dimension or execute detail action.
-        if (!$this->dim->isLastDim) {
+        if ($this->dim->id < $this->lastDimID) {
             $this->handleDimension();
         } elseif ($this->detailAction->runtimeTarget) {
             $output = ($this->detailAction->targetKey === Action::STRING) ?
@@ -585,7 +585,7 @@ class Report {
         // No footer for first row (in actual dimension).
         ($this->dim->row === null) ?: $this->handleFooters();
         $this->dim->activateValues($row, $rowKey, $groupValues);
-
+        
         // Call Header methods from changed group in dim to last group in dim;
         // Array slice with negative offset!
         $this->lowestHeader = $this->dim->lastLevel;
@@ -601,7 +601,7 @@ class Report {
             }
             $this->execute($group->actions[Actionkey::GroupHeader], ... $params);
         }
-        if ($this->dim->isLastDim && $this->skipLevel === false) {
+        if ($this->dim->id === $this->lastDimID && $this->skipLevel === false) {
             $this->execute($this->detailHeaderAction, $row, $rowKey, $this->currentLevel);
             $this->currentAction = $this->detailAction;
         }
@@ -617,7 +617,7 @@ class Report {
                 $group = $this->groups->items[$this->currentLevel];
                 $this->dim = $this->dims[$group->dimID];
                 $params = [$this->dim->row, $this->dim->rowKey, $this->currentLevel];
-                if ($this->dim->isLastDim && $this->currentLevel === $this->dim->lastLevel) {
+                if ($this->dim->id === $this->lastDimID && $this->currentLevel === $this->dim->lastLevel) {
                     $this->execute($this->detailFooterAction, ... $params);
                 }
                 $groupValue = $this->dim->groupValues[$this->currentLevel];

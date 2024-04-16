@@ -23,24 +23,21 @@ class Dimensions extends \ArrayIterator {
      */
     public array $names = [];
 
-    /**
-     * Don't allow constructor parameter to force usage of add() method. 
-     * @param type $array
-     * @throws \Exception
-     */
+   
     public function __construct($array = []) {
-        if (!empty($array)) {
-            throw new \Exception('Use add method.');
+        // Call add method to make sure we got an Dimension object.
+        foreach ($array as $value){
+            $this->push($value);
         }
+        
     }
 
-    /**
-     * @return Dimension
-     */
+    #[\Override]
     public function current(): Dimension {
         return parent::current();
     }
 
+    #[\Override]
     public function offsetGet($offset): Dimension {
         return parent::offsetGet($offset);
     }
@@ -49,13 +46,12 @@ class Dimensions extends \ArrayIterator {
      * Add a dimension object
      * @throws InvalidArgumentException when dimension name exists
      */
-     public function add(Dimension $dimension): void {
+    public function push(Dimension $dimension): void {
         if (!empty($this->names)) {
             if (array_key_exists($dimension->name, $this->names)) {
                 throw new \Exception("Dimension name '{$dimension->name}' already exists.");
             }
             $currentDim = $this->current();
-            $currentDim->isLastDim = false;
             $dimension->lastLevel = $currentDim->lastLevel;
             $dimension->id = $this->count();
         }
@@ -63,8 +59,9 @@ class Dimensions extends \ArrayIterator {
         parent::append($dimension);
     }
 
-    public function append($value): void {
-        throw new \Exception('Use add method to append an dimension object.');
+    #[\Override]
+    public function append($dimension): void {
+        // Call add method to make sure we got an Dimension object.
+        $this->push($dimension);
     }
-    
-   }
+}
