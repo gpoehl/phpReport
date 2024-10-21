@@ -107,8 +107,8 @@ class Report {
      */
     final public function __construct(
             private object|string|null $target = null,
-            null|array $config = null,
-            AbstractOutput $outputHandler = null,
+            ?array $config = null,
+            ?AbstractOutput $outputHandler = null,
             public mixed $params = null,
     ) {
 
@@ -900,7 +900,7 @@ class Report {
      * Defaults to the current level.
      * @return The group name of the requested level.
      */
-    public function getGroupName(int $groupLevel = null): string {
+    public function getGroupName(?int $groupLevel = null): string {
         $groupLevel ??= $this->currentLevel;
         return $this->groups->items[$groupLevel]->name;
     }

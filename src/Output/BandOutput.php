@@ -182,7 +182,7 @@ class BandOutput extends AbstractOutput implements CumulateIF {
     public function delete(int $level = 0, ?int $bandKey = null): void {
         // Delete specific band in level
         if ($bandKey !== null) {
-            $bandKey = $this->actionKeyMapper[$bandKey] ?? $bandKey;
+//            $bandKey = $this->actionKeyMapper[$bandKey] ?? $bandKey;
             unset($this->output[$level][$bandKey]);
             return;
         }
