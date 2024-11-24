@@ -1,3 +1,16 @@
+phpReport 3.6
+=============
+
+This is the last version which runs with PHP 8.3 and later. 
+Next version requires PHP 8.4
+
+
+Changes
+-------
+* Support PHP 8.4
+* Remove $isLastDim from Dimension class and handle last dimension ID in Report class. 
+
+
 phpReport 3.5
 =============
 
@@ -24,7 +37,7 @@ phpReport 3.4
 New features
 ------------
 
-* Improved configruation. Two naming pattern sets are available.
+* Improved configuration. Two naming pattern sets are available.
 * Configuration can be set on a global level by extendig report class.
 * Actions use Action Enum instead of strings
 * Data dimensions got additional name. Related method names can make use of the name.

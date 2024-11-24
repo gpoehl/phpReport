@@ -21,7 +21,7 @@ use gpoehl\phpReport\Actionkey;
 final class Configurator {
 
     /**
-     * @var $actions[] Default actions indexed by the action key.
+     * @var SplObjectStorage $actions Default actions indexed by the action key.
      * Action keys are mapped to actions to be invoked.
      * Action is usually a method to be called within the owner class or 
      * a string to be appended to $output. 
@@ -127,7 +127,7 @@ final class Configurator {
     private function validateName(string $name, string $messagePrefix): string {
         $name = trim($name);
         if ($name === null || $name == '') {
-            throw new \InvalidArgumentException("$messagePrefix name can not be empty.");
+            throw new \InvalidArgumentException("$messagePrefix name cannot be empty.");
         }
         if (!Action::isNameValid($name)) {
             throw new \InvalidArgumentException("$messagePrefix name '$name' is invalid.");

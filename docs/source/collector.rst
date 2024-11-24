@@ -1,7 +1,7 @@
 Collector
 =========
 
-A collector class is designed to hold and manage multiple items. An item can
+A collector class manage multiple items. An item can
 be an other collector or an calculator object.
 
 .. include:: defaultCollectors.rst

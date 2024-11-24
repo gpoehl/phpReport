@@ -25,7 +25,7 @@ use InvalidArgumentException;
  */
 class Report {
 
-    const VERSION = '3.5';
+    const VERSION = '3.6';
 
     protected string $configFilename = '';
 

@@ -30,10 +30,10 @@ and group footers) will be executed.
 
     :param mixed $source: Source of the group value. Defaults to the name.
      Use the attribute name when data row is an object or the key name when data row is an array.
-      It's also possiblbe to use a callable (a closure or an array having 
-      class and method parameters) expecting $row and $rowKey as parameters. 
+     It's also possiblbe to use a callable (a closure or an array having 
+     class and method parameters) expecting $row and $rowKey as parameters. 
 
-     :param iterable|null $actions: Array of group related actions to replace configurated actions.
+    :param iterable|null $actions: Array of group related actions to replace configurated actions.
 
     :param mixed $params: Variadic parameters to be passed to callables declared 
      with value parameter. 

@@ -25,7 +25,7 @@ class Dimensions extends \ArrayIterator {
 
    
     public function __construct($array = []) {
-        // Call add method to make sure we got an Dimension object.
+        // Call push method to make sure we got an Dimension object.
         foreach ($array as $value){
             $this->push($value);
         }

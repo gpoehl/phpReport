@@ -2,7 +2,7 @@ Actions
 =======
 
 Calling the run() method starts the execution and |project_name| takes control over the 
-program flow. At several points during program events occurs and related action will be invoked.
+program flow. Whenever defined events are detected related action will be invoked.
 
 Typical actions are: 
 

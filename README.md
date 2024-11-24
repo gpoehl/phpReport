@@ -64,7 +64,7 @@ More parameters can be used to configure the current phpReport instance.
 
 Declaration
 -----------
-With just four declaration methods you'll setup the skeleton of your application.
+With just five declaration methods you'll setup the skeleton of your application.
 
 The **group()** method declares a new data group and instantiates a group counter.
 phpReport will then compare group values between data rows, execute actions
@@ -74,8 +74,10 @@ The **compute()** method lets phpReport know that you want use aggregate functio
 sum(), min(), max() or that you'll ask for not null and not zero counters.
 
 The **sheet()** method lets you compute multiple values in a spreadsheet like format.
-Sheets can have a fixed number of columns indexed by pre-declared column names or
-a variable number of columns based on data values.
+The number of colums is variable and depends on the values in the key parameter.
+
+The **fixedSheet()** is similar to the sheet() method but has a fixed number of 
+columns indexed by pre-declared column names.
 
 With the **join()** method multiple data sources will be combined. Call the other
 declaration methods after the join() method when they belong to the joined data.
@@ -282,7 +284,7 @@ This is also the time to uncomment the two prototype calls made above.
 Requirements
 ------------
 
-The only requirement for **phpReport** is PHP 8.0 or later.
+The only requirement for **phpReport** is PHP 8.1 or later.
 
 
 

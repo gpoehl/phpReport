@@ -39,7 +39,7 @@ the compute function but requires an additional field to be used as a key.
     ->group ('year', fn($row) => substr($row->orderDate, 0, 4));
     ->sheet ('orderValue', fn($row) => substr($row->orderDate, 4, 2), 'oderAmount')
    
-The snippet obove declares a group for the year of the orderDate and cumulates
+The snippet above declares a group for the year of the orderDate and cumulates
 the 'orderAmount' in an collector indexed by the month of the orderDate.    
  
 Cumulated values provides totals and subtotals at any time for all declared groups.

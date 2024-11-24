@@ -1,7 +1,7 @@
 phpReport Manual
 ================
 
-Edition for phpReport 3.0
+Edition for phpReport 3.6
 
 by Günter Pöhl
 

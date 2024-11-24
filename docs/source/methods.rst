@@ -4,13 +4,15 @@ Overview of methods and properties
 Methods to instantiate report class
 -----------------------------------
 
-:php:meth:`data` Describe data input
+:php:meth:`join` Declare next level of data to be joined or linked
 
 :php:meth:`group` Declare a group to monitor changes between data rows
 
-:php:meth:`aggregate` Declare variable to provide aggregate functons (sum, count, min, max)
+:php:meth:`compute` Declare variable to provide aggregate functons (sum, count, min, max)
 
 :php:meth:`sheet` Declare variable to be aggregated horizontally (having key and value)
+
+:php:meth:`fixedSheet` Like sheet but with pre-defined keys
 
 
 Methods for data handling
